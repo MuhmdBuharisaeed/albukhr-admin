@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALBUKHR Admin MFA</title>
+<link rel="stylesheet" href="css/admin-auth.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/core/environment-core.js"></script>
+<script src="js/core/supabase-core.js"></script>
+<script src="js/core/supabase-admin-auth.js"></script>
+</head>
+<body>
+<main class="admin-auth">
+<section class="admin-card">
+<div class="admin-brand">ALBUKHR</div>
+<div class="admin-label">MULTI-FACTOR AUTHENTICATION</div>
+<h1>Verify your identity</h1>
+<p class="muted">Enter the verification code from your authenticator.</p>
+
+<form id="mfaForm">
+<label>
+Verification code
+<input id="code" inputmode="numeric" autocomplete="one-time-code"
+       minlength="6" maxlength="8" required>
+</label>
+
+<button id="verifyButton" type="submit">Verify and continue</button>
+<div id="status" class="status" aria-live="polite"></div>
+</form>
+</section>
+</main>
+
+<script>
+(async function () {
+  "use strict";
+
+  const form = document.getElementById("mfaForm");
+  const code = document.getElementById("code");
+  const button = document.getElementById("verifyButton");
+  const status = document.getElementById("status");
+  const factorId =
+    sessionStorage.getItem("albukhr_admin_mfa_factor");
+
+  function show(message, error) {
+    status.textContent = message;
+    status.classList.toggle("error", Boolean(error));
+  }
+
+  try {
+    await window.AlbukhrSupabaseAdminAuth.init();
+
+    if (!factorId) {
+      window.location.replace("admin-login.html");
+      return;
+    }
+  } catch (error) {
+    show("Authentication system unavailable.", true);
+  }
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    button.disabled = true;
+    show("Verifying...");
+
+    try {
+      await window.AlbukhrSupabaseAdminAuth.verifyMfa(
+        factorId,
+        code.value
+      );
+
+      sessionStorage.removeItem("albukhr_admin_mfa_factor");
+      show("Verified. Opening administration...");
+      window.location.replace("admin-dashboard.html");
+    } catch (error) {
+      console.error(error);
+      show("Invalid or expired verification code.", true);
+      button.disabled = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>
