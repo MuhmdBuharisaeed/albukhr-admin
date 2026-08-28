@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0">
+
+<meta
+  name="robots"
+  content="noindex,nofollow,noarchive">
+
+<title>ALBUKHR Admin — Secure Login</title>
+
+<link
+  rel="stylesheet"
+  href="css/admin-login.css">
+
+</head>
+
+
+<body>
+
+<main class="admin-login-page">
+
+  <section
+    class="login-card"
+    aria-labelledby="loginTitle">
+
+
+    <!-- BRAND -->
+
+    <div
+      class="brand-mark"
+      aria-hidden="true">
+
+      ALBUKHR
+
+    </div>
+
+
+    <!-- SECURITY LABEL -->
+
+    <div class="security-badge">
+
+      ADMIN CONTROL CENTER
+
+    </div>
+
+
+    <h1 id="loginTitle">
+
+      Admin Sign In
+
+    </h1>
+
+
+    <p class="subtitle">
+
+      Secure access to the ALBUKHR
+      administrative system.
+
+    </p>
+
+
+    <!-- STATUS -->
+
+    <div
+      id="authStatus"
+      class="status"
+      role="status"
+      aria-live="polite">
+    </div>
+
+
+    <!-- LOGIN FORM -->
+
+    <form
+      id="adminLoginForm"
+      novalidate>
+
+
+      <!-- EMAIL -->
+
+      <label for="adminEmail">
+
+        Admin Email
+
+      </label>
+
+
+      <input
+        id="adminEmail"
+        name="email"
+        type="email"
+        autocomplete="username"
+        inputmode="email"
+        maxlength="254"
+        required
+        placeholder="admin@example.com">
+
+
+      <!-- PASSWORD -->
+
+      <label for="adminPassword">
+
+        Password
+
+      </label>
+
+
+      <div class="password-wrap">
+
+
+        <input
+          id="adminPassword"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          minlength="12"
+          maxlength="128"
+          required
+          placeholder="Enter your password">
+
+
+        <button
+          type="button"
+          id="togglePassword"
+          class="password-toggle"
+          aria-label="Show password"
+          aria-pressed="false">
+
+          Show
+
+        </button>
+
+
+      </div>
+
+
+      <!-- LOGIN -->
+
+      <button
+        id="loginButton"
+        class="login-button"
+        type="submit">
+
+        Sign In
+
+      </button>
+
+
+    </form>
+
+
+    <!-- FORGOT PASSWORD -->
+
+    <button
+      id="forgotPasswordButton"
+      class="forgot-button"
+      type="button">
+
+      Forgot password?
+
+    </button>
+
+
+    <!-- SECURITY NOTE -->
+
+    <div class="security-note">
+
+      <strong>
+        Mainnet security authority
+      </strong>
+
+      <span>
+
+        Admin authentication is verified
+        through the ALBUKHR Mainnet
+        Supabase security system.
+
+      </span>
+
+    </div>
+
+
+  </section>
+
+</main>
+
+
+
+<!-- =====================================================
+     SUPABASE SDK
+===================================================== -->
+
+<script
+  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+</script>
+
+
+<!-- =====================================================
+     ALBUKHR CORE
+===================================================== -->
+
+<script
+  src="js/core/environment-core.js">
+</script>
+
+
+<script
+  src="js/core/supabase-admin-auth.js">
+</script>
+
+
+<!-- =====================================================
+     PAGE CONTROLLER
+===================================================== -->
+
+<script
+  src="js/admin-login.js">
+</script>
+
+
+</body>
+
+</html>
