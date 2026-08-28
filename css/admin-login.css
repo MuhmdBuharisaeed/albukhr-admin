@@ -1,0 +1,630 @@
+/* =========================================================
+   ALBUKHR ADMIN LOGIN
+   File:
+   css/admin-login.css
+========================================================= */
+
+
+:root {
+
+  --albukhr-green:
+    #0f7a3d;
+
+  --albukhr-green-dark:
+    #075b2c;
+
+  --albukhr-bg:
+    #f4faf7;
+
+  --albukhr-text:
+    #17201b;
+
+  --albukhr-muted:
+    #6b746f;
+
+  --albukhr-border:
+    #dce7e1;
+
+  --albukhr-danger:
+    #b42318;
+
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+
+  box-sizing:
+    border-box;
+
+}
+
+
+html,
+body {
+
+  margin:
+    0;
+
+  min-height:
+    100%;
+
+}
+
+
+body {
+
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  color:
+    var(--albukhr-text);
+
+  background:
+    radial-gradient(
+      circle at top,
+      #ffffff 0%,
+      var(--albukhr-bg) 55%,
+      #eaf5ef 100%
+    );
+
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.admin-login-page {
+
+  min-height:
+    100vh;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  padding:
+    24px 16px;
+
+}
+
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.login-card {
+
+  width:
+    min(100%, 430px);
+
+  padding:
+    30px 26px;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid var(--albukhr-border);
+
+  border-radius:
+    22px;
+
+  box-shadow:
+    0 18px 50px
+    rgba(15, 122, 61, .12);
+
+}
+
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.brand-mark {
+
+  width:
+    62px;
+
+  height:
+    62px;
+
+  margin:
+    0 auto 14px;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  border-radius:
+    18px;
+
+  background:
+    var(--albukhr-green);
+
+  color:
+    #ffffff;
+
+  font-size:
+    11px;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    1px;
+
+}
+
+
+/* =========================================================
+   SECURITY BADGE
+========================================================= */
+
+.security-badge {
+
+  width:
+    fit-content;
+
+  margin:
+    0 auto 12px;
+
+  padding:
+    6px 10px;
+
+  border-radius:
+    999px;
+
+  background:
+    #edf8f2;
+
+  color:
+    var(--albukhr-green-dark);
+
+  font-size:
+    10px;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    .8px;
+
+}
+
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+h1 {
+
+  margin:
+    0;
+
+  text-align:
+    center;
+
+  font-size:
+    26px;
+
+}
+
+
+/* =========================================================
+   SUBTITLE
+========================================================= */
+
+.subtitle {
+
+  max-width:
+    330px;
+
+  margin:
+    8px auto 24px;
+
+  text-align:
+    center;
+
+  color:
+    var(--albukhr-muted);
+
+  font-size:
+    13px;
+
+  line-height:
+    1.5;
+
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.status {
+
+  display:
+    none;
+
+  margin-bottom:
+    16px;
+
+  padding:
+    11px 12px;
+
+  border-radius:
+    12px;
+
+  background:
+    #f5f7f6;
+
+  color:
+    var(--albukhr-text);
+
+  font-size:
+    12px;
+
+  line-height:
+    1.45;
+
+}
+
+
+.status.show {
+
+  display:
+    block;
+
+}
+
+
+.status.error {
+
+  background:
+    #fff1f0;
+
+  color:
+    var(--albukhr-danger);
+
+}
+
+
+.status.success {
+
+  background:
+    #edf8f2;
+
+  color:
+    var(--albukhr-green-dark);
+
+}
+
+
+/* =========================================================
+   LABEL
+========================================================= */
+
+label {
+
+  display:
+    block;
+
+  margin:
+    0 0 7px;
+
+  font-size:
+    12px;
+
+  font-weight:
+    750;
+
+}
+
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+input {
+
+  width:
+    100%;
+
+  height:
+    48px;
+
+  margin:
+    0 0 16px;
+
+  padding:
+    0 13px;
+
+  border:
+    1px solid var(--albukhr-border);
+
+  border-radius:
+    12px;
+
+  outline:
+    none;
+
+  background:
+    #ffffff;
+
+  color:
+    var(--albukhr-text);
+
+  font-size:
+    14px;
+
+}
+
+
+input:focus {
+
+  border-color:
+    var(--albukhr-green);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(15, 122, 61, .10);
+
+}
+
+
+/* =========================================================
+   PASSWORD
+========================================================= */
+
+.password-wrap {
+
+  position:
+    relative;
+
+}
+
+
+.password-wrap input {
+
+  padding-right:
+    70px;
+
+}
+
+
+.password-toggle {
+
+  position:
+    absolute;
+
+  top:
+    0;
+
+  right:
+    0;
+
+  height:
+    48px;
+
+  padding:
+    0 13px;
+
+  border:
+    0;
+
+  background:
+    transparent;
+
+  color:
+    var(--albukhr-green-dark);
+
+  font-size:
+    11px;
+
+  font-weight:
+    800;
+
+  cursor:
+    pointer;
+
+}
+
+
+/* =========================================================
+   LOGIN BUTTON
+========================================================= */
+
+.login-button {
+
+  width:
+    100%;
+
+  height:
+    48px;
+
+  border:
+    0;
+
+  border-radius:
+    13px;
+
+  background:
+    var(--albukhr-green);
+
+  color:
+    #ffffff;
+
+  font-size:
+    14px;
+
+  font-weight:
+    800;
+
+  cursor:
+    pointer;
+
+  transition:
+    transform .15s ease,
+    opacity .15s ease;
+
+}
+
+
+.login-button:hover {
+
+  transform:
+    translateY(-1px);
+
+}
+
+
+.login-button:disabled {
+
+  opacity:
+    .65;
+
+  cursor:
+    not-allowed;
+
+  transform:
+    none;
+
+}
+
+
+/* =========================================================
+   FORGOT PASSWORD
+========================================================= */
+
+.forgot-button {
+
+  display:
+    block;
+
+  margin:
+    17px auto 0;
+
+  padding:
+    5px 8px;
+
+  border:
+    0;
+
+  background:
+    transparent;
+
+  color:
+    var(--albukhr-green-dark);
+
+  font-size:
+    12px;
+
+  font-weight:
+    750;
+
+  cursor:
+    pointer;
+
+}
+
+
+/* =========================================================
+   SECURITY NOTE
+========================================================= */
+
+.security-note {
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    4px;
+
+  margin-top:
+    24px;
+
+  padding:
+    13px;
+
+  border:
+    1px solid #e6eee9;
+
+  border-radius:
+    13px;
+
+  background:
+    #f7faf8;
+
+  color:
+    var(--albukhr-muted);
+
+  font-size:
+    11px;
+
+  line-height:
+    1.45;
+
+}
+
+
+.security-note strong {
+
+  color:
+    var(--albukhr-text);
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+
+  .admin-login-page {
+
+    padding:
+      14px;
+
+  }
+
+
+  .login-card {
+
+    padding:
+      25px 19px;
+
+    border-radius:
+      18px;
+
+  }
+
+
+  h1 {
+
+    font-size:
+      23px;
+
+  }
+
+}
