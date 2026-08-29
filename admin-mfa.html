@@ -2,83 +2,59 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087a3e">
+<meta name="robots" content="noindex,nofollow">
 <title>ALBUKHR Admin MFA</title>
 <link rel="stylesheet" href="css/admin-auth.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/core/environment-core.js"></script>
-<script src="js/core/supabase-core.js"></script>
-<script src="js/core/supabase-admin-auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" defer></script>
+<script src="js/core/environment-core.js" defer></script>
+<script src="js/core/supabase-core.js" defer></script>
+<script src="js/core/supabase-admin-auth.js" defer></script>
+<script src="js/admin-mfa.js" defer></script>
 </head>
 <body>
 <main class="admin-auth">
-<section class="admin-card">
+<section class="admin-card" aria-labelledby="mfaTitle">
+<div class="brand-mark"><img src="images/albukhr-eagle-logo.jpg" alt="ALBUKHR" onerror="this.style.display='none'"></div>
 <div class="admin-brand">ALBUKHR</div>
-<div class="admin-label">MULTI-FACTOR AUTHENTICATION</div>
-<h1>Verify your identity</h1>
-<p class="muted">Enter the verification code from your authenticator.</p>
+<div class="admin-label">ADMINISTRATION</div>
+<div class="security-badge">MAINNET SECURITY GATE</div>
 
-<form id="mfaForm">
-<label>
-Verification code
-<input id="code" inputmode="numeric" autocomplete="one-time-code"
-       minlength="6" maxlength="8" required>
+<h1 id="mfaTitle">Secure Admin MFA</h1>
+<p class="muted">Multi-factor authentication is required for ALBUKHR administration.</p>
+
+<div id="enrollPanel">
+<h2>Set up your authenticator</h2>
+<p class="muted">Scan the QR code with Google Authenticator, Microsoft Authenticator, or another TOTP authenticator.</p>
+
+<div id="qr" aria-label="Authenticator QR code"></div>
+
+<div class="secret-box">
+<strong>Manual setup key</strong>
+<code id="secret">Loading...</code>
+</div>
+
+<label for="mfaCode">6-digit verification code
+<input id="mfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000">
 </label>
 
-<button id="verifyButton" type="submit">Verify and continue</button>
-<div id="status" class="status" aria-live="polite"></div>
-</form>
+<button id="verifyButton" type="button">Verify &amp; Secure Admin</button>
+<div id="mfaStatus" class="status" aria-live="polite" aria-atomic="true"></div>
+</div>
+
+<div id="successPanel" hidden>
+<h2>MFA verified</h2>
+<p class="muted">Your administrator authenticator has been enrolled and verified successfully.</p>
+<button id="continueButton" type="button">Open Admin Control Center</button>
+</div>
+
+<div class="security-note">
+<strong>Protected administration</strong>
+<span>Password authentication and MFA assurance are verified through the ALBUKHR Mainnet security layer.</span>
+</div>
 </section>
 </main>
-
-<script>
-(async function () {
-  "use strict";
-
-  const form = document.getElementById("mfaForm");
-  const code = document.getElementById("code");
-  const button = document.getElementById("verifyButton");
-  const status = document.getElementById("status");
-  const factorId =
-    sessionStorage.getItem("albukhr_admin_mfa_factor");
-
-  function show(message, error) {
-    status.textContent = message;
-    status.classList.toggle("error", Boolean(error));
-  }
-
-  try {
-    await window.AlbukhrSupabaseAdminAuth.init();
-
-    if (!factorId) {
-      window.location.replace("admin-login.html");
-      return;
-    }
-  } catch (error) {
-    show("Authentication system unavailable.", true);
-  }
-
-  form.addEventListener("submit", async function (event) {
-    event.preventDefault();
-    button.disabled = true;
-    show("Verifying...");
-
-    try {
-      await window.AlbukhrSupabaseAdminAuth.verifyMfa(
-        factorId,
-        code.value
-      );
-
-      sessionStorage.removeItem("albukhr_admin_mfa_factor");
-      show("Verified. Opening administration...");
-      window.location.replace("admin-dashboard.html");
-    } catch (error) {
-      console.error(error);
-      show("Invalid or expired verification code.", true);
-      button.disabled = false;
-    }
-  });
-})();
-</script>
 </body>
 </html>
