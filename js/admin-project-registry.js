@@ -31,7 +31,9 @@ async function load(){
  try{
   const c=window.ALBUKHR_SUPABASE?.client;
   if(!c)throw Error("ALBUKHR Supabase Core is unavailable.");
-  const {data,error}=await c.rpc("get_project_registry");
+  const {data,error}=await c
+  .schema("albukhr_security")
+  .rpc("get_project_registry");
   if(error)throw error;
   const payload=Array.isArray(data)?(data[0]||{}):data||{};
   const rows=Array.isArray(payload.records)?payload.records:[];
