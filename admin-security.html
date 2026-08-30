@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087a3e">
+<meta name="robots" content="noindex,nofollow">
+<title>ALBUKHR — Security & Access</title>
+<link rel="stylesheet" href="css/admin-security.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/core/environment-core.js" defer></script>
+<script src="js/core/supabase-core.js" defer></script>
+<script src="js/core/supabase-admin-auth.js" defer></script>
+<script src="js/admin-security.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="admin-dashboard.html">
+    <img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR">
+    <span><b>ALBUKHR</b><small>ADMINISTRATION</small></span>
+  </a>
+  <div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div>
+</header>
+
+<main>
+  <nav class="back"><a href="admin-dashboard.html">← Admin Control Center</a></nav>
+
+  <section class="hero">
+    <div>
+      <small>MAINNET SECURITY GATE</small>
+      <h1>Security &amp; Access</h1>
+      <p>Server-authoritative administrator security context.</p>
+    </div>
+    <strong id="securityState">Verifying security...</strong>
+  </section>
+
+  <div id="pageStatus" class="status"></div>
+
+  <section class="grid">
+    <article class="card">
+      <header><span>Authentication</span><em id="authState">CHECKING</em></header>
+      <div class="metric"><b id="adminEmail">—</b><span id="adminId">—</span></div>
+      <dl>
+        <div><dt>Account status</dt><dd id="adminStatus">—</dd></div>
+        <div><dt>MFA requirement</dt><dd id="mfaRequired">—</dd></div>
+        <div><dt>Assurance level</dt><dd id="mfaStatus">—</dd></div>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><span>Roles</span><em id="roleCount">0</em></header>
+      <div id="roles" class="roles"></div>
+      <p class="muted">Roles are read from the ALBUKHR Mainnet security layer. This page does not grant roles.</p>
+    </article>
+
+    <article class="card">
+      <header><span>Project authorization</span><em>SERVER</em></header>
+      <dl>
+        <div><dt>Core projects</dt><dd id="coreCount">0</dd></div>
+        <div><dt>Scoped bindings</dt><dd id="scopedCount">0</dd></div>
+        <div><dt>Testnet access</dt><dd id="testnetAccess">No</dd></div>
+      </dl>
+    </article>
+
+    <article class="card">
+      <header><span>Security boundary</span><em>ENFORCED</em></header>
+      <ul class="checks">
+        <li>MAINNET-only administration</li>
+        <li>Supabase authenticated session</li>
+        <li>Server-authoritative admin context</li>
+        <li>AAL2 required for MFA-protected admins</li>
+        <li>No client-side role elevation</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="workspace">
+    <h2>Security operations</h2>
+    <p>Read-only security controls are shown here first. Privileged mutations must be implemented as dedicated server-authoritative RPCs before controls are exposed.</p>
+    <div class="notice">
+      <b>Current verified boundary</b>
+      <span id="boundaryText">Waiting for authorization context.</span>
+    </div>
+  </section>
+</main>
+</body>
+</html>
