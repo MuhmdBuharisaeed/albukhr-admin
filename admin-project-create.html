@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#087a3e"><meta name="robots" content="noindex,nofollow">
+<title>ALBUKHR — Create Project</title>
+<link rel="stylesheet" href="css/admin-project-create.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/core/environment-core.js" defer></script>
+<script src="js/core/supabase-core.js" defer></script>
+<script src="js/core/supabase-admin-auth.js" defer></script>
+<script src="js/core/project-logo-validator.js" defer></script>
+<script src="js/admin-project-create.js" defer></script>
+</head><body>
+<header class="topbar"><a class="brand" href="admin-project-registry.html"><b>ALBUKHR</b><small>ADMINISTRATION</small></a>
+<div><span>MAINNET</span> <button id="logoutButton" type="button">Sign out</button></div></header>
+<main><a class="back" href="admin-project-registry.html">← Project Registry</a>
+<section class="hero"><div><small>MAINNET PROJECT REGISTRY</small><h1>Create Project</h1><p>Create a new authoritative ALBUKHR Mainnet project record.</p></div><strong id="securityState">Verifying security...</strong></section>
+<div id="pageStatus" class="status" aria-live="polite"></div>
+<form id="projectForm" novalidate>
+<section class="panel"><div class="panel-title"><h2>Project Identity</h2><span>Required</span></div>
+<div class="grid">
+<label>Project Code<input id="projectCode" maxlength="64" autocomplete="off" placeholder="e.g. LABBAIKA"></label>
+<label>Project Name<input id="projectName" maxlength="160" autocomplete="off" placeholder="e.g. Labbaika Bakery Center"></label>
+<label>Slug<input id="projectSlug" maxlength="160" autocomplete="off" placeholder="e.g. labbaika-bakery-center"></label>
+<label>Project Type<select id="projectType"><option value="">Select project type</option><option value="core">Core</option><option value="internal">Internal</option><option value="external">External</option></select></label>
+<label id="coreSlotWrap" class="hidden">Core Slot<select id="coreSlot"><option value="">Select slot</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label>
+</div><label>Description<textarea id="description" rows="6" maxlength="5000"></textarea></label></section>
+<section class="panel"><div class="panel-title"><h2>Project Logo</h2><span>1 image only</span></div>
+<div class="rules"><span>PNG / JPG / JPEG</span><span>Minimum 400 × 400 px</span><span>Maximum 1 MB</span></div>
+<label class="upload"><input id="logoFile" type="file" accept="image/png,image/jpeg"><b>Select project logo</b><small>Exactly one image. Fixed object path: projects/&lt;project-id&gt;/logo</small></label>
+<div id="logoPreview" class="preview hidden"><img id="previewImage" alt="Project logo preview"><div><b id="logoName"></b><span id="logoMeta"></span><button id="removeLogo" type="button">Remove</button></div></div>
+<div id="logoStatus" class="inline-status"></div></section>
+<section class="panel security"><div class="panel-title"><h2>Security</h2><span>AAL2 required</span></div><p>Uses the existing Supabase Admin session. No second email/password is requested. Creation is server-authorized and audited.</p></section>
+<button id="createButton" class="primary" type="submit">Create Mainnet Project</button>
+</form></main></body></html>
