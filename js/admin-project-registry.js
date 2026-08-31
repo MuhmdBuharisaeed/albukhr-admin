@@ -18,9 +18,25 @@ function render(rows){
   const statusValue=pick(row,["status","state"],"—");
   const category=pick(row,["category","type","project_type"],"—");
   const card=document.createElement("article");card.className="project";
-  card.innerHTML='<div class="project-head"><div><span class="index">#'+esc(id)+'</span><h3>'+esc(name)+'</h3></div><em>'+esc(label(statusValue))+'</em></div>'+
-    '<dl><div><dt>Category</dt><dd>'+esc(category)+'</dd></div>'+
-    '<div><dt>Project ID</dt><dd>'+esc(id)+'</dd></div></dl>';
+  card.innerHTML =
+  '<div class="project-head">' +
+    '<div>' +
+      '<span class="index">#' + esc(id) + '</span>' +
+      '<h3>' + esc(name) + '</h3>' +
+    '</div>' +
+    '<em>' + esc(label(statusValue)) + '</em>' +
+  '</div>' +
+
+  '<dl>' +
+    '<div><dt>Category</dt><dd>' + esc(category) + '</dd></div>' +
+    '<div><dt>Project ID</dt><dd>' + esc(id) + '</dd></div>' +
+  '</dl>' +
+
+  '<div class="project-actions">' +
+    '<a class="edit-project" href="admin-project-edit.html?id=' +
+      encodeURIComponent(id) +
+    '">Edit Project</a>' +
+  '</div>';
   const extra=document.createElement("details");
   extra.innerHTML="<summary>View registry record</summary><pre>"+esc(JSON.stringify(row,null,2))+"</pre>";
   card.appendChild(extra);box.appendChild(card);
