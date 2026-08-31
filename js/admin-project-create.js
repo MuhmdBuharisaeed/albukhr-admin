@@ -1131,81 +1131,17 @@
                     .schema(
                         "albukhr_security"
                     )
-                    .rpc(
-
-                        "create_project",
-
-                        {
-
-                            p_project_code:
-
-                                project.code,
-
-
-                            p_slug:
-
-                                project.slug,
-
-
-                            p_name:
-
-                                project.name,
-
-
-                            p_project_type:
-
-                                project.type,
-
-
-                            p_description:
-
-                                project.description,
-
-
-                            p_core_slot:
-
-                                project.slot,
-
-
-                            // =================================
-                            // Logo is attached separately.
-                            //
-                            // Browser never creates its own
-                            // project logo database identity.
-                            // =================================
-
-                            p_logo_url:
-
-                                null,
-
-
-                            p_logo_path:
-
-                                null,
-
-
-                            p_logo_width:
-
-                                null,
-
-
-                            p_logo_height:
-
-                                null,
-
-
-                            p_logo_format:
-
-                                null,
-
-
-                            p_logo_size_bytes:
-
-                                null
-
-                        }
-
-                    );
+           .rpc(
+    "create_project",
+    {
+        p_project_code: project.code,
+        p_slug: project.slug,
+        p_name: project.name,
+        p_project_type: project.type,
+        p_description: project.description,
+        p_core_slot: project.slot
+    }
+);
 
 
             if (error) {
