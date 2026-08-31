@@ -417,22 +417,15 @@
         // STORE AUTHORIZED PROJECT
         // =================================================
 
-        loaded =
-            project;
+        loaded = project;
 
+populate(project);
 
-        populate(project);
+setBusy(false);
 
-
-        $("saveButton").disabled =
-            false;
-
-
-        msg(
-
-            "Authorized Mainnet project loaded. Review the changes before saving."
-
-        );
+msg(
+    "Authorized Mainnet project loaded. Review the changes before saving."
+);
 
     }
 
