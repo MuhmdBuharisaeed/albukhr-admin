@@ -1,798 +1,1183 @@
-(function(window,document){
-"use strict";
+(function (window, document) {
+    "use strict";
 
-const A=()=>window.AlbukhrSupabaseAdminAuth;
-const $=id=>document.getElementById(id);
+    const A = () => window.AlbukhrSupabaseAdminAuth;
+    const $ = (id) => document.getElementById(id);
 
-let projectId=null;
-let loaded=null;
-let busy=false;
-
-
-function msg(text,error){
-  $("pageStatus").textContent=text||"";
-  $("pageStatus").className="status"+(error?" error":"");
-}
+    let projectId = null;
+    let loaded = null;
+    let busy = false;
 
 
-function setBusy(value){
-  busy=!!value;
+    // =====================================================
+    // UI STATUS
+    // =====================================================
 
-  $("saveButton").disabled=busy||!loaded;
+    function msg(text, isError) {
 
-  $("saveButton").textContent=
-    busy
-      ?"Saving..."
-      :"Save Project Changes";
-}
+        const el = $("pageStatus");
 
+        el.textContent = text || "";
 
-function slugify(value){
+        el.className =
+            "status" +
+            (isError ? " error" : "");
 
-  return String(value||"")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g,"-")
-    .replace(/^-+|-+$/g,"")
-    .slice(0,160);
-
-}
+    }
 
 
-function getProjectId(){
+    // =====================================================
+    // BUSY STATE
+    // =====================================================
 
-  const id=
-    new URLSearchParams(
-      window.location.search
-    ).get("id");
+    function setBusy(value) {
 
-  if(!id){
-    return null;
-  }
+        busy = !!value;
 
-  const uuidPattern=
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        const button =
+            $("saveButton");
 
-  return uuidPattern.test(id)
-    ?id
-    :null;
+        button.disabled =
+            busy || !loaded;
 
-}
+        button.textContent =
+            busy
+                ? "Saving..."
+                : "Save Project Changes";
 
-
-function setCore(){
-
-  const isCore=
-    $("projectType").value==="core";
-
-  $("coreSlotWrap").classList.toggle(
-    "hidden",
-    !isCore
-  );
-
-  if(!isCore){
-    $("coreSlot").value="";
-  }
-
-}
+    }
 
 
-function populate(project){
+    // =====================================================
+    // SLUG GENERATOR
+    // =====================================================
 
-  $("projectId").textContent=
-    project.id||"—";
+    function slugify(value) {
 
-  $("network").textContent=
-    String(
-      project.network||"—"
-    ).toUpperCase();
+        return String(value || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 160);
 
-  $("projectStatus").textContent=
-    String(
-      project.status||"—"
-    );
-
-  $("projectCode").value=
-    project.project_code||"";
-
-  $("projectName").value=
-    project.name||"";
-
-  $("projectSlug").value=
-    project.slug||"";
-
-  $("projectType").value=
-    project.project_type||"";
-
-  $("coreSlot").value=
-    project.core_slot==null
-      ?""
-      :String(project.core_slot);
-
-  $("description").value=
-    project.description||"";
-
-  setCore();
-
-}
+    }
 
 
-/* =========================================================
-   SECURE PROJECT LOAD
+    // =====================================================
+    // PROJECT UUID
+    // =====================================================
 
-   Browser does NOT query public.projects.
+    function getProjectId() {
 
-   Browser does NOT load the entire registry.
-
-   Server performs:
-
-   auth.uid()
-        ↓
-   AAL2
-        ↓
-   Active admin
-        ↓
-   Mainnet project
-        ↓
-   can_manage_project()
-        ↓
-   Single authorized project
-========================================================= */
-
-async function loadProject(){
-
-  const client=
-    window.ALBUKHR_SUPABASE?.client;
-
-  if(!client){
-    throw Error(
-      "ALBUKHR Supabase Core is unavailable."
-    );
-  }
+        const id =
+            new URLSearchParams(
+                location.search
+            ).get("id");
 
 
-  msg(
-    "Loading authorized project record..."
-  );
+        if (!id) {
 
+            return null;
 
-  const result=
-    await client
-      .schema("albukhr_security")
-      .rpc(
-        "get_project_for_edit",
-        {
-          p_project_id:projectId
         }
-      );
 
 
-  if(result.error){
-    throw result.error;
-  }
+        const uuidPattern =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 
-  const payload=
-    Array.isArray(result.data)
-      ?(result.data[0]||{})
-      :(result.data||{});
+        return uuidPattern.test(id)
+            ? id
+            : null;
+
+    }
 
 
-  if(payload.success!==true){
+    // =====================================================
+    // CORE PROJECT UI
+    // =====================================================
 
-    throw Error(
-      payload.message||
-      "Project edit authorization denied."
-    );
+    function setCore() {
 
-  }
-
-
-  if(payload.authorized!==true){
-
-    throw Error(
-      payload.message||
-      "Project edit authorization denied."
-    );
-
-  }
+        const isCore =
+            $("projectType").value ===
+            "core";
 
 
-  const project=
-    payload.project;
+        $("coreSlotWrap")
+            .classList.toggle(
+                "hidden",
+                !isCore
+            );
 
 
-  if(
-    !project||
-    typeof project!=="object"
-  ){
+        if (!isCore) {
 
-    throw Error(
-      "The requested project record was not returned."
-    );
+            $("coreSlot").value =
+                "";
 
-  }
+        }
+
+    }
 
 
-  if(
-    String(project.id)!==
-    String(projectId)
-  ){
+    // =====================================================
+    // POPULATE PROJECT
+    // =====================================================
 
-    throw Error(
-      "Project identity verification failed."
-    );
+    function populate(project) {
 
-  }
+        $("projectId").textContent =
+            project.id || "—";
 
 
-  if(
-    String(
-      project.network||""
-    ).toLowerCase()!=="mainnet"
-  ){
-
-    throw Error(
-      "Only Mainnet projects can be edited here."
-    );
-
-  }
+        $("network").textContent =
+            String(
+                project.network || "—"
+            ).toUpperCase();
 
 
-  loaded=project;
-
-  populate(project);
-
-
-  $("saveButton").disabled=false;
+        $("projectStatus").textContent =
+            String(
+                project.status || "—"
+            );
 
 
-  msg(
-    payload.message||
-    "Project loaded. Review the changes before saving."
-  );
-
-}
+        $("projectCode").value =
+            project.project_code || "";
 
 
-/* =========================================================
-   FORM VALIDATION
-========================================================= */
-
-function readForm(){
-
-  const code=
-    $("projectCode")
-      .value
-      .trim();
+        $("projectName").value =
+            project.name || "";
 
 
-  const name=
-    $("projectName")
-      .value
-      .trim();
+        $("projectSlug").value =
+            project.slug || "";
 
 
-  const slug=
-    $("projectSlug")
-      .value
-      .trim();
+        $("projectType").value =
+            project.project_type || "";
 
 
-  const type=
+        $("coreSlot").value =
+            project.core_slot == null
+                ? ""
+                : String(
+                    project.core_slot
+                );
+
+
+        $("description").value =
+            project.description || "";
+
+
+        setCore();
+
+    }
+
+
+    // =====================================================
+    // LOAD SPECIFIC PROJECT
+    //
+    // SECURITY:
+    //
+    // Browser sends only the requested UUID.
+    //
+    // Server:
+    //   - validates auth.uid()
+    //   - requires AAL2
+    //   - validates active admin
+    //   - validates project scope
+    //   - forces Mainnet
+    //
+    // No registry-wide project download.
+    // =====================================================
+
+    async function loadProject() {
+
+        const client =
+            window.ALBUKHR_SUPABASE?.client;
+
+
+        if (!client) {
+
+            throw Error(
+                "ALBUKHR Supabase Core is unavailable."
+            );
+
+        }
+
+
+        msg(
+            "Loading authorized Mainnet project..."
+        );
+
+
+        const {
+            data,
+            error
+        } =
+            await client
+                .schema("albukhr_security")
+                .rpc(
+                    "get_project_for_edit",
+                    {
+                        p_project_id:
+                            projectId
+                    }
+                );
+
+
+        if (error) {
+
+            throw error;
+
+        }
+
+
+        const response =
+            data || {};
+
+
+        // =================================================
+        // SERVER SUCCESS
+        // =================================================
+
+        if (
+            response.success !== true
+        ) {
+
+            throw Error(
+
+                response.message ||
+
+                "Project loading authorization denied."
+
+            );
+
+        }
+
+
+        // =================================================
+        // SERVER AUTHORIZATION
+        // =================================================
+
+        if (
+            response.authorized !== true
+        ) {
+
+            throw Error(
+
+                response.message ||
+
+                "Project edit authorization denied."
+
+            );
+
+        }
+
+
+        // =================================================
+        // RESPONSE NETWORK
+        // =================================================
+
+        if (
+
+            String(
+                response.network || ""
+            )
+                .trim()
+                .toLowerCase()
+
+            !==
+
+            "mainnet"
+
+        ) {
+
+            throw Error(
+
+                "Project edit is available only on ALBUKHR MAINNET."
+
+            );
+
+        }
+
+
+        // =================================================
+        // PROJECT OBJECT
+        // =================================================
+
+        const project =
+            response.project;
+
+
+        if (
+            !project ||
+            !project.id
+        ) {
+
+            throw Error(
+
+                "The authorized project response is invalid."
+
+            );
+
+        }
+
+
+        // =================================================
+        // PROJECT IDENTITY VERIFICATION
+        //
+        // The returned project MUST be exactly
+        // the project requested.
+        // =================================================
+
+        if (
+
+            String(project.id)
+
+            !==
+
+            String(projectId)
+
+        ) {
+
+            throw Error(
+
+                "Project identity verification failed."
+
+            );
+
+        }
+
+
+        // =================================================
+        // PROJECT NETWORK VERIFICATION
+        //
+        // Defense in depth.
+        // =================================================
+
+        if (
+
+            String(
+                project.network || ""
+            )
+                .trim()
+                .toLowerCase()
+
+            !==
+
+            "mainnet"
+
+        ) {
+
+            throw Error(
+
+                "Project network verification failed."
+
+            );
+
+        }
+
+
+        // =================================================
+        // PROJECT TYPE VERIFICATION
+        // =================================================
+
+        const projectType =
+            String(
+                project.project_type || ""
+            )
+                .trim()
+                .toLowerCase();
+
+
+        if (
+
+            ![
+                "core",
+                "internal",
+                "external"
+            ].includes(projectType)
+
+        ) {
+
+            throw Error(
+
+                "Project type verification failed."
+
+            );
+
+        }
+
+
+        // =================================================
+        // STORE AUTHORIZED PROJECT
+        // =================================================
+
+        loaded =
+            project;
+
+
+        populate(project);
+
+
+        $("saveButton").disabled =
+            false;
+
+
+        msg(
+
+            "Authorized Mainnet project loaded. Review the changes before saving."
+
+        );
+
+    }
+
+
+    // =====================================================
+    // READ AND VALIDATE FORM
+    // =====================================================
+
+    function readForm() {
+
+        const code =
+            $("projectCode")
+                .value
+                .trim();
+
+
+        const name =
+            $("projectName")
+                .value
+                .trim();
+
+
+        const slug =
+            $("projectSlug")
+                .value
+                .trim();
+
+
+        const type =
+            $("projectType")
+                .value;
+
+
+        const description =
+            $("description")
+                .value
+                .trim();
+
+
+        const slot =
+            $("coreSlot")
+                .value;
+
+
+        // =================================================
+        // PROJECT CODE
+        // =================================================
+
+        if (!code) {
+
+            throw Error(
+                "Project code is required."
+            );
+
+        }
+
+
+        if (
+
+            !/^[A-Z0-9][A-Z0-9_-]*$/i
+                .test(code)
+
+        ) {
+
+            throw Error(
+
+                "Project code contains invalid characters."
+
+            );
+
+        }
+
+
+        // =================================================
+        // PROJECT NAME
+        // =================================================
+
+        if (!name) {
+
+            throw Error(
+                "Project name is required."
+            );
+
+        }
+
+
+        // =================================================
+        // SLUG
+        // =================================================
+
+        if (
+
+            !/^[a-z0-9][a-z0-9-]*$/
+                .test(slug)
+
+        ) {
+
+            throw Error(
+
+                "Slug must contain only lowercase letters, numbers and hyphens."
+
+            );
+
+        }
+
+
+        // =================================================
+        // PROJECT TYPE
+        // =================================================
+
+        if (!type) {
+
+            throw Error(
+                "Select a project type."
+            );
+
+        }
+
+
+        if (
+
+            ![
+                "core",
+                "internal",
+                "external"
+            ].includes(type)
+
+        ) {
+
+            throw Error(
+                "Invalid project type."
+            );
+
+        }
+
+
+        // =================================================
+        // CORE SLOT
+        // =================================================
+
+        if (
+            type === "core"
+        ) {
+
+            if (!slot) {
+
+                throw Error(
+
+                    "Core projects require a core slot from 1 to 7."
+
+                );
+
+            }
+
+
+            const number =
+                Number(slot);
+
+
+            if (
+
+                !Number.isInteger(number) ||
+
+                number < 1 ||
+
+                number > 7
+
+            ) {
+
+                throw Error(
+
+                    "Core slot must be between 1 and 7."
+
+                );
+
+            }
+
+        }
+
+        else if (slot) {
+
+            throw Error(
+
+                "Only core projects may have a core slot."
+
+            );
+
+        }
+
+
+        // =================================================
+        // SECURE RPC PAYLOAD
+        //
+        // Network is NOT supplied.
+        // Logo fields are NOT supplied.
+        // =================================================
+
+        return {
+
+            p_project_id:
+                projectId,
+
+            p_project_code:
+                code.toUpperCase(),
+
+            p_slug:
+                slug.toLowerCase(),
+
+            p_name:
+                name,
+
+            p_project_type:
+                type,
+
+            p_description:
+                description || null,
+
+            p_core_slot:
+                slot
+                    ? Number(slot)
+                    : null
+
+        };
+
+    }
+
+
+    // =====================================================
+    // SAVE PROJECT
+    // =====================================================
+
+    async function save() {
+
+        if (
+            busy ||
+            !loaded
+        ) {
+
+            return;
+
+        }
+
+
+        setBusy(true);
+
+
+        msg(
+            "Saving authorized project changes..."
+        );
+
+
+        try {
+
+            const client =
+                window.ALBUKHR_SUPABASE?.client;
+
+
+            if (!client) {
+
+                throw Error(
+
+                    "ALBUKHR Supabase Core is unavailable."
+
+                );
+
+            }
+
+
+            const payload =
+                readForm();
+
+
+            // =============================================
+            // DEFENSE IN DEPTH
+            //
+            // Ensure project identity has not changed.
+            // =============================================
+
+            if (
+
+                String(
+                    payload.p_project_id
+                )
+
+                !==
+
+                String(
+                    loaded.id
+                )
+
+            ) {
+
+                throw Error(
+
+                    "Project identity changed unexpectedly."
+
+                );
+
+            }
+
+
+            // =============================================
+            // SERVER-AUTHORIZED UPDATE
+            // =============================================
+
+            const {
+                data,
+                error
+            } =
+                await client
+                    .schema("albukhr_security")
+                    .rpc(
+                        "update_project",
+                        payload
+                    );
+
+
+            if (error) {
+
+                throw error;
+
+            }
+
+
+            const response =
+                data || {};
+
+
+            if (
+                response.success !== true
+            ) {
+
+                throw Error(
+
+                    response.message ||
+
+                    "Project update was denied."
+
+                );
+
+            }
+
+
+            if (
+
+                response.authorized !== true
+
+            ) {
+
+                throw Error(
+
+                    response.message ||
+
+                    "Project update authorization denied."
+
+                );
+
+            }
+
+
+            // =============================================
+            // RESPONSE ID VERIFICATION
+            // =============================================
+
+            if (
+
+                String(
+                    response.project_id
+                )
+
+                !==
+
+                String(
+                    projectId
+                )
+
+            ) {
+
+                throw Error(
+
+                    "Project update identity verification failed."
+
+                );
+
+            }
+
+
+            // =============================================
+            // RESPONSE NETWORK VERIFICATION
+            // =============================================
+
+            if (
+
+                String(
+                    response.network || ""
+                )
+                    .trim()
+                    .toLowerCase()
+
+                !==
+
+                "mainnet"
+
+            ) {
+
+                throw Error(
+
+                    "Project update network verification failed."
+
+                );
+
+            }
+
+
+            msg(
+                "Project updated successfully."
+            );
+
+
+            // =============================================
+            // RETURN TO REGISTRY
+            // =============================================
+
+            setTimeout(
+                () => {
+
+                    location.replace(
+                        "admin-project-registry.html"
+                    );
+
+                },
+                700
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "[ALBUKHR PROJECT EDIT]",
+                error
+            );
+
+
+            msg(
+
+                String(
+                    error?.message ||
+                    error
+                ),
+
+                true
+
+            );
+
+
+            setBusy(false);
+
+        }
+
+    }
+
+
+    // =====================================================
+    // PROJECT TYPE CHANGE
+    // =====================================================
+
     $("projectType")
-      .value;
-
-
-  const description=
-    $("description")
-      .value
-      .trim();
-
-
-  const slot=
-    $("coreSlot")
-      .value;
-
-
-  /* -------------------------------------------------------
-     PROJECT CODE
-  ------------------------------------------------------- */
-
-  if(!code){
-
-    throw Error(
-      "Project code is required."
-    );
-
-  }
-
-
-  if(
-    !/^[A-Z0-9][A-Z0-9_-]*$/i.test(code)
-  ){
-
-    throw Error(
-      "Project code contains invalid characters."
-    );
-
-  }
-
-
-  /* -------------------------------------------------------
-     PROJECT NAME
-  ------------------------------------------------------- */
-
-  if(!name){
-
-    throw Error(
-      "Project name is required."
-    );
-
-  }
-
-
-  /* -------------------------------------------------------
-     SLUG
-  ------------------------------------------------------- */
-
-  if(
-    !/^[a-z0-9][a-z0-9-]*$/.test(
-      slug.toLowerCase()
-    )
-  ){
-
-    throw Error(
-      "Slug must contain only lowercase letters, numbers and hyphens."
-    );
-
-  }
-
-
-  /* -------------------------------------------------------
-     PROJECT TYPE
-  ------------------------------------------------------- */
-
-  if(
-    !["core","internal","external"]
-      .includes(type)
-  ){
-
-    throw Error(
-      "Select a valid project type."
-    );
-
-  }
-
-
-  /* -------------------------------------------------------
-     CORE SLOT
-  ------------------------------------------------------- */
-
-  let coreSlot=null;
-
-
-  if(type==="core"){
-
-    if(!slot){
-
-      throw Error(
-        "Core projects require a core slot from 1 to 7."
-      );
-
-    }
-
-
-    const numberSlot=
-      Number(slot);
-
-
-    if(
-      !Number.isInteger(numberSlot)||
-      numberSlot<1||
-      numberSlot>7
-    ){
-
-      throw Error(
-        "Core slot must be between 1 and 7."
-      );
-
-    }
-
-
-    coreSlot=numberSlot;
-
-  }
-
-
-  if(
-    type!=="core"&&
-    slot
-  ){
-
-    throw Error(
-      "Only core projects may have a core slot."
-    );
-
-  }
-
-
-  /* -------------------------------------------------------
-     RETURN RPC PAYLOAD
-  ------------------------------------------------------- */
-
-  return {
-
-    p_project_id:
-      projectId,
-
-    p_project_code:
-      code.toUpperCase(),
-
-    p_slug:
-      slug.toLowerCase(),
-
-    p_name:
-      name,
-
-    p_project_type:
-      type,
-
-    p_description:
-      description||null,
-
-    p_core_slot:
-      coreSlot
-
-  };
-
-}
-
-
-/* =========================================================
-   SECURE PROJECT UPDATE
-========================================================= */
-
-async function save(){
-
-  if(
-    busy||
-    !loaded
-  ){
-    return;
-  }
-
-
-  setBusy(true);
-
-
-  msg(
-    "Validating and saving project changes..."
-  );
-
-
-  try{
-
-    const client=
-      window.ALBUKHR_SUPABASE?.client;
-
-
-    if(!client){
-
-      throw Error(
-        "ALBUKHR Supabase Core is unavailable."
-      );
-
-    }
-
-
-    const payload=
-      readForm();
-
-
-    const result=
-      await client
-        .schema("albukhr_security")
-        .rpc(
-          "update_project",
-          payload
+        .addEventListener(
+            "change",
+            setCore
         );
 
 
-    if(result.error){
-      throw result.error;
-    }
+    // =====================================================
+    // AUTO SLUG
+    // =====================================================
 
+    $("projectName")
+        .addEventListener(
+            "input",
+            () => {
 
-    const response=
-      Array.isArray(result.data)
-        ?(result.data[0]||{})
-        :(result.data||{});
+                if (
 
+                    !$("projectSlug")
+                        .dataset
+                        .edited
 
-    if(response.success!==true){
+                ) {
 
-      throw Error(
-        response.message||
-        "Project update was denied."
-      );
+                    $("projectSlug").value =
+                        slugify(
 
-    }
+                            $("projectName")
+                                .value
 
+                        );
 
-    msg(
-      response.message||
-      "Project updated successfully."
-    );
+                }
 
-
-    /*
-      Short delay so the administrator
-      can see the success confirmation.
-    */
-
-    setTimeout(
-      ()=>{
-
-        window.location.replace(
-          "admin-project-registry.html"
+            }
         );
 
-      },
-      700
-    );
+
+    $("projectSlug")
+        .addEventListener(
+            "input",
+            () => {
+
+                $("projectSlug")
+                    .dataset
+                    .edited =
+                    "1";
 
 
-  }catch(error){
+                $("projectSlug").value =
+                    slugify(
 
-    console.error(
-      "[ALBUKHR PROJECT EDIT]",
-      error
-    );
+                        $("projectSlug")
+                            .value
 
+                    );
 
-    msg(
-      String(
-        error?.message||
-        error
-      ),
-      true
-    );
-
-
-    setBusy(false);
-
-  }
-
-}
-
-
-/* =========================================================
-   FORM EVENTS
-========================================================= */
-
-$("projectType")
-  .addEventListener(
-    "change",
-    setCore
-  );
-
-
-$("projectName")
-  .addEventListener(
-    "input",
-    ()=>{
-
-      if(
-        !$("projectSlug")
-          .dataset
-          .edited
-      ){
-
-        $("projectSlug").value=
-          slugify(
-            $("projectName").value
-          );
-
-      }
-
-    }
-  );
-
-
-$("projectSlug")
-  .addEventListener(
-    "input",
-    ()=>{
-
-      $("projectSlug")
-        .dataset
-        .edited="1";
-
-
-      $("projectSlug").value=
-        slugify(
-          $("projectSlug").value
+            }
         );
 
-    }
-  );
 
+    // =====================================================
+    // FORM SUBMIT
+    // =====================================================
 
-$("projectForm")
-  .addEventListener(
-    "submit",
-    event=>{
+    $("projectForm")
+        .addEventListener(
+            "submit",
+            (event) => {
 
-      event.preventDefault();
+                event.preventDefault();
 
-      save();
+                save();
 
-    }
-  );
-
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-$("logoutButton")
-  .addEventListener(
-    "click",
-
-    async()=>{
-
-      try{
-
-        await A()?.signOut();
-
-      }finally{
-
-        window.location.replace(
-          "admin-login.html"
+            }
         );
 
-      }
 
-    }
-  );
+    // =====================================================
+    // LOGOUT
+    // =====================================================
 
+    $("logoutButton")
+        .addEventListener(
+            "click",
+            async () => {
 
-/* =========================================================
-   INITIALIZATION
-========================================================= */
+                try {
 
-(async()=>{
+                    await A()?.signOut();
 
-  try{
+                }
 
-    /* -----------------------------------------------------
-       MAINNET ONLY
-    ----------------------------------------------------- */
+                finally {
 
-    if(
-      !A()||
-      !window.ALBukhrEnvironment?.isMainnet()
-    ){
+                    location.replace(
+                        "admin-login.html"
+                    );
 
-      throw Error(
-        "Project editing is available only on ALBUKHR MAINNET."
-      );
+                }
 
-    }
+            }
+        );
 
 
-    /* -----------------------------------------------------
-       VALIDATE URL PROJECT ID
-    ----------------------------------------------------- */
+    // =====================================================
+    // INITIALIZATION
+    // =====================================================
 
-    projectId=
-      getProjectId();
+    (async () => {
 
+        try {
 
-    if(!projectId){
+            // =============================================
+            // AUTH ENGINE
+            // =============================================
 
-      throw Error(
-        "A valid project ID is required."
-      );
+            if (!A()) {
 
-    }
+                throw Error(
 
+                    "ALBUKHR Admin Authentication Engine is unavailable."
 
-    /* -----------------------------------------------------
-       INITIALIZE ADMIN AUTH
-    ----------------------------------------------------- */
+                );
 
-    await A().init();
-
-
-    const admin=
-      await A().requireAdmin({
-        redirect:false
-      });
+            }
 
 
-    if(!admin){
+            // =============================================
+            // MAINNET ONLY
+            // =============================================
 
-      window.location.replace(
-        "admin-login.html"
-      );
+            if (
 
-      return;
+                !window.ALBukhrEnvironment?.isMainnet()
 
-    }
+            ) {
 
+                throw Error(
 
-    /* -----------------------------------------------------
-       MFA / AAL2
-    ----------------------------------------------------- */
+                    "Project editing is available only on ALBUKHR MAINNET."
 
-    const mfa=
-      await A().ensureMfa();
+                );
 
-
-    if(
-      admin.mfa_required&&
-      !mfa.verified
-    ){
-
-      window.location.replace(
-
-        "admin-mfa.html?redirect="+
-
-        encodeURIComponent(
-          window.location.pathname+
-          window.location.search
-        )
-
-      );
-
-      return;
-
-    }
+            }
 
 
-    /* -----------------------------------------------------
-       SECURITY STATE
-    ----------------------------------------------------- */
+            // =============================================
+            // PROJECT UUID
+            // =============================================
 
-    $("securityState").textContent=
-      "Authenticated • AAL2";
-
-
-    /* -----------------------------------------------------
-       LOAD SINGLE AUTHORIZED PROJECT
-    ----------------------------------------------------- */
-
-    await loadProject();
+            projectId =
+                getProjectId();
 
 
-  }catch(error){
+            if (!projectId) {
 
-    console.error(
-      "[ALBUKHR PROJECT EDIT INIT]",
-      error
-    );
+                throw Error(
 
+                    "A valid project ID is required."
 
-    msg(
+                );
 
-      "Project edit could not be initialized: "+
-
-      String(
-        error?.message||
-        error
-      ),
-
-      true
-
-    );
+            }
 
 
-    $("saveButton").disabled=true;
+            // =============================================
+            // INITIALIZE ADMIN SESSION
+            // =============================================
 
-  }
+            await A().init();
 
-})();
 
-})(window,document);
+            const admin =
+                await A().requireAdmin({
+
+                    redirect:
+                        false
+
+                });
+
+
+            if (!admin) {
+
+                location.replace(
+                    "admin-login.html"
+                );
+
+                return;
+
+            }
+
+
+            // =============================================
+            // MFA
+            // =============================================
+
+            const mfa =
+                await A().ensureMfa();
+
+
+            if (
+
+                admin.mfa_required &&
+
+                !mfa.verified
+
+            ) {
+
+                location.replace(
+
+                    "admin-mfa.html?redirect=" +
+
+                    encodeURIComponent(
+
+                        location.pathname +
+
+                        location.search
+
+                    )
+
+                );
+
+                return;
+
+            }
+
+
+            // =============================================
+            // SECURITY STATUS
+            // =============================================
+
+            $("securityState")
+                .textContent =
+                "Authenticated • AAL2";
+
+
+            // =============================================
+            // DIRECT SECURE LOAD
+            // =============================================
+
+            await loadProject();
+
+        }
+
+        catch (error) {
+
+            console.error(
+
+                "[ALBUKHR PROJECT EDIT INIT]",
+
+                error
+
+            );
+
+
+            msg(
+
+                "Project edit could not be initialized: " +
+
+                String(
+
+                    error?.message ||
+                    error
+
+                ),
+
+                true
+
+            );
+
+
+            $("saveButton").disabled =
+                true;
+
+        }
+
+    })();
+
+
+})(window, document);
