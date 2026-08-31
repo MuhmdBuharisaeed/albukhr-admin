@@ -56,3 +56,28 @@ details{margin-top:8px;border-top:1px solid #edf3ef;padding-top:9px;font-size:11
 .hidden{
   display:none !important;
 }
+
+.project-actions{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid #edf3ef;
+}
+
+.edit-project{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  color:#087a3e;
+  background:#f1f8f4;
+  border:1px solid #d7e8df;
+  border-radius:10px;
+  padding:9px 12px;
+  font-size:11px;
+  font-weight:900;
+}
+
+.edit-project:hover{
+  background:#087a3e;
+  color:#fff;
+}
