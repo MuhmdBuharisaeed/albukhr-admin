@@ -237,7 +237,9 @@
 
 
         const response =
-            data || {};
+            Array.isArray(data)
+                ? (data[0] || {})
+                : (data || {});
 
 
         // =================================================
@@ -329,9 +331,6 @@
 
         // =================================================
         // PROJECT IDENTITY VERIFICATION
-        //
-        // The returned project MUST be exactly
-        // the project requested.
         // =================================================
 
         if (
@@ -355,8 +354,6 @@
 
         // =================================================
         // PROJECT NETWORK VERIFICATION
-        //
-        // Defense in depth.
         // =================================================
 
         if (
@@ -417,15 +414,19 @@
         // STORE AUTHORIZED PROJECT
         // =================================================
 
-        loaded = project;
+        loaded =
+            project;
 
-populate(project);
 
-setBusy(false);
+        populate(project);
 
-msg(
-    "Authorized Mainnet project loaded. Review the changes before saving."
-);
+
+        setBusy(false);
+
+
+        msg(
+            "Authorized Mainnet project loaded. Review the changes before saving."
+        );
 
     }
 
@@ -456,7 +457,9 @@ msg(
 
         const type =
             $("projectType")
-                .value;
+                .value
+                .trim()
+                .toLowerCase();
 
 
         const description =
@@ -669,11 +672,65 @@ msg(
         }
 
 
+        // =================================================
+        // LOADED PROJECT IDENTITY VERIFICATION
+        // =================================================
+
+        if (
+
+            !loaded.id ||
+
+            String(loaded.id)
+
+            !==
+
+            String(projectId)
+
+        ) {
+
+            msg(
+                "Loaded project identity verification failed.",
+                true
+            );
+
+            return;
+
+        }
+
+
+        // =================================================
+        // LOADED PROJECT NETWORK VERIFICATION
+        // =================================================
+
+        if (
+
+            String(
+                loaded.network || ""
+            )
+                .trim()
+                .toLowerCase()
+
+            !==
+
+            "mainnet"
+
+        ) {
+
+            msg(
+                "Only Mainnet projects can be updated here.",
+                true
+            );
+
+            return;
+
+        }
+
+
         setBusy(true);
 
 
         msg(
-            "Saving authorized project changes..."
+            "Validating project changes..."
         );
 
 
@@ -694,14 +751,41 @@ msg(
             }
 
 
+            // =============================================
+            // READ AND VALIDATE FORM
+            // =============================================
+
             const payload =
                 readForm();
 
 
             // =============================================
-            // DEFENSE IN DEPTH
-            //
-            // Ensure project identity has not changed.
+            // REQUEST ID VERIFICATION
+            // =============================================
+
+            if (
+
+                String(
+                    payload.p_project_id
+                )
+
+                !==
+
+                String(projectId)
+
+            ) {
+
+                throw Error(
+
+                    "Project update identity verification failed."
+
+                );
+
+            }
+
+
+            // =============================================
+            // LOADED ID / REQUEST ID VERIFICATION
             // =============================================
 
             if (
@@ -725,6 +809,11 @@ msg(
                 );
 
             }
+
+
+            msg(
+                "Saving authorized Mainnet project changes..."
+            );
 
 
             // =============================================
@@ -751,8 +840,14 @@ msg(
 
 
             const response =
-                data || {};
+                Array.isArray(data)
+                    ? (data[0] || {})
+                    : (data || {});
 
+
+            // =============================================
+            // SERVER SUCCESS
+            // =============================================
 
             if (
                 response.success !== true
@@ -768,6 +863,10 @@ msg(
 
             }
 
+
+            // =============================================
+            // SERVER AUTHORIZATION
+            // =============================================
 
             if (
 
@@ -792,21 +891,21 @@ msg(
 
             if (
 
+                !response.project_id ||
+
                 String(
                     response.project_id
                 )
 
                 !==
 
-                String(
-                    projectId
-                )
+                String(projectId)
 
             ) {
 
                 throw Error(
 
-                    "Project update identity verification failed."
+                    "Project update response identity verification failed."
 
                 );
 
@@ -840,8 +939,12 @@ msg(
             }
 
 
+            // =============================================
+            // SUCCESS
+            // =============================================
+
             msg(
-                "Project updated successfully."
+                "Authorized Mainnet project updated successfully."
             );
 
 
