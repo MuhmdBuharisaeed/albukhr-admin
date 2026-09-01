@@ -1,56 +1,75 @@
 (function (window, document) {
     "use strict";
 
-    const A = () => window.AlbukhrSupabaseAdminAuth;
-    const $ = (id) => document.getElementById(id);
+
+    const A = () =>
+        window.AlbukhrSupabaseAdminAuth;
+
+
+    const $ = (id) =>
+        document.getElementById(id);
+
 
     let projectId = null;
-    let loaded = null;
+    let loadedProject = null;
     let busy = false;
+    let dirty = false;
 
 
-    // =====================================================
-    // UI STATUS
-    // =====================================================
+    /* =====================================================
+       STATUS
+    ===================================================== */
 
-    function msg(text, isError) {
+    function msg(text, isError = false) {
 
-        const el = $("pageStatus");
+        const element =
+            $("pageStatus");
 
-        el.textContent = text || "";
 
-        el.className =
+        element.textContent =
+            text || "";
+
+
+        element.className =
             "status" +
             (isError ? " error" : "");
 
     }
 
 
-    // =====================================================
-    // BUSY STATE
-    // =====================================================
+    /* =====================================================
+       NORMALIZATION
+    ===================================================== */
 
-    function setBusy(value) {
+    function normalize(value) {
 
-        busy = !!value;
-
-        const button =
-            $("saveButton");
-
-        button.disabled =
-            busy || !loaded;
-
-        button.textContent =
-            busy
-                ? "Saving..."
-                : "Save Project Changes";
+        return String(
+            value ?? ""
+        )
+            .trim();
 
     }
 
 
-    // =====================================================
-    // SLUG GENERATOR
-    // =====================================================
+    function normalizeNetwork(value) {
+
+        return normalize(value)
+            .toLowerCase();
+
+    }
+
+
+    function normalizeType(value) {
+
+        return normalize(value)
+            .toLowerCase();
+
+    }
+
+
+    /* =====================================================
+       SLUG
+    ===================================================== */
 
     function slugify(value) {
 
@@ -64,15 +83,15 @@
     }
 
 
-    // =====================================================
-    // PROJECT UUID
-    // =====================================================
+    /* =====================================================
+       PROJECT UUID
+    ===================================================== */
 
     function getProjectId() {
 
         const id =
             new URLSearchParams(
-                location.search
+                window.location.search
             ).get("id");
 
 
@@ -94,37 +113,140 @@
     }
 
 
-    // =====================================================
-    // CORE PROJECT UI
-    // =====================================================
+    /* =====================================================
+       BUSY STATE
+    ===================================================== */
 
-    function setCore() {
+    function setBusy(value) {
 
-        const isCore =
-            $("projectType").value ===
-            "core";
-
-
-        $("coreSlotWrap")
-            .classList.toggle(
-                "hidden",
-                !isCore
-            );
+        busy =
+            !!value;
 
 
-        if (!isCore) {
+        const button =
+            $("saveButton");
 
-            $("coreSlot").value =
-                "";
 
-        }
+        button.disabled =
+            busy ||
+            !loadedProject;
+
+
+        button.textContent =
+            busy
+                ? "Saving..."
+                : "Save Project Changes";
 
     }
 
 
-    // =====================================================
-    // POPULATE PROJECT
-    // =====================================================
+    /* =====================================================
+       DIRTY STATE
+    ===================================================== */
+
+    function markDirty() {
+
+        dirty = true;
+
+    }
+
+
+    function resetDirty() {
+
+        dirty = false;
+
+    }
+
+
+    /* =====================================================
+       FORMAT SIZE
+    ===================================================== */
+
+    function formatBytes(bytes) {
+
+        const value =
+            Number(bytes);
+
+
+        if (
+            !Number.isFinite(value) ||
+            value < 0
+        ) {
+
+            return "—";
+
+        }
+
+
+        if (value < 1024) {
+
+            return value + " bytes";
+
+        }
+
+
+        const units = [
+            "KB",
+            "MB",
+            "GB"
+        ];
+
+
+        let size =
+            value / 1024;
+
+
+        let index = 0;
+
+
+        while (
+            size >= 1024 &&
+            index < units.length - 1
+        ) {
+
+            size =
+                size / 1024;
+
+            index++;
+
+        }
+
+
+        return (
+            size.toFixed(
+                size >= 10
+                    ? 1
+                    : 2
+            )
+            +
+            " "
+            +
+            units[index]
+        );
+
+    }
+
+
+    /* =====================================================
+       PROJECT TYPE LABEL
+    ===================================================== */
+
+    function label(value) {
+
+        return String(value ?? "")
+            .replace(/_/g, " ")
+            .replace(
+                /\b\w/g,
+                (character) =>
+                    character.toUpperCase()
+            );
+
+    }
+
+
+    /* =====================================================
+       POPULATE PROJECT
+    ===================================================== */
 
     function populate(project) {
 
@@ -133,15 +255,40 @@
 
 
         $("network").textContent =
-            String(
-                project.network || "—"
-            ).toUpperCase();
+            normalizeNetwork(
+                project.network
+            ).toUpperCase()
+            || "—";
 
 
         $("projectStatus").textContent =
-            String(
-                project.status || "—"
+            label(
+                project.status
+            )
+            || "—";
+
+
+        const projectType =
+            normalizeType(
+                project.project_type
             );
+
+
+        $("projectType").value =
+            label(projectType);
+
+
+        $("protectedProjectType").textContent =
+            label(projectType)
+            || "—";
+
+
+        $("coreSlot").textContent =
+            project.core_slot == null
+                ? "Not applicable"
+                : String(
+                    project.core_slot
+                );
 
 
         $("projectCode").value =
@@ -156,48 +303,259 @@
             project.slug || "";
 
 
-        $("projectType").value =
-            project.project_type || "";
-
-
-        $("coreSlot").value =
-            project.core_slot == null
-                ? ""
-                : String(
-                    project.core_slot
-                );
-
-
         $("description").value =
             project.description || "";
 
 
-        setCore();
+        populateLogo(project);
 
     }
 
 
-    // =====================================================
-    // LOAD SPECIFIC PROJECT
-    //
-    // SECURITY:
-    //
-    // Browser sends only the requested UUID.
-    //
-    // Server:
-    //   - validates auth.uid()
-    //   - requires AAL2
-    //   - validates active admin
-    //   - validates project scope
-    //   - forces Mainnet
-    //
-    // No registry-wide project download.
-    // =====================================================
+    /* =====================================================
+       LOGO INFORMATION
+    ===================================================== */
+
+    function populateLogo(project) {
+
+        const image =
+            $("projectLogoPreview");
+
+
+        const noLogo =
+            $("noProjectLogo");
+
+
+        const logoUrl =
+            normalize(
+                project.logo_url
+            );
+
+
+        const logoPath =
+            normalize(
+                project.logo_path
+            );
+
+
+        $("logoPath").textContent =
+            logoPath || "—";
+
+
+        $("logoFormat").textContent =
+            normalize(
+                project.logo_format
+            )
+            || "—";
+
+
+        const width =
+            project.logo_width;
+
+
+        const height =
+            project.logo_height;
+
+
+        $("logoDimensions").textContent =
+            (
+                width != null &&
+                height != null
+            )
+                ? (
+                    width +
+                    " × " +
+                    height
+                )
+                : "—";
+
+
+        $("logoSize").textContent =
+            formatBytes(
+                project.logo_size_bytes
+            );
+
+
+        image.hidden = true;
+        noLogo.hidden = false;
+        image.removeAttribute("src");
+
+
+        if (!logoUrl) {
+
+            return;
+
+        }
+
+
+        image.src =
+            logoUrl;
+
+
+        image.hidden = false;
+        noLogo.hidden = true;
+
+
+        image.onerror =
+            function () {
+
+                image.hidden = true;
+
+                image.removeAttribute(
+                    "src"
+                );
+
+                noLogo.hidden = false;
+
+            };
+
+    }
+
+
+    /* =====================================================
+       VERIFY PROJECT RESPONSE
+    ===================================================== */
+
+    function verifyProjectResponse(
+        response
+    ) {
+
+        if (
+            !response ||
+            typeof response !== "object"
+        ) {
+
+            throw Error(
+                "The project server response is invalid."
+            );
+
+        }
+
+
+        if (
+            response.success !== true
+        ) {
+
+            throw Error(
+                response.message ||
+                "Project loading failed."
+            );
+
+        }
+
+
+        if (
+            response.authorized !== true
+        ) {
+
+            throw Error(
+                response.message ||
+                "Project authorization denied."
+            );
+
+        }
+
+
+        if (
+            normalizeNetwork(
+                response.network
+            ) !== "mainnet"
+        ) {
+
+            throw Error(
+                "Project response failed Mainnet verification."
+            );
+
+        }
+
+
+        const project =
+            response.project;
+
+
+        if (
+            !project ||
+            typeof project !== "object"
+        ) {
+
+            throw Error(
+                "The authorized project response is missing."
+            );
+
+        }
+
+
+        if (
+            !project.id
+        ) {
+
+            throw Error(
+                "The authorized project identity is missing."
+            );
+
+        }
+
+
+        if (
+            String(project.id) !==
+            String(projectId)
+        ) {
+
+            throw Error(
+                "Project identity verification failed."
+            );
+
+        }
+
+
+        if (
+            normalizeNetwork(
+                project.network
+            ) !== "mainnet"
+        ) {
+
+            throw Error(
+                "Project network verification failed."
+            );
+
+        }
+
+
+        const type =
+            normalizeType(
+                project.project_type
+            );
+
+
+        if (
+            ![
+                "core",
+                "internal",
+                "external"
+            ].includes(type)
+        ) {
+
+            throw Error(
+                "Project scope verification failed."
+            );
+
+        }
+
+
+        return project;
+
+    }
+
+
+    /* =====================================================
+       LOAD PROJECT
+    ===================================================== */
 
     async function loadProject() {
 
         const client =
-            window.ALBUKHR_SUPABASE?.client;
+            window.ALBUKHR_SUPABASE
+                ?.client;
 
 
         if (!client) {
@@ -207,6 +565,9 @@
             );
 
         }
+
+
+        setBusy(true);
 
 
         msg(
@@ -219,7 +580,9 @@
             error
         } =
             await client
-                .schema("albukhr_security")
+                .schema(
+                    "albukhr_security"
+                )
                 .rpc(
                     "get_project_for_edit",
                     {
@@ -242,240 +605,61 @@
                 : (data || {});
 
 
-        // =================================================
-        // SERVER SUCCESS
-        // =================================================
-
-        if (
-            response.success !== true
-        ) {
-
-            throw Error(
-
-                response.message ||
-
-                "Project loading authorization denied."
-
-            );
-
-        }
-
-
-        // =================================================
-        // SERVER AUTHORIZATION
-        // =================================================
-
-        if (
-            response.authorized !== true
-        ) {
-
-            throw Error(
-
-                response.message ||
-
-                "Project edit authorization denied."
-
-            );
-
-        }
-
-
-        // =================================================
-        // RESPONSE NETWORK
-        // =================================================
-
-        if (
-
-            String(
-                response.network || ""
-            )
-                .trim()
-                .toLowerCase()
-
-            !==
-
-            "mainnet"
-
-        ) {
-
-            throw Error(
-
-                "Project edit is available only on ALBUKHR MAINNET."
-
-            );
-
-        }
-
-
-        // =================================================
-        // PROJECT OBJECT
-        // =================================================
-
         const project =
-            response.project;
-
-
-        if (
-            !project ||
-            !project.id
-        ) {
-
-            throw Error(
-
-                "The authorized project response is invalid."
-
+            verifyProjectResponse(
+                response
             );
 
-        }
 
-
-        // =================================================
-        // PROJECT IDENTITY VERIFICATION
-        // =================================================
-
-        if (
-
-            String(project.id)
-
-            !==
-
-            String(projectId)
-
-        ) {
-
-            throw Error(
-
-                "Project identity verification failed."
-
-            );
-
-        }
-
-
-        // =================================================
-        // PROJECT NETWORK VERIFICATION
-        // =================================================
-
-        if (
-
-            String(
-                project.network || ""
-            )
-                .trim()
-                .toLowerCase()
-
-            !==
-
-            "mainnet"
-
-        ) {
-
-            throw Error(
-
-                "Project network verification failed."
-
-            );
-
-        }
-
-
-        // =================================================
-        // PROJECT TYPE VERIFICATION
-        // =================================================
-
-        const projectType =
-            String(
-                project.project_type || ""
-            )
-                .trim()
-                .toLowerCase();
-
-
-        if (
-
-            ![
-                "core",
-                "internal",
-                "external"
-            ].includes(projectType)
-
-        ) {
-
-            throw Error(
-
-                "Project type verification failed."
-
-            );
-
-        }
-
-
-        // =================================================
-        // STORE AUTHORIZED PROJECT
-        // =================================================
-
-        loaded =
+        loadedProject =
             project;
 
 
         populate(project);
 
 
+        resetDirty();
+
+
         setBusy(false);
 
 
         msg(
-            "Authorized Mainnet project loaded. Review the changes before saving."
+            "Authorized Mainnet project loaded. Review editable fields before saving."
         );
 
     }
 
 
-    // =====================================================
-    // READ AND VALIDATE FORM
-    // =====================================================
+    /* =====================================================
+       FORM VALIDATION
+    ===================================================== */
 
     function readForm() {
 
         const code =
-            $("projectCode")
-                .value
-                .trim();
+            normalize(
+                $("projectCode").value
+            );
 
 
         const name =
-            $("projectName")
-                .value
-                .trim();
+            normalize(
+                $("projectName").value
+            );
 
 
         const slug =
-            $("projectSlug")
-                .value
-                .trim();
-
-
-        const type =
-            $("projectType")
-                .value
-                .trim()
-                .toLowerCase();
+            normalize(
+                $("projectSlug").value
+            );
 
 
         const description =
-            $("description")
-                .value
-                .trim();
+            normalize(
+                $("description").value
+            );
 
-
-        const slot =
-            $("coreSlot")
-                .value;
-
-
-        // =================================================
-        // PROJECT CODE
-        // =================================================
 
         if (!code) {
 
@@ -487,24 +671,27 @@
 
 
         if (
-
-            !/^[A-Z0-9][A-Z0-9_-]*$/i
-                .test(code)
-
+            code.length > 64
         ) {
 
             throw Error(
-
-                "Project code contains invalid characters."
-
+                "Project code is too long."
             );
 
         }
 
 
-        // =================================================
-        // PROJECT NAME
-        // =================================================
+        if (
+            !/^[A-Z0-9][A-Z0-9_-]*$/i
+                .test(code)
+        ) {
+
+            throw Error(
+                "Project code contains invalid characters."
+            );
+
+        }
+
 
         if (!name) {
 
@@ -515,116 +702,70 @@
         }
 
 
-        // =================================================
-        // SLUG
-        // =================================================
+        if (
+            name.length > 160
+        ) {
+
+            throw Error(
+                "Project name is too long."
+            );
+
+        }
+
+
+        if (!slug) {
+
+            throw Error(
+                "Project slug is required."
+            );
+
+        }
+
 
         if (
+            slug.length > 160
+        ) {
 
+            throw Error(
+                "Project slug is too long."
+            );
+
+        }
+
+
+        if (
             !/^[a-z0-9][a-z0-9-]*$/
                 .test(slug)
-
         ) {
 
             throw Error(
-
                 "Slug must contain only lowercase letters, numbers and hyphens."
-
-            );
-
-        }
-
-
-        // =================================================
-        // PROJECT TYPE
-        // =================================================
-
-        if (!type) {
-
-            throw Error(
-                "Select a project type."
             );
 
         }
 
 
         if (
-
-            ![
-                "core",
-                "internal",
-                "external"
-            ].includes(type)
-
+            description.length > 5000
         ) {
 
             throw Error(
-                "Invalid project type."
+                "Description is too long."
             );
 
         }
 
 
-        // =================================================
-        // CORE SLOT
-        // =================================================
+        /* =============================================
+           ONLY EDITABLE FIELDS ARE SENT
 
-        if (
-            type === "core"
-        ) {
-
-            if (!slot) {
-
-                throw Error(
-
-                    "Core projects require a core slot from 1 to 7."
-
-                );
-
-            }
-
-
-            const number =
-                Number(slot);
-
-
-            if (
-
-                !Number.isInteger(number) ||
-
-                number < 1 ||
-
-                number > 7
-
-            ) {
-
-                throw Error(
-
-                    "Core slot must be between 1 and 7."
-
-                );
-
-            }
-
-        }
-
-        else if (slot) {
-
-            throw Error(
-
-                "Only core projects may have a core slot."
-
-            );
-
-        }
-
-
-        // =================================================
-        // SECURE RPC PAYLOAD
-        //
-        // Network is NOT supplied.
-        // Logo fields are NOT supplied.
-        // =================================================
+           Never sent:
+           - network
+           - project_type
+           - core_slot
+           - status
+           - logo metadata
+        ============================================== */
 
         return {
 
@@ -640,31 +781,98 @@
             p_name:
                 name,
 
-            p_project_type:
-                type,
-
             p_description:
-                description || null,
-
-            p_core_slot:
-                slot
-                    ? Number(slot)
-                    : null
+                description || null
 
         };
 
     }
 
 
-    // =====================================================
-    // SAVE PROJECT
-    // =====================================================
+    /* =====================================================
+       VERIFY UPDATE RESPONSE
+    ===================================================== */
+
+    function verifyUpdateResponse(
+        response
+    ) {
+
+        if (
+            !response ||
+            typeof response !== "object"
+        ) {
+
+            throw Error(
+                "Project update server response is invalid."
+            );
+
+        }
+
+
+        if (
+            response.success !== true
+        ) {
+
+            throw Error(
+                response.message ||
+                "Project update was denied."
+            );
+
+        }
+
+
+        if (
+            response.authorized !== true
+        ) {
+
+            throw Error(
+                response.message ||
+                "Project update authorization denied."
+            );
+
+        }
+
+
+        if (
+            !response.project_id ||
+            String(
+                response.project_id
+            )
+            !==
+            String(projectId)
+        ) {
+
+            throw Error(
+                "Project update identity verification failed."
+            );
+
+        }
+
+
+        if (
+            normalizeNetwork(
+                response.network
+            ) !== "mainnet"
+        ) {
+
+            throw Error(
+                "Project update network verification failed."
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       SAVE PROJECT
+    ===================================================== */
 
     async function save() {
 
         if (
             busy ||
-            !loaded
+            !loadedProject
         ) {
 
             return;
@@ -672,20 +880,12 @@
         }
 
 
-        // =================================================
-        // LOADED PROJECT IDENTITY VERIFICATION
-        // =================================================
-
         if (
-
-            !loaded.id ||
-
-            String(loaded.id)
-
+            String(
+                loadedProject.id
+            )
             !==
-
             String(projectId)
-
         ) {
 
             msg(
@@ -698,22 +898,11 @@
         }
 
 
-        // =================================================
-        // LOADED PROJECT NETWORK VERIFICATION
-        // =================================================
-
         if (
-
-            String(
-                loaded.network || ""
+            normalizeNetwork(
+                loadedProject.network
             )
-                .trim()
-                .toLowerCase()
-
-            !==
-
-            "mainnet"
-
+            !== "mainnet"
         ) {
 
             msg(
@@ -726,106 +915,101 @@
         }
 
 
+        let payload;
+
+
+        try {
+
+            payload =
+                readForm();
+
+        }
+
+        catch (error) {
+
+            msg(
+                String(
+                    error?.message ||
+                    error
+                ),
+                true
+            );
+
+            return;
+
+        }
+
+
+        if (
+            String(
+                payload.p_project_id
+            )
+            !==
+            String(projectId)
+        ) {
+
+            msg(
+                "Project update identity verification failed.",
+                true
+            );
+
+            return;
+
+        }
+
+
+        if (
+            String(
+                payload.p_project_id
+            )
+            !==
+            String(
+                loadedProject.id
+            )
+        ) {
+
+            msg(
+                "Project identity changed unexpectedly.",
+                true
+            );
+
+            return;
+
+        }
+
+
         setBusy(true);
 
 
         msg(
-            "Validating project changes..."
+            "Saving authorized Mainnet project changes..."
         );
 
 
         try {
 
             const client =
-                window.ALBUKHR_SUPABASE?.client;
+                window.ALBUKHR_SUPABASE
+                    ?.client;
 
 
             if (!client) {
 
                 throw Error(
-
                     "ALBUKHR Supabase Core is unavailable."
-
                 );
 
             }
 
-
-            // =============================================
-            // READ AND VALIDATE FORM
-            // =============================================
-
-            const payload =
-                readForm();
-
-
-            // =============================================
-            // REQUEST ID VERIFICATION
-            // =============================================
-
-            if (
-
-                String(
-                    payload.p_project_id
-                )
-
-                !==
-
-                String(projectId)
-
-            ) {
-
-                throw Error(
-
-                    "Project update identity verification failed."
-
-                );
-
-            }
-
-
-            // =============================================
-            // LOADED ID / REQUEST ID VERIFICATION
-            // =============================================
-
-            if (
-
-                String(
-                    payload.p_project_id
-                )
-
-                !==
-
-                String(
-                    loaded.id
-                )
-
-            ) {
-
-                throw Error(
-
-                    "Project identity changed unexpectedly."
-
-                );
-
-            }
-
-
-            msg(
-                "Saving authorized Mainnet project changes..."
-            );
-
-
-            // =============================================
-            // SERVER-AUTHORIZED UPDATE
-            // =============================================
 
             const {
                 data,
                 error
             } =
                 await client
-                    .schema("albukhr_security")
+                    .schema(
+                        "albukhr_security"
+                    )
                     .rpc(
                         "update_project",
                         payload
@@ -845,117 +1029,23 @@
                     : (data || {});
 
 
-            // =============================================
-            // SERVER SUCCESS
-            // =============================================
-
-            if (
-                response.success !== true
-            ) {
-
-                throw Error(
-
-                    response.message ||
-
-                    "Project update was denied."
-
-                );
-
-            }
+            verifyUpdateResponse(
+                response
+            );
 
 
-            // =============================================
-            // SERVER AUTHORIZATION
-            // =============================================
+            resetDirty();
 
-            if (
-
-                response.authorized !== true
-
-            ) {
-
-                throw Error(
-
-                    response.message ||
-
-                    "Project update authorization denied."
-
-                );
-
-            }
-
-
-            // =============================================
-            // RESPONSE ID VERIFICATION
-            // =============================================
-
-            if (
-
-                !response.project_id ||
-
-                String(
-                    response.project_id
-                )
-
-                !==
-
-                String(projectId)
-
-            ) {
-
-                throw Error(
-
-                    "Project update response identity verification failed."
-
-                );
-
-            }
-
-
-            // =============================================
-            // RESPONSE NETWORK VERIFICATION
-            // =============================================
-
-            if (
-
-                String(
-                    response.network || ""
-                )
-                    .trim()
-                    .toLowerCase()
-
-                !==
-
-                "mainnet"
-
-            ) {
-
-                throw Error(
-
-                    "Project update network verification failed."
-
-                );
-
-            }
-
-
-            // =============================================
-            // SUCCESS
-            // =============================================
 
             msg(
                 "Authorized Mainnet project updated successfully."
             );
 
 
-            // =============================================
-            // RETURN TO REGISTRY
-            // =============================================
-
             setTimeout(
                 () => {
 
-                    location.replace(
+                    window.location.replace(
                         "admin-project-registry.html"
                     );
 
@@ -974,14 +1064,11 @@
 
 
             msg(
-
                 String(
                     error?.message ||
                     error
                 ),
-
                 true
-
             );
 
 
@@ -992,52 +1079,53 @@
     }
 
 
-    // =====================================================
-    // PROJECT TYPE CHANGE
-    // =====================================================
-
-    $("projectType")
-        .addEventListener(
-            "change",
-            setCore
-        );
-
-
-    // =====================================================
-    // AUTO SLUG
-    // =====================================================
+    /* =====================================================
+       AUTO SLUG
+    ===================================================== */
 
     $("projectName")
         .addEventListener(
             "input",
-            () => {
+            function () {
 
                 if (
-
                     !$("projectSlug")
                         .dataset
                         .edited
-
                 ) {
 
                     $("projectSlug").value =
                         slugify(
-
-                            $("projectName")
-                                .value
-
+                            $("projectName").value
                         );
 
                 }
 
+
+                markDirty();
+
             }
+        );
+
+
+    $("projectCode")
+        .addEventListener(
+            "input",
+            markDirty
+        );
+
+
+    $("description")
+        .addEventListener(
+            "input",
+            markDirty
         );
 
 
     $("projectSlug")
         .addEventListener(
             "input",
-            () => {
+            function () {
 
                 $("projectSlug")
                     .dataset
@@ -1047,24 +1135,24 @@
 
                 $("projectSlug").value =
                     slugify(
-
-                        $("projectSlug")
-                            .value
-
+                        $("projectSlug").value
                     );
+
+
+                markDirty();
 
             }
         );
 
 
-    // =====================================================
-    // FORM SUBMIT
-    // =====================================================
+    /* =====================================================
+       FORM SUBMIT
+    ===================================================== */
 
     $("projectForm")
         .addEventListener(
             "submit",
-            (event) => {
+            function (event) {
 
                 event.preventDefault();
 
@@ -1074,24 +1162,51 @@
         );
 
 
-    // =====================================================
-    // LOGOUT
-    // =====================================================
+    /* =====================================================
+       PAGE EXIT WARNING
+    ===================================================== */
+
+    window.addEventListener(
+        "beforeunload",
+        function (event) {
+
+            if (
+                !dirty ||
+                busy
+            ) {
+
+                return;
+
+            }
+
+
+            event.preventDefault();
+
+            event.returnValue = "";
+
+        }
+    );
+
+
+    /* =====================================================
+       LOGOUT
+    ===================================================== */
 
     $("logoutButton")
         .addEventListener(
             "click",
-            async () => {
+            async function () {
 
                 try {
 
-                    await A()?.signOut();
+                    await A()
+                        ?.signOut();
 
                 }
 
                 finally {
 
-                    location.replace(
+                    window.location.replace(
                         "admin-login.html"
                     );
 
@@ -1101,51 +1216,46 @@
         );
 
 
-    // =====================================================
-    // INITIALIZATION
-    // =====================================================
+    /* =====================================================
+       INITIALIZATION
+    ===================================================== */
 
-    (async () => {
+    (async function () {
 
         try {
 
-            // =============================================
-            // AUTH ENGINE
-            // =============================================
+            /* =============================================
+               AUTH ENGINE
+            ============================================== */
 
             if (!A()) {
 
                 throw Error(
-
                     "ALBUKHR Admin Authentication Engine is unavailable."
-
                 );
 
             }
 
 
-            // =============================================
-            // MAINNET ONLY
-            // =============================================
+            /* =============================================
+               MAINNET ONLY
+            ============================================== */
 
             if (
-
-                !window.ALBukhrEnvironment?.isMainnet()
-
+                !window.ALBukhrEnvironment
+                    ?.isMainnet()
             ) {
 
                 throw Error(
-
                     "Project editing is available only on ALBUKHR MAINNET."
-
                 );
 
             }
 
 
-            // =============================================
-            // PROJECT UUID
-            // =============================================
+            /* =============================================
+               VALID PROJECT UUID
+            ============================================== */
 
             projectId =
                 getProjectId();
@@ -1154,33 +1264,28 @@
             if (!projectId) {
 
                 throw Error(
-
                     "A valid project ID is required."
-
                 );
 
             }
 
 
-            // =============================================
-            // INITIALIZE ADMIN SESSION
-            // =============================================
+            /* =============================================
+               INITIALIZE ADMIN AUTH
+            ============================================== */
 
             await A().init();
 
 
             const admin =
                 await A().requireAdmin({
-
-                    redirect:
-                        false
-
+                    redirect:false
                 });
 
 
             if (!admin) {
 
-                location.replace(
+                window.location.replace(
                     "admin-login.html"
                 );
 
@@ -1189,31 +1294,28 @@
             }
 
 
-            // =============================================
-            // MFA
-            // =============================================
+            /* =============================================
+               MFA
+            ============================================== */
 
             const mfa =
                 await A().ensureMfa();
 
 
             if (
-
                 admin.mfa_required &&
-
                 !mfa.verified
-
             ) {
 
-                location.replace(
+                window.location.replace(
 
                     "admin-mfa.html?redirect=" +
 
                     encodeURIComponent(
 
-                        location.pathname +
+                        window.location.pathname +
 
-                        location.search
+                        window.location.search
 
                     )
 
@@ -1224,18 +1326,18 @@
             }
 
 
-            // =============================================
-            // SECURITY STATUS
-            // =============================================
+            /* =============================================
+               SECURITY STATUS
+            ============================================== */
 
             $("securityState")
                 .textContent =
                 "Authenticated • AAL2";
 
 
-            // =============================================
-            // DIRECT SECURE LOAD
-            // =============================================
+            /* =============================================
+               LOAD AUTHORIZED PROJECT
+            ============================================== */
 
             await loadProject();
 
@@ -1244,31 +1346,24 @@
         catch (error) {
 
             console.error(
-
                 "[ALBUKHR PROJECT EDIT INIT]",
-
                 error
-
             );
 
 
             msg(
-
                 "Project edit could not be initialized: " +
 
                 String(
-
                     error?.message ||
                     error
-
                 ),
-
                 true
-
             );
 
 
-            $("saveButton").disabled =
+            $("saveButton")
+                .disabled =
                 true;
 
         }
