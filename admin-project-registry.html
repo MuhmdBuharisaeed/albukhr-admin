@@ -1,80 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width,initial-scale=1,viewport-fit=cover"
-    >
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+>
 
-    <meta
-        name="theme-color"
-        content="#087a3e"
-    >
+<meta
+    name="theme-color"
+    content="#087a3e"
+>
 
-    <meta
-        name="robots"
-        content="noindex,nofollow"
-    >
+<meta
+    name="robots"
+    content="noindex,nofollow"
+>
 
-    <title>
-        ALBUKHR — Project Registry
-    </title>
-
-
-    <!-- =====================================================
-         STYLES
-    ====================================================== -->
-
-    <link
-        rel="stylesheet"
-        href="css/admin-project-registry.css"
-    >
+<title>
+    ALBUKHR — Project Registry
+</title>
 
 
-    <!-- =====================================================
-         SUPABASE
-    ====================================================== -->
-
-    <script
-        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-        defer
-    ></script>
+<link
+    rel="stylesheet"
+    href="css/admin-project-registry.css"
+>
 
 
-    <!-- =====================================================
-         ALBUKHR CORE
-    ====================================================== -->
-
-    <script
-        src="js/core/environment-core.js"
-        defer
-    ></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    defer
+></script>
 
 
-    <script
-        src="js/core/supabase-core.js"
-        defer
-    ></script>
+<script
+    src="js/core/environment-core.js"
+    defer
+></script>
 
 
-    <script
-        src="js/core/supabase-admin-auth.js"
-        defer
-    ></script>
+<script
+    src="js/core/supabase-core.js"
+    defer
+></script>
 
 
-    <!-- =====================================================
-         PAGE ENGINE
-    ====================================================== -->
+<script
+    src="js/core/supabase-admin-auth.js"
+    defer
+></script>
 
-    <script
-        src="js/admin-project-registry.js"
-        defer
-    ></script>
+
+<script
+    src="js/admin-project-registry.js"
+    defer
+></script>
 
 </head>
 
@@ -82,366 +65,287 @@
 <body>
 
 
-    <!-- =====================================================
-         TOPBAR
-    ====================================================== -->
+<header class="topbar">
 
-    <header class="topbar">
+    <a
+        class="brand"
+        href="admin-dashboard.html"
+    >
 
-
-        <a
-            class="brand"
-            href="admin-dashboard.html"
+        <img
+            src="images/file_00000000064c7246ae2d8ac819ddf9fc.png"
+            alt="ALBUKHR"
         >
 
-            <img
-                src="images/file_00000000064c7246ae2d8ac819ddf9fc.png"
-                alt="ALBUKHR"
-            >
+        <span>
+
+            <b>
+                ALBUKHR
+            </b>
+
+            <small>
+                ADMINISTRATION
+            </small>
+
+        </span>
+
+    </a>
 
 
-            <span>
+    <div class="actions">
 
-                <b>
-                    ALBUKHR
-                </b>
+        <span>
+            MAINNET
+        </span>
 
 
-                <small>
-                    ADMINISTRATION
-                </small>
+        <button
+            id="logoutButton"
+            type="button"
+        >
+            Sign out
+        </button>
 
-            </span>
+    </div>
+
+</header>
+
+
+
+<main>
+
+
+    <nav class="back">
+
+        <a href="admin-dashboard.html">
+
+            ← Admin Control Center
 
         </a>
 
-
-        <div class="actions">
-
-            <span>
-                MAINNET
-            </span>
+    </nav>
 
 
-            <button
-                id="logoutButton"
-                type="button"
-            >
-                Sign out
-            </button>
+
+    <section class="hero">
+
+
+        <div>
+
+            <small>
+                MAINNET PROJECT REGISTRY
+            </small>
+
+
+            <h1>
+                Project Registry
+            </h1>
+
+
+            <p>
+                Authoritative project records and registry scope
+                for ALBUKHR administration.
+            </p>
 
         </div>
 
 
-    </header>
+
+        <strong id="securityState">
+
+            Verifying security...
+
+        </strong>
+
+
+    </section>
 
 
 
-    <!-- =====================================================
-         MAIN
-    ====================================================== -->
-
-    <main>
-
-
-        <!-- =================================================
-             BACK
-        ================================================== -->
-
-        <nav class="back">
-
-            <a
-                href="admin-dashboard.html"
-            >
-                ← Admin Control Center
-            </a>
-
-        </nav>
+    <div
+        id="pageStatus"
+        class="status"
+    ></div>
 
 
 
-        <!-- =================================================
-             HERO
-        ================================================== -->
+    <section class="summary">
 
-        <section class="hero">
+
+        <article>
+
+            <span>
+                Authorization
+            </span>
+
+            <b id="authorization">
+                CHECKING
+            </b>
+
+        </article>
+
+
+
+        <article>
+
+            <span>
+                Registry records
+            </span>
+
+            <b id="recordCount">
+                0
+            </b>
+
+        </article>
+
+
+
+        <article>
+
+            <span>
+                Registry source
+            </span>
+
+            <b id="sourceState">
+                CHECKING
+            </b>
+
+        </article>
+
+
+    </section>
+
+
+
+    <section
+        id="deniedPanel"
+        class="panel hidden"
+    >
+
+        <h2>
+            Registry access denied
+        </h2>
+
+
+        <p>
+            You are authenticated, but your Mainnet admin role
+            does not authorize Project Registry operations.
+        </p>
+
+    </section>
+
+
+
+    <section
+        id="registryPanel"
+        class="panel hidden"
+    >
+
+
+        <div class="panel-head">
 
 
             <div>
 
-
-                <small>
-                    MAINNET PROJECT REGISTRY
-                </small>
-
-
-                <h1>
-                    Project Registry
-                </h1>
+                <h2>
+                    Registered projects
+                </h2>
 
 
-                <p>
-                    Authoritative project records and registry scope
-                    for ALBUKHR administration.
+                <p id="registryDescription">
+
+                    Loading the server-authoritative registry...
+
                 </p>
 
-
             </div>
 
 
 
-            <strong
-                id="securityState"
-            >
-                Verifying security...
-            </strong>
+            <div class="registry-actions">
 
 
-        </section>
+                <a
+                    href="admin-project-create.html"
+                    class="create-project-button"
+                >
+
+                    + Create Project
+
+                </a>
 
 
 
-        <!-- =================================================
-             PAGE STATUS
-        ================================================== -->
+                <button
+                    id="refreshButton"
+                    type="button"
+                >
+
+                    Refresh
+
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
 
         <div
-            id="pageStatus"
-            class="status"
-            role="status"
-            aria-live="polite"
-        ></div>
-
-
-
-        <!-- =================================================
-             SUMMARY
-        ================================================== -->
-
-        <section
-            class="summary"
+            id="emptyState"
+            class="empty hidden"
         >
-
-
-            <article>
-
-                <span>
-                    Authorization
-                </span>
-
-
-                <b
-                    id="authorization"
-                >
-                    CHECKING
-                </b>
-
-            </article>
-
-
-
-            <article>
-
-                <span>
-                    Registry records
-                </span>
-
-
-                <b
-                    id="recordCount"
-                >
-                    0
-                </b>
-
-            </article>
-
-
-
-            <article>
-
-                <span>
-                    Registry source
-                </span>
-
-
-                <b
-                    id="sourceState"
-                >
-                    CHECKING
-                </b>
-
-            </article>
-
-
-        </section>
-
-
-
-        <!-- =================================================
-             DENIED PANEL
-        ================================================== -->
-
-        <section
-            id="deniedPanel"
-            class="panel hidden"
-        >
-
-
-            <h2>
-                Registry access denied
-            </h2>
-
-
-            <p>
-                You are authenticated, but your Mainnet admin role
-                does not authorize Project Registry operations.
-            </p>
-
-
-        </section>
-
-
-
-        <!-- =================================================
-             REGISTRY PANEL
-        ================================================== -->
-
-        <section
-            id="registryPanel"
-            class="panel hidden"
-        >
-
-
-            <!-- =============================================
-                 PANEL HEAD
-            ============================================== -->
-
-            <div
-                class="panel-head"
-            >
-
-
-                <div>
-
-
-                    <h2>
-                        Registered projects
-                    </h2>
-
-
-                    <p
-                        id="registryDescription"
-                    >
-                        Loading the server-authoritative registry...
-                    </p>
-
-
-                </div>
-
-
-
-                <!-- =========================================
-                     ACTIONS
-                ========================================== -->
-
-                <div
-                    class="registry-actions"
-                >
-
-
-                    <a
-                        id="createProjectButton"
-                        href="admin-project-create.html"
-                        class="create-project-button hidden"
-                    >
-                        + Create Project
-                    </a>
-
-
-
-                    <button
-                        id="refreshButton"
-                        type="button"
-                    >
-                        Refresh
-                    </button>
-
-
-                </div>
-
-
-            </div>
-
-
-
-            <!-- =============================================
-                 EMPTY STATE
-            ============================================== -->
-
-            <div
-                id="emptyState"
-                class="empty hidden"
-            >
-
-
-                <b>
-                    No registry records returned.
-                </b>
-
-
-                <span
-                    id="emptyText"
-                >
-                    The registry RPC returned no project records.
-                </span>
-
-
-            </div>
-
-
-
-            <!-- =============================================
-                 PROJECTS
-            ============================================== -->
-
-            <div
-                id="projects"
-                class="projects"
-            ></div>
-
-
-        </section>
-
-
-
-        <!-- =================================================
-             SECURITY NOTICE
-        ================================================== -->
-
-        <section
-            class="notice"
-        >
-
 
             <b>
-                Security boundary
+                No registry records returned.
             </b>
 
 
-            <span>
-                Project Registry does not request a second
-                email/password login. Access is inherited from
-                the authenticated Supabase session and checked
-                against the ALBUKHR Mainnet security layer.
+            <span id="emptyText">
+
+                The registry RPC returned no project records.
+
             </span>
 
+        </div>
 
-        </section>
 
 
-    </main>
+        <div
+            id="projects"
+            class="projects"
+        ></div>
+
+
+    </section>
+
+
+
+    <section class="notice">
+
+
+        <b>
+            Security boundary
+        </b>
+
+
+        <span>
+
+            Project Registry does not request a second
+            email/password login. Access is inherited from
+            the authenticated Supabase session and checked
+            against the ALBUKHR Mainnet security layer.
+
+        </span>
+
+
+    </section>
+
+
+</main>
 
 
 </body>
-
 </html>
