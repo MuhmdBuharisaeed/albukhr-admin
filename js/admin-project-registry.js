@@ -7,33 +7,25 @@
 
 
     // =====================================================
-    // ALBUKHR PROJECT REGISTRY ENGINE
+    // ALBUKHR PROJECT REGISTRY
     //
     // MAINNET ADMIN PROJECT REGISTRY
     //
     // SECURITY MODEL:
     //
     // Browser:
-    //
     //   - initializes authenticated admin session
-    //   - verifies AAL2 / MFA state
-    //   - provides UI/UX role guard
-    //   - requests registry through security RPC
-    //   - renders only server-authoritative records
+    //   - verifies AAL2 through the admin auth engine
+    //   - provides UI/UX authorization boundaries
+    //   - calls the authoritative registry RPC
     //
     // Server:
-    //
     //   - validates auth.uid()
-    //   - validates AAL2
-    //   - validates active admin
+    //   - validates active admin identity
     //   - validates registry authorization
-    //   - forces Mainnet registry source
-    //   - reads authoritative public.projects records
+    //   - returns Mainnet projects only
     //
-    // Browser authorization is NOT authoritative.
-    //
-    // get_project_registry()
-    // remains the server security boundary.
+    // The server remains authoritative.
     // =====================================================
 
 
@@ -45,35 +37,27 @@
         window.AlbukhrSupabaseAdminAuth;
 
 
-    const $ = (
-        id
-    ) =>
+    const $ = (id) =>
         document.getElementById(
             id
         );
 
 
     // =====================================================
-    // STATE
-    // =====================================================
-
-    let admin = null;
-
-    let loading = false;
-
-
-    // =====================================================
-    // PROJECT REGISTRY ROLES
+    // ROLE POLICY
     //
-    // IMPORTANT:
+    // Registry access:
     //
-    // This is a frontend UI/UX guard only.
+    //   - super_admin
+    //   - registry_admin
+    //   - core_admin
     //
-    // Server-side authorization inside:
+    // Project creation:
     //
-    // albukhr_security.get_project_registry()
+    //   - super_admin
+    //   - registry_admin
     //
-    // remains authoritative.
+    // Server-side RPC authorization remains authoritative.
     // =====================================================
 
     const REGISTRY_ROLES = [
@@ -85,6 +69,25 @@
         "core_admin"
 
     ];
+
+
+    const CREATION_ROLES = [
+
+        "super_admin",
+
+        "registry_admin"
+
+    ];
+
+
+    // =====================================================
+    // CURRENT STATE
+    // =====================================================
+
+    let currentAdmin = null;
+
+
+    let loading = false;
 
 
     // =====================================================
@@ -113,6 +116,7 @@
 
         element.className =
             "status" +
+
             (
                 error
                     ? " error"
@@ -123,148 +127,7 @@
 
 
     // =====================================================
-    // SECURITY STATE
-    // =====================================================
-
-    function setSecurityState(
-        text
-    ) {
-
-        const element =
-            $("securityState");
-
-
-        if (!element) {
-
-            return;
-
-        }
-
-
-        element.textContent =
-            text || "";
-
-    }
-
-
-    // =====================================================
-    // AUTHORIZATION STATE
-    // =====================================================
-
-    function setAuthorization(
-        value
-    ) {
-
-        const element =
-            $("authorization");
-
-
-        if (!element) {
-
-            return;
-
-        }
-
-
-        element.textContent =
-            value || "CHECKING";
-
-    }
-
-
-    // =====================================================
-    // SOURCE STATE
-    // =====================================================
-
-    function setSourceState(
-        value
-    ) {
-
-        const element =
-            $("sourceState");
-
-
-        if (!element) {
-
-            return;
-
-        }
-
-
-        element.textContent =
-            value || "CHECKING";
-
-    }
-
-
-    // =====================================================
-    // RECORD COUNT
-    // =====================================================
-
-    function setRecordCount(
-        value
-    ) {
-
-        const element =
-            $("recordCount");
-
-
-        if (!element) {
-
-            return;
-
-        }
-
-
-        element.textContent =
-            String(
-                Number.isFinite(
-                    Number(value)
-                )
-
-                    ? Number(value)
-
-                    : 0
-            );
-
-    }
-
-
-    // =====================================================
-    // LABEL
-    // =====================================================
-
-    function label(
-        value
-    ) {
-
-        return String(
-            value ?? ""
-        )
-
-            .replace(
-                /_/g,
-                " "
-            )
-
-            .replace(
-
-                /\b\w/g,
-
-                (character) =>
-
-                    character.toUpperCase()
-
-            );
-
-    }
-
-
-    // =====================================================
     // ESCAPE HTML
-    //
-    // Prevents server-returned text from being
-    // interpreted as HTML during rendering.
     // =====================================================
 
     function esc(
@@ -289,7 +152,34 @@
 
 
     // =====================================================
-    // PICK RECORD VALUE
+    // LABEL
+    // =====================================================
+
+    function label(
+        value
+    ) {
+
+        return String(
+            value ?? ""
+        )
+
+            .replace(
+                /_/g,
+                " "
+            )
+
+            .replace(
+                /\b\w/g,
+
+                (character) =>
+                    character.toUpperCase()
+            );
+
+    }
+
+
+    // =====================================================
+    // PICK VALUE
     // =====================================================
 
     function pick(
@@ -299,11 +189,7 @@
     ) {
 
         for (
-
-            const name
-
-            of names
-
+            const name of names
         ) {
 
             if (
@@ -320,7 +206,9 @@
 
             ) {
 
-                return object[name];
+                return object[
+                    name
+                ];
 
             }
 
@@ -333,40 +221,13 @@
 
 
     // =====================================================
-    // MAINNET CHECK
-    // =====================================================
-
-    function requireMainnet() {
-
-        if (
-
-            !window
-                .ALBukhrEnvironment
-                ?.isMainnet()
-
-        ) {
-
-            throw Error(
-
-                "Project Registry is available only on ALBUKHR MAINNET."
-
-            );
-
-        }
-
-    }
-
-
-    // =====================================================
-    // SUPABASE CLIENT
+    // GET CLIENT
     // =====================================================
 
     function getClient() {
 
         const client =
-            window
-                .ALBUKHR_SUPABASE
-                ?.client;
+            window.ALBUKHR_SUPABASE?.client;
 
 
         if (!client) {
@@ -386,152 +247,1078 @@
 
 
     // =====================================================
-    // FRONTEND ROLE CHECK
-    //
-    // UI/UX ONLY
+    // MAINNET CHECK
     // =====================================================
 
-    function hasRegistryRole(
-        currentAdmin
-    ) {
+    function requireMainnet() {
 
         if (
 
-            !currentAdmin
+            !window.ALBukhrEnvironment
+                ?.isMainnet()
 
         ) {
 
-            return false;
+            throw Error(
+
+                "Project Registry is available only on ALBUKHR MAINNET."
+
+            );
 
         }
-
-
-        const roles =
-
-            Array.isArray(
-                currentAdmin.roles
-            )
-
-                ? currentAdmin.roles
-
-                : [];
-
-
-        return REGISTRY_ROLES.some(
-
-            (role) =>
-
-                roles.includes(
-                    role
-                )
-
-        );
 
     }
 
 
     // =====================================================
-    // CREATE PROJECT ACCESS
-    //
-    // Project creation currently belongs to:
-    //
-    //   - super_admin
-    //   - registry_admin
-    //
-    // This is only a UI guard.
-    //
-    // create_project()
-    // remains authoritative.
+    // NORMALIZE ROLES
     // =====================================================
 
-    function canCreateProject(
-        currentAdmin
+    function getRoles(
+        admin
     ) {
 
         if (
 
-            !currentAdmin
+            !Array.isArray(
+                admin?.roles
+            )
 
         ) {
 
-            return false;
+            return [];
 
         }
 
 
-        const roles =
+        return admin.roles
+            .map(
 
-            Array.isArray(
-                currentAdmin.roles
+                (role) =>
+
+                    String(
+                        role || ""
+                    )
+                        .trim()
+                        .toLowerCase()
+
             )
 
-                ? currentAdmin.roles
-
-                : [];
-
-
-        return [
-
-            "super_admin",
-
-            "registry_admin"
-
-        ].some(
-
-            (role) =>
-
-                roles.includes(
-                    role
-                )
-
-        );
+            .filter(
+                Boolean
+            );
 
     }
 
 
     // =====================================================
-    // CREATE BUTTON
+    // HAS ROLE
     // =====================================================
 
-    function updateCreateButton() {
+    function hasAnyRole(
+        admin,
+        allowedRoles
+    ) {
 
-        const button =
-            $("createProjectButton");
-
-
-        if (!button) {
-
-            return;
-
-        }
-
-
-        const allowed =
-            canCreateProject(
+        const roles =
+            getRoles(
                 admin
             );
 
 
-        if (!allowed) {
+        return allowedRoles.some(
 
-            button.classList.add(
-                "hidden"
-            );
+            (role) =>
 
-            return;
+                roles.includes(
+                    role
+                )
 
-        }
-
-
-        button.classList.remove(
-            "hidden"
         );
 
     }
 
 
     // =====================================================
-    // LOADING STATE
+    // REGISTRY ACCESS
+    // =====================================================
+
+    function hasRegistryAccess(
+        admin
+    ) {
+
+        return hasAnyRole(
+
+            admin,
+
+            REGISTRY_ROLES
+
+        );
+
+    }
+
+
+    // =====================================================
+    // PROJECT CREATION ACCESS
+    // =====================================================
+
+    function hasCreationAccess(
+        admin
+    ) {
+
+        return hasAnyRole(
+
+            admin,
+
+            CREATION_ROLES
+
+        );
+
+    }
+
+
+    // =====================================================
+    // PROJECT INITIALS
+    //
+    // Used when:
+    //
+    //   - project has no logo
+    //   - logo URL is unavailable
+    //   - image fails to load
+    // =====================================================
+
+    function projectInitials(
+        name
+    ) {
+
+        const words =
+            String(
+                name || ""
+            )
+
+                .trim()
+
+                .split(
+                    /\s+/
+                )
+
+                .filter(
+                    Boolean
+                );
+
+
+        if (!words.length) {
+
+            return "P";
+
+        }
+
+
+        return words
+
+            .slice(
+                0,
+                2
+            )
+
+            .map(
+
+                (word) =>
+
+                    word.charAt(
+                        0
+                    )
+
+                    .toUpperCase()
+
+            )
+
+            .join("");
+
+    }
+
+
+    // =====================================================
+    // VALID LOGO URL
+    //
+    // Only HTTP/HTTPS URLs are accepted for rendering.
+    // =====================================================
+
+    function getLogoUrl(
+        row
+    ) {
+
+        const value =
+            pick(
+
+                row,
+
+                [
+
+                    "logo_url",
+
+                    "logoUrl"
+
+                ],
+
+                ""
+
+            );
+
+
+        if (
+
+            !value
+
+            ||
+
+            value === "—"
+
+        ) {
+
+            return "";
+
+        }
+
+
+        try {
+
+            const url =
+                new URL(
+                    String(value)
+                );
+
+
+            if (
+
+                url.protocol !== "https:"
+
+                &&
+
+                url.protocol !== "http:"
+
+            ) {
+
+                return "";
+
+            }
+
+
+            return url.href;
+
+        }
+
+        catch {
+
+            return "";
+
+        }
+
+    }
+
+
+    // =====================================================
+    // CREATE LOGO ELEMENT
+    //
+    // IMPORTANT:
+    //
+    // The image is explicitly constrained by:
+    //
+    //   .project-logo-image
+    //
+    // Therefore original logo dimensions can never
+    // expand the project card.
+    // =====================================================
+
+    function createProjectLogo(
+        row,
+        name
+    ) {
+
+        const logo =
+            document.createElement(
+                "div"
+            );
+
+
+        logo.className =
+            "project-logo";
+
+
+        const logoUrl =
+            getLogoUrl(
+                row
+            );
+
+
+        const initials =
+            projectInitials(
+                name
+            );
+
+
+        // =============================================
+        // NO LOGO
+        // =============================================
+
+        if (!logoUrl) {
+
+            logo.classList.add(
+                "project-logo-fallback"
+            );
+
+
+            logo.textContent =
+                initials;
+
+
+            logo.setAttribute(
+
+                "aria-label",
+
+                "Project logo unavailable"
+
+            );
+
+
+            return logo;
+
+        }
+
+
+        // =============================================
+        // IMAGE
+        // =============================================
+
+        const image =
+            document.createElement(
+                "img"
+            );
+
+
+        image.className =
+            "project-logo-image";
+
+
+        image.src =
+            logoUrl;
+
+
+        image.alt =
+            `${name} logo`;
+
+
+        image.loading =
+            "lazy";
+
+
+        image.decoding =
+            "async";
+
+
+        // =============================================
+        // IMAGE ERROR FALLBACK
+        // =============================================
+
+        image.addEventListener(
+
+            "error",
+
+            () => {
+
+                logo.innerHTML =
+                    "";
+
+
+                logo.classList.add(
+                    "project-logo-fallback"
+                );
+
+
+                logo.textContent =
+                    initials;
+
+
+                logo.setAttribute(
+
+                    "aria-label",
+
+                    "Project logo unavailable"
+
+                );
+
+            },
+
+            {
+                once: true
+            }
+
+        );
+
+
+        logo.appendChild(
+            image
+        );
+
+
+        return logo;
+
+    }
+
+
+    // =====================================================
+    // CREATE PROJECT CARD
+    // =====================================================
+
+    function createProjectCard(
+        row,
+        index
+    ) {
+
+        const id =
+            pick(
+
+                row,
+
+                [
+
+                    "id",
+
+                    "project_id",
+
+                    "uuid"
+
+                ],
+
+                String(
+                    index + 1
+                )
+
+            );
+
+
+        const name =
+            pick(
+
+                row,
+
+                [
+
+                    "name",
+
+                    "project_name",
+
+                    "title"
+
+                ],
+
+                "Unnamed project"
+
+            );
+
+
+        const projectCode =
+            pick(
+
+                row,
+
+                [
+
+                    "project_code",
+
+                    "code"
+
+                ],
+
+                "—"
+
+            );
+
+
+        const slug =
+            pick(
+
+                row,
+
+                [
+
+                    "slug"
+
+                ],
+
+                "—"
+
+            );
+
+
+        const statusValue =
+            pick(
+
+                row,
+
+                [
+
+                    "status",
+
+                    "state"
+
+                ],
+
+                "—"
+
+            );
+
+
+        const projectType =
+            pick(
+
+                row,
+
+                [
+
+                    "project_type",
+
+                    "type",
+
+                    "category"
+
+                ],
+
+                "—"
+
+            );
+
+
+        const network =
+            pick(
+
+                row,
+
+                [
+
+                    "network"
+
+                ],
+
+                "mainnet"
+
+            );
+
+
+        const description =
+            pick(
+
+                row,
+
+                [
+
+                    "description"
+
+                ],
+
+                ""
+
+            );
+
+
+        const card =
+            document.createElement(
+                "article"
+            );
+
+
+        card.className =
+            "project";
+
+
+        // =============================================
+        // PROJECT HEADER
+        // =============================================
+
+        const head =
+            document.createElement(
+                "div"
+            );
+
+
+        head.className =
+            "project-head";
+
+
+        // =============================================
+        // PROJECT IDENTITY
+        // =============================================
+
+        const identity =
+            document.createElement(
+                "div"
+            );
+
+
+        identity.className =
+            "project-identity";
+
+
+        // =============================================
+        // LOGO
+        // =============================================
+
+        const logo =
+            createProjectLogo(
+
+                row,
+
+                name
+
+            );
+
+
+        // =============================================
+        // TITLE AREA
+        // =============================================
+
+        const titleArea =
+            document.createElement(
+                "div"
+            );
+
+
+        titleArea.className =
+            "project-title";
+
+
+        const code =
+            document.createElement(
+                "span"
+            );
+
+
+        code.className =
+            "project-code";
+
+
+        code.textContent =
+            projectCode;
+
+
+        const title =
+            document.createElement(
+                "h3"
+            );
+
+
+        title.textContent =
+            name;
+
+
+        const meta =
+            document.createElement(
+                "span"
+            );
+
+
+        meta.className =
+            "project-type";
+
+
+        meta.textContent =
+
+            `${label(projectType)} • ${label(network)}`;
+
+
+        titleArea.appendChild(
+            code
+        );
+
+
+        titleArea.appendChild(
+            title
+        );
+
+
+        titleArea.appendChild(
+            meta
+        );
+
+
+        identity.appendChild(
+            logo
+        );
+
+
+        identity.appendChild(
+            titleArea
+        );
+
+
+        // =============================================
+        // STATUS
+        // =============================================
+
+        const statusBadge =
+            document.createElement(
+                "em"
+            );
+
+
+        statusBadge.textContent =
+            label(
+                statusValue
+            );
+
+
+        head.appendChild(
+            identity
+        );
+
+
+        head.appendChild(
+            statusBadge
+        );
+
+
+        card.appendChild(
+            head
+        );
+
+
+        // =============================================
+        // DESCRIPTION
+        // =============================================
+
+        if (
+
+            description
+
+            &&
+
+            description !== "—"
+
+        ) {
+
+            const descriptionElement =
+                document.createElement(
+                    "p"
+                );
+
+
+            descriptionElement.className =
+                "project-description";
+
+
+            descriptionElement.textContent =
+                description;
+
+
+            card.appendChild(
+                descriptionElement
+            );
+
+        }
+
+
+        // =============================================
+        // DETAILS
+        // =============================================
+
+        const list =
+            document.createElement(
+                "dl"
+            );
+
+
+        const details = [
+
+            [
+
+                "Project type",
+
+                label(
+                    projectType
+                )
+
+            ],
+
+            [
+
+                "Slug",
+
+                slug
+
+            ],
+
+            [
+
+                "Project ID",
+
+                id
+
+            ]
+
+        ];
+
+
+        details.forEach(
+
+            ([term, value]) => {
+
+                const rowElement =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                const dt =
+                    document.createElement(
+                        "dt"
+                    );
+
+
+                const dd =
+                    document.createElement(
+                        "dd"
+                    );
+
+
+                dt.textContent =
+                    term;
+
+
+                dd.textContent =
+                    value;
+
+
+                rowElement.appendChild(
+                    dt
+                );
+
+
+                rowElement.appendChild(
+                    dd
+                );
+
+
+                list.appendChild(
+                    rowElement
+                );
+
+            }
+
+        );
+
+
+        card.appendChild(
+            list
+        );
+
+
+        // =============================================
+        // ACTIONS
+        // =============================================
+
+        const actions =
+            document.createElement(
+                "div"
+            );
+
+
+        actions.className =
+            "project-actions";
+
+
+        const edit =
+            document.createElement(
+                "a"
+            );
+
+
+        edit.className =
+            "edit-project";
+
+
+        edit.href =
+
+            "admin-project-edit.html?id=" +
+
+            encodeURIComponent(
+                id
+            );
+
+
+        edit.textContent =
+            "Edit Project";
+
+
+        actions.appendChild(
+            edit
+        );
+
+
+        card.appendChild(
+            actions
+        );
+
+
+        // =============================================
+        // RAW RECORD
+        //
+        // Useful for administrative inspection.
+        // =================================================
+
+        const extra =
+            document.createElement(
+                "details"
+            );
+
+
+        const summary =
+            document.createElement(
+                "summary"
+            );
+
+
+        summary.textContent =
+            "View registry record";
+
+
+        const pre =
+            document.createElement(
+                "pre"
+            );
+
+
+        pre.textContent =
+            JSON.stringify(
+
+                row,
+
+                null,
+
+                2
+
+            );
+
+
+        extra.appendChild(
+            summary
+        );
+
+
+        extra.appendChild(
+            pre
+        );
+
+
+        card.appendChild(
+            extra
+        );
+
+
+        return card;
+
+    }
+
+
+    // =====================================================
+    // RENDER PROJECTS
+    // =====================================================
+
+    function render(
+        rows
+    ) {
+
+        const box =
+            $("projects");
+
+
+        const emptyState =
+            $("emptyState");
+
+
+        if (!box) {
+
+            return;
+
+        }
+
+
+        box.innerHTML =
+            "";
+
+
+        const safeRows =
+            Array.isArray(
+                rows
+            )
+
+                ? rows
+
+                : [];
+
+
+        $("recordCount").textContent =
+            safeRows.length;
+
+
+        // =============================================
+        // EMPTY
+        // =============================================
+
+        if (
+
+            !safeRows.length
+
+        ) {
+
+            emptyState?.classList.remove(
+                "hidden"
+            );
+
+
+            return;
+
+        }
+
+
+        emptyState?.classList.add(
+            "hidden"
+        );
+
+
+        // =============================================
+        // PROJECTS
+        // =============================================
+
+        safeRows.forEach(
+
+            (
+                row,
+                index
+            ) => {
+
+                const card =
+                    createProjectCard(
+
+                        row,
+
+                        index
+
+                    );
+
+
+                box.appendChild(
+                    card
+                );
+
+            }
+
+        );
+
+    }
+
+
+    // =====================================================
+    // BUSY STATE
     // =====================================================
 
     function setLoading(
@@ -558,682 +1345,11 @@
 
 
         button.textContent =
-
             loading
 
                 ? "Refreshing..."
 
                 : "Refresh";
-
-    }
-
-
-    // =====================================================
-    // EMPTY STATE
-    // =====================================================
-
-    function showEmpty(
-        message
-    ) {
-
-        const empty =
-            $("emptyState");
-
-
-        const projects =
-            $("projects");
-
-
-        if (projects) {
-
-            projects.innerHTML =
-                "";
-
-        }
-
-
-        if (empty) {
-
-            empty.classList.remove(
-                "hidden"
-            );
-
-        }
-
-
-        const text =
-            $("emptyText");
-
-
-        if (text) {
-
-            text.textContent =
-
-                message ||
-
-                "The registry RPC returned no project records.";
-
-        }
-
-    }
-
-
-    // =====================================================
-    // HIDE EMPTY STATE
-    // =====================================================
-
-    function hideEmpty() {
-
-        $("emptyState")
-            ?.classList.add(
-
-                "hidden"
-
-            );
-
-    }
-
-
-    // =====================================================
-    // HIDE REGISTRY
-    // =====================================================
-
-    function hideRegistry() {
-
-        $("registryPanel")
-            ?.classList.add(
-
-                "hidden"
-
-            );
-
-    }
-
-
-    // =====================================================
-    // SHOW REGISTRY
-    // =====================================================
-
-    function showRegistry() {
-
-        $("registryPanel")
-            ?.classList.remove(
-
-                "hidden"
-
-            );
-
-    }
-
-
-    // =====================================================
-    // SHOW DENIED
-    // =====================================================
-
-    function showDenied() {
-
-        $("deniedPanel")
-            ?.classList.remove(
-
-                "hidden"
-
-            );
-
-    }
-
-
-    // =====================================================
-    // HIDE DENIED
-    // =====================================================
-
-    function hideDenied() {
-
-        $("deniedPanel")
-            ?.classList.add(
-
-                "hidden"
-
-            );
-
-    }
-
-
-    // =====================================================
-    // RENDER PROJECTS
-    // =====================================================
-
-    function render(
-        rows
-    ) {
-
-        const projects =
-            $("projects");
-
-
-        if (!projects) {
-
-            return;
-
-        }
-
-
-        const records =
-
-            Array.isArray(
-                rows
-            )
-
-                ? rows
-
-                : [];
-
-
-        projects.innerHTML =
-            "";
-
-
-        setRecordCount(
-            records.length
-        );
-
-
-        // =============================================
-        // EMPTY
-        // =============================================
-
-        if (
-
-            records.length === 0
-
-        ) {
-
-            showEmpty(
-
-                "No Mainnet projects are currently registered."
-
-            );
-
-            return;
-
-        }
-
-
-        hideEmpty();
-
-
-        // =============================================
-        // PROJECTS
-        // =============================================
-
-        records.forEach(
-
-            (
-                row,
-                index
-            ) => {
-
-                // =====================================
-                // ID
-                // =====================================
-
-                const id =
-                    pick(
-
-                        row,
-
-                        [
-                            "id",
-                            "project_id",
-                            "uuid"
-                        ],
-
-                        String(
-                            index + 1
-                        )
-
-                    );
-
-
-                // =====================================
-                // PROJECT CODE
-                // =====================================
-
-                const projectCode =
-                    pick(
-
-                        row,
-
-                        [
-                            "project_code",
-                            "code"
-                        ],
-
-                        "—"
-
-                    );
-
-
-                // =====================================
-                // NAME
-                // =====================================
-
-                const name =
-                    pick(
-
-                        row,
-
-                        [
-                            "name",
-                            "project_name",
-                            "title"
-                        ],
-
-                        "Unnamed project"
-
-                    );
-
-
-                // =====================================
-                // STATUS
-                // =====================================
-
-                const statusValue =
-                    pick(
-
-                        row,
-
-                        [
-                            "status",
-                            "state"
-                        ],
-
-                        "—"
-
-                    );
-
-
-                // =====================================
-                // TYPE
-                // =====================================
-
-                const projectType =
-                    pick(
-
-                        row,
-
-                        [
-                            "project_type",
-                            "category",
-                            "type"
-                        ],
-
-                        "—"
-
-                    );
-
-
-                // =====================================
-                // SLUG
-                // =====================================
-
-                const projectSlug =
-                    pick(
-
-                        row,
-
-                        [
-                            "slug"
-                        ],
-
-                        "—"
-
-                    );
-
-
-                // =====================================
-                // NETWORK
-                // =====================================
-
-                const network =
-                    pick(
-
-                        row,
-
-                        [
-                            "network"
-                        ],
-
-                        "mainnet"
-
-                    );
-
-
-                // =====================================
-                // LOGO
-                // =====================================
-
-                const logoUrl =
-                    pick(
-
-                        row,
-
-                        [
-                            "logo_url"
-                        ],
-
-                        ""
-
-                    );
-
-
-                // =====================================
-                // CARD
-                // =====================================
-
-                const card =
-                    document.createElement(
-                        "article"
-                    );
-
-
-                card.className =
-                    "project";
-
-
-                // =====================================
-                // PROJECT CARD
-                // =====================================
-
-                card.innerHTML =
-
-                    '<div class="project-head">' +
-
-                        '<div>' +
-
-                            '<span class="index">' +
-
-                                esc(
-                                    projectCode
-                                ) +
-
-                            '</span>' +
-
-
-                            '<h3>' +
-
-                                esc(
-                                    name
-                                ) +
-
-                            '</h3>' +
-
-                        '</div>' +
-
-
-                        '<em>' +
-
-                            esc(
-                                label(
-                                    statusValue
-                                )
-                            ) +
-
-                        '</em>' +
-
-                    '</div>' +
-
-
-
-                    // =================================
-                    // LOGO
-                    // =================================
-
-                    (
-
-                        logoUrl
-
-                            ?
-
-                            '<div class="project-logo">' +
-
-                                '<img ' +
-
-                                    'src="' +
-
-                                        esc(
-                                            logoUrl
-                                        ) +
-
-                                    '" ' +
-
-                                    'alt="' +
-
-                                        esc(
-                                            name
-                                        ) +
-
-                                    ' logo" ' +
-
-                                    'loading="lazy">' +
-
-                            '</div>'
-
-                            :
-
-                            ''
-
-                    ) +
-
-
-
-                    // =================================
-                    // PROJECT DETAILS
-                    // =================================
-
-                    '<dl>' +
-
-
-                        '<div>' +
-
-                            '<dt>Project type</dt>' +
-
-                            '<dd>' +
-
-                                esc(
-                                    label(
-                                        projectType
-                                    )
-                                ) +
-
-                            '</dd>' +
-
-                        '</div>' +
-
-
-
-                        '<div>' +
-
-                            '<dt>Slug</dt>' +
-
-                            '<dd>' +
-
-                                esc(
-                                    projectSlug
-                                ) +
-
-                            '</dd>' +
-
-                        '</div>' +
-
-
-
-                        '<div>' +
-
-                            '<dt>Network</dt>' +
-
-                            '<dd>' +
-
-                                esc(
-                                    String(
-                                        network
-                                    ).toUpperCase()
-                                ) +
-
-                            '</dd>' +
-
-                        '</div>' +
-
-
-
-                        '<div>' +
-
-                            '<dt>Project ID</dt>' +
-
-                            '<dd>' +
-
-                                esc(
-                                    id
-                                ) +
-
-                            '</dd>' +
-
-                        '</div>' +
-
-
-                    '</dl>' +
-
-
-
-                    // =================================
-                    // ACTIONS
-                    // =================================
-
-                    '<div class="project-actions">' +
-
-
-                        '<a ' +
-
-                            'class="edit-project" ' +
-
-                            'href="admin-project-edit.html?id=' +
-
-                                encodeURIComponent(
-                                    id
-                                ) +
-
-                            '">' +
-
-
-                            'Edit Project' +
-
-
-                        '</a>' +
-
-
-                    '</div>';
-
-
-                // =====================================
-                // RAW AUTHORITATIVE RECORD
-                // =====================================
-
-                const details =
-                    document.createElement(
-                        "details"
-                    );
-
-
-                const summary =
-                    document.createElement(
-                        "summary"
-                    );
-
-
-                summary.textContent =
-                    "View registry record";
-
-
-                const pre =
-                    document.createElement(
-                        "pre"
-                    );
-
-
-                pre.textContent =
-                    JSON.stringify(
-
-                        row,
-
-                        null,
-
-                        2
-
-                    );
-
-
-                details.appendChild(
-                    summary
-                );
-
-
-                details.appendChild(
-                    pre
-                );
-
-
-                card.appendChild(
-                    details
-                );
-
-
-                projects.appendChild(
-                    card
-                );
-
-            }
-
-        );
-
-    }
-
-
-    // =====================================================
-    // NORMALIZE RPC RESPONSE
-    // =====================================================
-
-    function normalizePayload(
-        data
-    ) {
-
-        if (
-
-            Array.isArray(
-                data
-            )
-
-        ) {
-
-            return data[0] || {};
-
-        }
-
-
-        if (
-
-            data
-
-            &&
-
-            typeof data === "object"
-
-        ) {
-
-            return data;
-
-        }
-
-
-        return {};
 
     }
 
@@ -1256,22 +1372,14 @@
         );
 
 
-        setSourceState(
-            "LOADING"
-        );
-
-
-        status(
-
-            "Synchronizing Project Registry with the Mainnet security layer..."
-
-        );
+        $("sourceState").textContent =
+            "LOADING";
 
 
         try {
 
             // =============================================
-            // MAINNET DEFENSE
+            // MAINNET
             // =============================================
 
             requireMainnet();
@@ -1286,7 +1394,7 @@
 
 
             // =============================================
-            // RPC
+            // AUTHORITATIVE RPC
             // =============================================
 
             const {
@@ -1314,58 +1422,32 @@
 
 
             // =============================================
-            // NORMALIZE RESPONSE
+            // JSONB RESPONSE
             // =============================================
 
             const payload =
-                normalizePayload(
+
+                Array.isArray(
                     data
-                );
-
-
-            // =============================================
-            // SERVER SUCCESS CHECK
-            //
-            // Compatible with the hardened RPC.
-            //
-            // Older server versions without
-            // "success" remain supported.
-            // =============================================
-
-            if (
-
-                Object.prototype.hasOwnProperty.call(
-
-                    payload,
-
-                    "success"
-
                 )
 
-                &&
+                    ? (
 
-                payload.success !== true
+                        data[0] || {}
 
-            ) {
+                    )
 
-                throw Error(
+                    : (
 
-                    payload.message ||
+                        data || {}
 
-                    "Project Registry request failed."
-
-                );
-
-            }
+                    );
 
 
             // =============================================
             // SERVER AUTHORIZATION
             //
-            // IMPORTANT:
-            //
-            // Never interpret authorization denial
-            // as an empty registry.
+            // Never trust frontend role checks alone.
             // =============================================
 
             if (
@@ -1374,19 +1456,54 @@
 
             ) {
 
-                throw Error(
+                $("authorization").textContent =
+                    "DENIED";
+
+
+                $("sourceState").textContent =
+                    label(
+
+                        payload.source ||
+
+                        "ALBUKHR Security"
+
+                    );
+
+
+                $("recordCount").textContent =
+                    "0";
+
+
+                $("registryPanel")
+                    ?.classList.add(
+                        "hidden"
+                    );
+
+
+                $("deniedPanel")
+                    ?.classList.remove(
+                        "hidden"
+                    );
+
+
+                status(
 
                     payload.message ||
 
-                    "Project Registry authorization denied."
+                    "Project Registry authorization denied.",
+
+                    true
 
                 );
+
+
+                return;
 
             }
 
 
             // =============================================
-            // NETWORK VERIFICATION
+            // MAINNET RESPONSE VERIFICATION
             // =============================================
 
             if (
@@ -1423,7 +1540,6 @@
             // =============================================
 
             const rows =
-
                 Array.isArray(
                     payload.records
                 )
@@ -1437,7 +1553,7 @@
             // SOURCE
             // =============================================
 
-            setSourceState(
+            $("sourceState").textContent =
 
                 payload.source ===
                 "public.projects"
@@ -1445,56 +1561,34 @@
                     ? "public.projects"
 
                     : label(
-                        payload.source ||
-                        "RPC"
-                    )
 
-            );
+                        payload.source ||
+
+                        "RPC"
+
+                    );
 
 
             // =============================================
             // DESCRIPTION
             // =============================================
 
-            const description =
-                $("registryDescription");
+            $("registryDescription").textContent =
 
+                payload.message ||
 
-            if (description) {
-
-                description.textContent =
-
-                    payload.message ||
-
-                    "Registry records returned by the Mainnet security RPC.";
-
-            }
+                "Registry records returned by the Mainnet security RPC.";
 
 
             // =============================================
-            // EMPTY MESSAGE
+            // EMPTY TEXT
             // =============================================
 
-            const emptyText =
-                $("emptyText");
+            $("emptyText").textContent =
 
+                payload.message ||
 
-            if (emptyText) {
-
-                emptyText.textContent =
-
-                    payload.message ||
-
-                    "The registry RPC returned no project records.";
-
-            }
-
-
-            // =============================================
-            // FINAL MAINNET CHECK
-            // =============================================
-
-            requireMainnet();
+                "The registry RPC returned no project records.";
 
 
             // =============================================
@@ -1529,25 +1623,8 @@
             );
 
 
-            // =============================================
-            // ERROR STATE
-            // =============================================
-
-            setSourceState(
-                "ERROR"
-            );
-
-
-            setRecordCount(
-                0
-            );
-
-
-            $("projects").innerHTML =
-                "";
-
-
-            hideEmpty();
+            $("sourceState").textContent =
+                "ERROR";
 
 
             status(
@@ -1577,25 +1654,224 @@
 
 
     // =====================================================
-    // LOGOUT
+    // INITIALIZATION
     // =====================================================
 
-    async function signOut() {
+    async function init() {
 
         try {
 
-            await A()
-                ?.signOut();
+            // =============================================
+            // ADMIN AUTH ENGINE
+            // =============================================
+
+            if (!A()) {
+
+                throw Error(
+
+                    "Admin authentication engine unavailable."
+
+                );
+
+            }
+
+
+            // =============================================
+            // MAINNET ONLY
+            // =============================================
+
+            requireMainnet();
+
+
+            // =============================================
+            // INITIALIZE AUTH
+            // =============================================
+
+            await A().init();
+
+
+            // =============================================
+            // REQUIRE ADMIN
+            // =============================================
+
+            currentAdmin =
+                await A().requireAdmin({
+
+                    redirect:
+                        false
+
+                });
+
+
+            if (!currentAdmin) {
+
+                location.replace(
+
+                    "admin-login.html"
+
+                );
+
+                return;
+
+            }
+
+
+            // =============================================
+            // MFA
+            // =============================================
+
+            const mfa =
+                await A().ensureMfa();
+
+
+            if (
+
+                !mfa?.verified
+
+            ) {
+
+                location.replace(
+
+                    "admin-mfa.html"
+
+                );
+
+                return;
+
+            }
+
+
+            // =============================================
+            // SECURITY STATE
+            // =============================================
+
+            $("securityState").textContent =
+
+                "Authenticated • AAL2";
+
+
+            // =============================================
+            // FRONTEND REGISTRY GUARD
+            //
+            // UI/UX only.
+            //
+            // get_project_registry RPC remains authoritative.
+            // =============================================
+
+            const allowed =
+                hasRegistryAccess(
+
+                    currentAdmin
+
+                );
+
+
+            $("authorization").textContent =
+
+                allowed
+
+                    ? "AUTHORIZED"
+
+                    : "DENIED";
+
+
+            if (!allowed) {
+
+                $("deniedPanel")
+                    ?.classList.remove(
+                        "hidden"
+                    );
+
+
+                status(
+
+                    "Authenticated, but Project Registry authorization was denied.",
+
+                    true
+
+                );
+
+
+                return;
+
+            }
+
+
+            // =============================================
+            // SHOW REGISTRY
+            // =============================================
+
+            $("registryPanel")
+                ?.classList.remove(
+                    "hidden"
+                );
+
+
+            // =============================================
+            // CREATE BUTTON
+            //
+            // Only UI visibility.
+            //
+            // create_project RPC remains authoritative.
+            // =============================================
+
+            if (
+
+                hasCreationAccess(
+                    currentAdmin
+                )
+
+            ) {
+
+                $("createProjectButton")
+                    ?.classList.remove(
+                        "hidden"
+                    );
+
+            }
+
+
+            // =============================================
+            // LOAD
+            // =============================================
+
+            await load();
 
         }
 
-        finally {
+        catch (error) {
 
-            location.replace(
+            console.error(
 
-                "admin-login.html"
+                "[ALBUKHR PROJECT REGISTRY INIT]",
+
+                error
 
             );
+
+
+            status(
+
+                String(
+                    error?.message ||
+                    error
+                ),
+
+                true
+
+            );
+
+
+            $("authorization").textContent =
+                "ERROR";
+
+
+            $("sourceState").textContent =
+                "ERROR";
+
+
+            $("refreshButton").disabled =
+                true;
 
         }
 
@@ -1617,11 +1893,7 @@
 
                 "click",
 
-                () => {
-
-                    load();
-
-                }
+                load
 
             );
 
@@ -1635,260 +1907,27 @@
 
                 "click",
 
-                signOut
+                async () => {
+
+                    try {
+
+                        await A()?.signOut();
+
+                    }
+
+                    finally {
+
+                        location.replace(
+
+                            "admin-login.html"
+
+                        );
+
+                    }
+
+                }
 
             );
-
-    }
-
-
-    // =====================================================
-    // INITIALIZATION
-    // =====================================================
-
-    async function init() {
-
-        try {
-
-            // =============================================
-            // MAINNET
-            // =============================================
-
-            requireMainnet();
-
-
-            // =============================================
-            // ADMIN AUTH ENGINE
-            // =============================================
-
-            if (!A()) {
-
-                throw Error(
-
-                    "Admin authentication engine unavailable."
-
-                );
-
-            }
-
-
-            // =============================================
-            // INITIALIZE AUTH
-            // =============================================
-
-            await A()
-                .init();
-
-
-            // =============================================
-            // REQUIRE ADMIN
-            // =============================================
-
-            admin =
-                await A()
-                    .requireAdmin({
-
-                        redirect:
-                            false
-
-                    });
-
-
-            // =============================================
-            // NO ADMIN
-            // =============================================
-
-            if (!admin) {
-
-                location.replace(
-
-                    "admin-login.html"
-
-                );
-
-                return;
-
-            }
-
-
-            // =============================================
-            // MFA / AAL2
-            // =============================================
-
-            const mfa =
-                await A()
-                    .ensureMfa();
-
-
-            // =============================================
-            // AAL2 REQUIRED
-            // =============================================
-
-            if (
-
-                !mfa
-
-                ||
-
-                mfa.verified !== true
-
-            ) {
-
-                location.replace(
-
-                    "admin-mfa.html"
-
-                );
-
-                return;
-
-            }
-
-
-            // =============================================
-            // SECURITY STATE
-            // =============================================
-
-            setSecurityState(
-
-                "Authenticated • AAL2"
-
-            );
-
-
-            // =============================================
-            // FRONTEND ROLE GUARD
-            //
-            // Server remains authoritative.
-            // =============================================
-
-            if (
-
-                !hasRegistryRole(
-                    admin
-                )
-
-            ) {
-
-                setAuthorization(
-                    "DENIED"
-                );
-
-
-                setSourceState(
-                    "DENIED"
-                );
-
-
-                setRecordCount(
-                    0
-                );
-
-
-                hideRegistry();
-
-
-                showDenied();
-
-
-                status(
-
-                    "Authenticated, but Project Registry authorization was denied.",
-
-                    true
-
-                );
-
-
-                return;
-
-            }
-
-
-            // =============================================
-            // FRONTEND AUTHORIZED
-            // =============================================
-
-            setAuthorization(
-                "AUTHORIZED"
-            );
-
-
-            hideDenied();
-
-
-            showRegistry();
-
-
-            updateCreateButton();
-
-
-            // =============================================
-            // LOAD REGISTRY
-            // =============================================
-
-            await load();
-
-        }
-
-        catch (error) {
-
-            console.error(
-
-                "[ALBUKHR PROJECT REGISTRY INIT]",
-
-                error
-
-            );
-
-
-            setSecurityState(
-                "SECURITY ERROR"
-            );
-
-
-            setAuthorization(
-                "ERROR"
-            );
-
-
-            setSourceState(
-                "ERROR"
-            );
-
-
-            status(
-
-                String(
-                    error?.message ||
-                    error
-                ),
-
-                true
-
-            );
-
-
-            hideRegistry();
-
-
-            setTimeout(
-
-                () => {
-
-                    location.replace(
-
-                        "admin-login.html"
-
-                    );
-
-                },
-
-                900
-
-            );
-
-        }
 
     }
 
