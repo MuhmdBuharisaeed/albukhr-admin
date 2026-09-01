@@ -1,33 +1,513 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#087a3e"><meta name="robots" content="noindex,nofollow">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+>
+<meta name="theme-color" content="#087a3e">
+<meta name="robots" content="noindex,nofollow">
+
 <title>ALBUKHR — Edit Project</title>
-<link rel="stylesheet" href="css/admin-project-edit.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="js/core/environment-core.js" defer></script>
-<script src="js/core/supabase-core.js" defer></script>
-<script src="js/core/supabase-admin-auth.js" defer></script>
-<script src="js/admin-project-edit.js" defer></script>
-</head><body>
-<header class="topbar"><a class="brand" href="admin-project-registry.html"><span class="mark">A</span><span><b>ALBUKHR</b><small>ADMINISTRATION</small></span></a>
-<div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div></header>
-<main><nav class="back"><a href="admin-project-registry.html">← Project Registry</a></nav>
-<section class="hero"><div><small>MAINNET PROJECT REGISTRY</small><h1>Edit Project</h1><p>Update the authoritative Mainnet project record.</p></div><strong id="securityState">Verifying security...</strong></section>
-<div id="pageStatus" class="status" aria-live="polite"></div>
-<form id="projectForm" novalidate>
-<section class="panel"><div class="panel-title"><h2>Project Identity</h2><span>Editable</span></div>
-<div class="grid">
-<label>Project Code<input id="projectCode" maxlength="64" autocomplete="off"></label>
-<label>Project Name<input id="projectName" maxlength="160" autocomplete="off"></label>
-<label>Slug<input id="projectSlug" maxlength="160" autocomplete="off"></label>
-<label>Project Type<select id="projectType"><option value="">Select project type</option><option value="core">Core</option><option value="internal">Internal</option><option value="external">External</option></select></label>
-<label id="coreSlotWrap" class="hidden">Core Slot<select id="coreSlot"><option value="">Select slot</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label>
-</div>
-<label>Description<textarea id="description" rows="7" maxlength="5000"></textarea></label></section>
-<section class="panel readonly"><div class="panel-title"><h2>Protected Registry Fields</h2><span>Server controlled</span></div>
-<div class="protected-grid"><div><span>Project ID</span><b id="projectId">—</b></div><div><span>Network</span><b id="network">—</b></div><div><span>Status</span><b id="projectStatus">—</b></div></div>
-<p>Project ID, network, status, timestamps, and logo metadata are not changed by this update operation.</p></section>
-<section class="panel security"><div class="panel-title"><h2>Security</h2><span>AAL2 required</span></div>
-<p>This page uses the existing Supabase Admin session. No second email/password is requested. Authorization is enforced server-side by the Mainnet security layer.</p></section>
-<div class="form-actions"><a class="secondary" href="admin-project-registry.html">Cancel</a><button id="saveButton" class="primary" type="submit" disabled>Save Project Changes</button></div>
-</form></main></body></html>
+
+<link
+    rel="stylesheet"
+    href="css/admin-project-edit.css"
+>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    defer
+></script>
+
+<script
+    src="js/core/environment-core.js"
+    defer
+></script>
+
+<script
+    src="js/core/supabase-core.js"
+    defer
+></script>
+
+<script
+    src="js/core/supabase-admin-auth.js"
+    defer
+></script>
+
+<script
+    src="js/admin-project-edit.js"
+    defer
+></script>
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <a
+        class="brand"
+        href="admin-project-registry.html"
+        aria-label="Back to ALBUKHR Project Registry"
+    >
+
+        <img
+            src="images/file_00000000064c7246ae2d8ac819ddf9fc.png"
+            alt="ALBUKHR"
+        >
+
+        <span>
+            <b>ALBUKHR</b>
+            <small>ADMINISTRATION</small>
+        </span>
+
+    </a>
+
+
+    <div class="actions">
+
+        <span>MAINNET</span>
+
+        <button
+            id="logoutButton"
+            type="button"
+        >
+            Sign out
+        </button>
+
+    </div>
+
+</header>
+
+
+<main>
+
+    <nav class="back">
+
+        <a href="admin-project-registry.html">
+
+            ← Project Registry
+
+        </a>
+
+    </nav>
+
+
+    <section class="hero">
+
+        <div>
+
+            <small>
+                MAINNET PROJECT REGISTRY
+            </small>
+
+            <h1>
+                Edit Project
+            </h1>
+
+            <p>
+                Update the authorized project identity and
+                description within the ALBUKHR Mainnet registry.
+            </p>
+
+        </div>
+
+
+        <strong id="securityState">
+
+            Verifying security...
+
+        </strong>
+
+    </section>
+
+
+    <div
+        id="pageStatus"
+        class="status"
+        aria-live="polite"
+    ></div>
+
+
+    <form
+        id="projectForm"
+        novalidate
+    >
+
+
+        <!-- =========================================
+             EDITABLE PROJECT FIELDS
+        ========================================== -->
+
+        <section class="panel">
+
+            <div class="panel-title">
+
+                <h2>
+                    Editable Project Details
+                </h2>
+
+                <span>
+                    Authorized update
+                </span>
+
+            </div>
+
+
+            <div class="grid">
+
+
+                <label>
+
+                    Project Code
+
+                    <input
+                        id="projectCode"
+                        type="text"
+                        maxlength="64"
+                        autocomplete="off"
+                        required
+                    >
+
+                </label>
+
+
+                <label>
+
+                    Project Name
+
+                    <input
+                        id="projectName"
+                        type="text"
+                        maxlength="160"
+                        autocomplete="off"
+                        required
+                    >
+
+                </label>
+
+
+                <label>
+
+                    Project Slug
+
+                    <input
+                        id="projectSlug"
+                        type="text"
+                        maxlength="160"
+                        autocomplete="off"
+                        required
+                    >
+
+                </label>
+
+
+                <label>
+
+                    Registry Scope
+
+                    <input
+                        id="projectType"
+                        type="text"
+                        readonly
+                        aria-readonly="true"
+                    >
+
+                </label>
+
+
+            </div>
+
+
+            <label>
+
+                Description
+
+                <textarea
+                    id="description"
+                    rows="7"
+                    maxlength="5000"
+                ></textarea>
+
+            </label>
+
+        </section>
+
+
+        <!-- =========================================
+             PROTECTED REGISTRY FIELDS
+        ========================================== -->
+
+        <section class="panel readonly">
+
+            <div class="panel-title">
+
+                <h2>
+                    Protected Registry Fields
+                </h2>
+
+                <span>
+                    Server controlled
+                </span>
+
+            </div>
+
+
+            <div class="protected-grid">
+
+
+                <div>
+
+                    <span>
+                        Project ID
+                    </span>
+
+                    <b id="projectId">
+                        —
+                    </b>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Network
+                    </span>
+
+                    <b id="network">
+                        —
+                    </b>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Status
+                    </span>
+
+                    <b id="projectStatus">
+                        —
+                    </b>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Project Type
+                    </span>
+
+                    <b id="protectedProjectType">
+                        —
+                    </b>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Core Slot
+                    </span>
+
+                    <b id="coreSlot">
+                        —
+                    </b>
+
+                </div>
+
+
+            </div>
+
+
+            <p>
+
+                Project ID, network, status, project scope,
+                core slot, timestamps and logo metadata cannot
+                be changed through this operation.
+
+            </p>
+
+        </section>
+
+
+        <!-- =========================================
+             LOGO INFORMATION
+        ========================================== -->
+
+        <section class="panel logo-panel">
+
+            <div class="panel-title">
+
+                <h2>
+                    Project Visual Identity
+                </h2>
+
+                <span>
+                    Protected
+                </span>
+
+            </div>
+
+
+            <div class="logo-info">
+
+
+                <div class="logo-preview-wrap">
+
+                    <img
+                        id="projectLogoPreview"
+                        class="project-logo-preview"
+                        alt="Project logo"
+                        hidden
+                    >
+
+                    <div
+                        id="noProjectLogo"
+                        class="no-project-logo"
+                    >
+
+                        No project logo
+
+                    </div>
+
+                </div>
+
+
+                <div class="logo-meta">
+
+                    <div>
+
+                        <span>
+                            Logo Path
+                        </span>
+
+                        <b id="logoPath">
+                            —
+                        </b>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Format
+                        </span>
+
+                        <b id="logoFormat">
+                            —
+                        </b>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Dimensions
+                        </span>
+
+                        <b id="logoDimensions">
+                            —
+                        </b>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Size
+                        </span>
+
+                        <b id="logoSize">
+                            —
+                        </b>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <p>
+
+                Project visual identity is managed through
+                the dedicated ALBUKHR Project Logo Engine.
+
+            </p>
+
+        </section>
+
+
+        <!-- =========================================
+             SECURITY
+        ========================================== -->
+
+        <section class="panel security">
+
+            <div class="panel-title">
+
+                <h2>
+                    Security
+                </h2>
+
+                <span>
+                    AAL2 required
+                </span>
+
+            </div>
+
+
+            <p>
+
+                This page uses the existing authenticated
+                Supabase Admin session. Server-side authorization
+                validates the active administrator, AAL2 assurance,
+                Mainnet boundary and project-specific scope before
+                project data can be loaded or updated.
+
+            </p>
+
+        </section>
+
+
+        <!-- =========================================
+             ACTIONS
+        ========================================== -->
+
+        <div class="form-actions">
+
+            <a
+                class="secondary"
+                href="admin-project-registry.html"
+            >
+                Cancel
+            </a>
+
+
+            <button
+                id="saveButton"
+                class="primary"
+                type="submit"
+                disabled
+            >
+                Save Project Changes
+            </button>
+
+        </div>
+
+
+    </form>
+
+</main>
+
+</body>
+</html>
