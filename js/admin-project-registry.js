@@ -11,27 +11,26 @@
     //
     // MAINNET ADMIN PROJECT REGISTRY
     //
-    // SECURITY MODEL:
+    // SECURITY:
     //
     // Browser:
     //   - initializes authenticated admin session
-    //   - verifies AAL2 through the admin auth engine
-    //   - provides UI/UX authorization boundaries
-    //   - calls the authoritative registry RPC
+    //   - verifies MFA / AAL2 flow
+    //   - provides UI authorization guard
+    //   - calls server-authoritative registry RPC
     //
     // Server:
-    //   - validates auth.uid()
-    //   - validates active admin identity
-    //   - validates registry authorization
-    //   - returns Mainnet projects only
+    //   - validates authenticated identity
+    //   - validates active admin authorization
+    //   - returns authoritative Mainnet projects
     //
-    // The server remains authoritative.
+    // Source:
+    //   public.projects
+    //
+    // Network:
+    //   MAINNET ONLY
     // =====================================================
 
-
-    // =====================================================
-    // HELPERS
-    // =====================================================
 
     const A = () =>
         window.AlbukhrSupabaseAdminAuth;
@@ -44,23 +43,16 @@
 
 
     // =====================================================
-    // ROLE POLICY
+    // FRONTEND ROLE GUARD
     //
-    // Registry access:
+    // IMPORTANT:
     //
-    //   - super_admin
-    //   - registry_admin
-    //   - core_admin
-    //
-    // Project creation:
-    //
-    //   - super_admin
-    //   - registry_admin
+    // This is UI/UX only.
     //
     // Server-side RPC authorization remains authoritative.
     // =====================================================
 
-    const REGISTRY_ROLES = [
+    const allowedRoles = [
 
         "super_admin",
 
@@ -71,23 +63,33 @@
     ];
 
 
-    const CREATION_ROLES = [
-
-        "super_admin",
-
-        "registry_admin"
-
-    ];
-
-
     // =====================================================
-    // CURRENT STATE
+    // LABEL
     // =====================================================
 
-    let currentAdmin = null;
+    function label(
+        value
+    ) {
 
+        return String(
+            value ?? ""
+        )
 
-    let loading = false;
+            .replace(
+                /_/g,
+                " "
+            )
+
+            .replace(
+
+                /\b\w/g,
+
+                (character) =>
+                    character.toUpperCase()
+
+            );
+
+    }
 
 
     // =====================================================
@@ -115,6 +117,7 @@
 
 
         element.className =
+
             "status" +
 
             (
@@ -127,7 +130,7 @@
 
 
     // =====================================================
-    // ESCAPE HTML
+    // HTML ESCAPE
     // =====================================================
 
     function esc(
@@ -152,178 +155,22 @@
 
 
     // =====================================================
-    // LABEL
+    // FRONTEND AUTHORIZATION
     // =====================================================
 
-    function label(
-        value
-    ) {
-
-        return String(
-            value ?? ""
-        )
-
-            .replace(
-                /_/g,
-                " "
-            )
-
-            .replace(
-                /\b\w/g,
-
-                (character) =>
-                    character.toUpperCase()
-            );
-
-    }
-
-
-    // =====================================================
-    // PICK VALUE
-    // =====================================================
-
-    function pick(
-        object,
-        names,
-        fallback = "—"
-    ) {
-
-        for (
-            const name of names
-        ) {
-
-            if (
-
-                object
-
-                &&
-
-                object[name] != null
-
-                &&
-
-                object[name] !== ""
-
-            ) {
-
-                return object[
-                    name
-                ];
-
-            }
-
-        }
-
-
-        return fallback;
-
-    }
-
-
-    // =====================================================
-    // GET CLIENT
-    // =====================================================
-
-    function getClient() {
-
-        const client =
-            window.ALBUKHR_SUPABASE?.client;
-
-
-        if (!client) {
-
-            throw Error(
-
-                "ALBUKHR Supabase Core is unavailable."
-
-            );
-
-        }
-
-
-        return client;
-
-    }
-
-
-    // =====================================================
-    // MAINNET CHECK
-    // =====================================================
-
-    function requireMainnet() {
-
-        if (
-
-            !window.ALBukhrEnvironment
-                ?.isMainnet()
-
-        ) {
-
-            throw Error(
-
-                "Project Registry is available only on ALBUKHR MAINNET."
-
-            );
-
-        }
-
-    }
-
-
-    // =====================================================
-    // NORMALIZE ROLES
-    // =====================================================
-
-    function getRoles(
+    function authorized(
         admin
     ) {
 
-        if (
+        const roles =
 
-            !Array.isArray(
+            Array.isArray(
                 admin?.roles
             )
 
-        ) {
+                ? admin.roles
 
-            return [];
-
-        }
-
-
-        return admin.roles
-            .map(
-
-                (role) =>
-
-                    String(
-                        role || ""
-                    )
-                        .trim()
-                        .toLowerCase()
-
-            )
-
-            .filter(
-                Boolean
-            );
-
-    }
-
-
-    // =====================================================
-    // HAS ROLE
-    // =====================================================
-
-    function hasAnyRole(
-        admin,
-        allowedRoles
-    ) {
-
-        const roles =
-            getRoles(
-                admin
-            );
+                : [];
 
 
         return allowedRoles.some(
@@ -340,115 +187,64 @@
 
 
     // =====================================================
-    // REGISTRY ACCESS
+    // PICK FIRST AVAILABLE FIELD
     // =====================================================
 
-    function hasRegistryAccess(
-        admin
+    function pick(
+        object,
+        names,
+        fallback = "—"
     ) {
 
-        return hasAnyRole(
+        for (
 
-            admin,
+            const name of names
 
-            REGISTRY_ROLES
+        ) {
 
-        );
+            if (
 
-    }
+                object &&
 
+                object[name] != null &&
 
-    // =====================================================
-    // PROJECT CREATION ACCESS
-    // =====================================================
+                object[name] !== ""
 
-    function hasCreationAccess(
-        admin
-    ) {
+            ) {
 
-        return hasAnyRole(
+                return object[name];
 
-            admin,
-
-            CREATION_ROLES
-
-        );
-
-    }
-
-
-    // =====================================================
-    // PROJECT INITIALS
-    //
-    // Used when:
-    //
-    //   - project has no logo
-    //   - logo URL is unavailable
-    //   - image fails to load
-    // =====================================================
-
-    function projectInitials(
-        name
-    ) {
-
-        const words =
-            String(
-                name || ""
-            )
-
-                .trim()
-
-                .split(
-                    /\s+/
-                )
-
-                .filter(
-                    Boolean
-                );
-
-
-        if (!words.length) {
-
-            return "P";
+            }
 
         }
 
 
-        return words
-
-            .slice(
-                0,
-                2
-            )
-
-            .map(
-
-                (word) =>
-
-                    word.charAt(
-                        0
-                    )
-
-                    .toUpperCase()
-
-            )
-
-            .join("");
+        return fallback;
 
     }
 
 
     // =====================================================
-    // VALID LOGO URL
+    // PROJECT LOGO
     //
-    // Only HTTP/HTTPS URLs are accepted for rendering.
+    // IMPORTANT:
+    //
+    // Project logos must never control card dimensions.
+    //
+    // The image is rendered inside a fixed
+    // 44px × 44px container.
+    //
+    // If logo_url is unavailable or the image fails,
+    // a controlled ALBUKHR placeholder is shown.
     // =====================================================
 
-    function getLogoUrl(
-        row
+    function createProjectLogo(
+        row,
+        projectName
     ) {
 
-        const value =
+        const logoUrl =
+
             pick(
 
                 row,
@@ -466,761 +262,163 @@
             );
 
 
-        if (
+        // =============================================
+        // LOGO WRAPPER
+        // =============================================
 
-            !value
-
-            ||
-
-            value === "—"
-
-        ) {
-
-            return "";
-
-        }
-
-
-        try {
-
-            const url =
-                new URL(
-                    String(value)
-                );
-
-
-            if (
-
-                url.protocol !== "https:"
-
-                &&
-
-                url.protocol !== "http:"
-
-            ) {
-
-                return "";
-
-            }
-
-
-            return url.href;
-
-        }
-
-        catch {
-
-            return "";
-
-        }
-
-    }
-
-
-    // =====================================================
-    // CREATE LOGO ELEMENT
-    //
-    // IMPORTANT:
-    //
-    // The image is explicitly constrained by:
-    //
-    //   .project-logo-image
-    //
-    // Therefore original logo dimensions can never
-    // expand the project card.
-    // =====================================================
-
-    function createProjectLogo(
-        row,
-        name
-    ) {
-
-        const logo =
+        const wrapper =
             document.createElement(
                 "div"
             );
 
 
-        logo.className =
+        wrapper.className =
             "project-logo";
 
 
-        const logoUrl =
-            getLogoUrl(
-                row
-            );
-
-
-        const initials =
-            projectInitials(
-                name
-            );
-
-
         // =============================================
-        // NO LOGO
-        // =============================================
-
-        if (!logoUrl) {
-
-            logo.classList.add(
-                "project-logo-fallback"
-            );
-
-
-            logo.textContent =
-                initials;
-
-
-            logo.setAttribute(
-
-                "aria-label",
-
-                "Project logo unavailable"
-
-            );
-
-
-            return logo;
-
-        }
-
-
-        // =============================================
-        // IMAGE
-        // =============================================
-
-        const image =
-            document.createElement(
-                "img"
-            );
-
-
-        image.className =
-            "project-logo-image";
-
-
-        image.src =
-            logoUrl;
-
-
-        image.alt =
-            `${name} logo`;
-
-
-        image.loading =
-            "lazy";
-
-
-        image.decoding =
-            "async";
-
-
-        // =============================================
-        // IMAGE ERROR FALLBACK
-        // =============================================
-
-        image.addEventListener(
-
-            "error",
-
-            () => {
-
-                logo.innerHTML =
-                    "";
-
-
-                logo.classList.add(
-                    "project-logo-fallback"
-                );
-
-
-                logo.textContent =
-                    initials;
-
-
-                logo.setAttribute(
-
-                    "aria-label",
-
-                    "Project logo unavailable"
-
-                );
-
-            },
-
-            {
-                once: true
-            }
-
-        );
-
-
-        logo.appendChild(
-            image
-        );
-
-
-        return logo;
-
-    }
-
-
-    // =====================================================
-    // CREATE PROJECT CARD
-    // =====================================================
-
-    function createProjectCard(
-        row,
-        index
-    ) {
-
-        const id =
-            pick(
-
-                row,
-
-                [
-
-                    "id",
-
-                    "project_id",
-
-                    "uuid"
-
-                ],
-
-                String(
-                    index + 1
-                )
-
-            );
-
-
-        const name =
-            pick(
-
-                row,
-
-                [
-
-                    "name",
-
-                    "project_name",
-
-                    "title"
-
-                ],
-
-                "Unnamed project"
-
-            );
-
-
-        const projectCode =
-            pick(
-
-                row,
-
-                [
-
-                    "project_code",
-
-                    "code"
-
-                ],
-
-                "—"
-
-            );
-
-
-        const slug =
-            pick(
-
-                row,
-
-                [
-
-                    "slug"
-
-                ],
-
-                "—"
-
-            );
-
-
-        const statusValue =
-            pick(
-
-                row,
-
-                [
-
-                    "status",
-
-                    "state"
-
-                ],
-
-                "—"
-
-            );
-
-
-        const projectType =
-            pick(
-
-                row,
-
-                [
-
-                    "project_type",
-
-                    "type",
-
-                    "category"
-
-                ],
-
-                "—"
-
-            );
-
-
-        const network =
-            pick(
-
-                row,
-
-                [
-
-                    "network"
-
-                ],
-
-                "mainnet"
-
-            );
-
-
-        const description =
-            pick(
-
-                row,
-
-                [
-
-                    "description"
-
-                ],
-
-                ""
-
-            );
-
-
-        const card =
-            document.createElement(
-                "article"
-            );
-
-
-        card.className =
-            "project";
-
-
-        // =============================================
-        // PROJECT HEADER
-        // =============================================
-
-        const head =
-            document.createElement(
-                "div"
-            );
-
-
-        head.className =
-            "project-head";
-
-
-        // =============================================
-        // PROJECT IDENTITY
-        // =============================================
-
-        const identity =
-            document.createElement(
-                "div"
-            );
-
-
-        identity.className =
-            "project-identity";
-
-
-        // =============================================
-        // LOGO
-        // =============================================
-
-        const logo =
-            createProjectLogo(
-
-                row,
-
-                name
-
-            );
-
-
-        // =============================================
-        // TITLE AREA
-        // =============================================
-
-        const titleArea =
-            document.createElement(
-                "div"
-            );
-
-
-        titleArea.className =
-            "project-title";
-
-
-        const code =
-            document.createElement(
-                "span"
-            );
-
-
-        code.className =
-            "project-code";
-
-
-        code.textContent =
-            projectCode;
-
-
-        const title =
-            document.createElement(
-                "h3"
-            );
-
-
-        title.textContent =
-            name;
-
-
-        const meta =
-            document.createElement(
-                "span"
-            );
-
-
-        meta.className =
-            "project-type";
-
-
-        meta.textContent =
-
-            `${label(projectType)} • ${label(network)}`;
-
-
-        titleArea.appendChild(
-            code
-        );
-
-
-        titleArea.appendChild(
-            title
-        );
-
-
-        titleArea.appendChild(
-            meta
-        );
-
-
-        identity.appendChild(
-            logo
-        );
-
-
-        identity.appendChild(
-            titleArea
-        );
-
-
-        // =============================================
-        // STATUS
-        // =============================================
-
-        const statusBadge =
-            document.createElement(
-                "em"
-            );
-
-
-        statusBadge.textContent =
-            label(
-                statusValue
-            );
-
-
-        head.appendChild(
-            identity
-        );
-
-
-        head.appendChild(
-            statusBadge
-        );
-
-
-        card.appendChild(
-            head
-        );
-
-
-        // =============================================
-        // DESCRIPTION
+        // VALID LOGO URL
         // =============================================
 
         if (
 
-            description
-
-            &&
-
-            description !== "—"
+            logoUrl &&
+            logoUrl !== "—"
 
         ) {
 
-            const descriptionElement =
+            const image =
                 document.createElement(
-                    "p"
+                    "img"
                 );
 
 
-            descriptionElement.className =
-                "project-description";
+            image.src =
+                String(
+                    logoUrl
+                );
 
 
-            descriptionElement.textContent =
-                description;
+            image.alt =
+
+                String(
+                    projectName ||
+                    "Project"
+                ) +
+
+                " logo";
 
 
-            card.appendChild(
-                descriptionElement
+            image.loading =
+                "lazy";
+
+
+            image.decoding =
+                "async";
+
+
+            // =========================================
+            // FALLBACK
+            // =========================================
+
+            image.addEventListener(
+
+                "error",
+
+                () => {
+
+                    wrapper.innerHTML =
+                        "";
+
+
+                    const fallback =
+                        document.createElement(
+                            "span"
+                        );
+
+
+                    fallback.className =
+                        "project-logo-fallback";
+
+
+                    fallback.textContent =
+                        "A";
+
+
+                    fallback.setAttribute(
+
+                        "aria-label",
+
+                        "ALBUKHR project logo unavailable"
+
+                    );
+
+
+                    wrapper.appendChild(
+                        fallback
+                    );
+
+                },
+
+                {
+
+                    once:
+                        true
+
+                }
+
             );
+
+
+            wrapper.appendChild(
+                image
+            );
+
+
+            return wrapper;
 
         }
 
 
         // =============================================
-        // DETAILS
+        // NO LOGO FALLBACK
         // =============================================
 
-        const list =
+        const fallback =
             document.createElement(
-                "dl"
+                "span"
             );
 
 
-        const details = [
-
-            [
-
-                "Project type",
-
-                label(
-                    projectType
-                )
-
-            ],
-
-            [
-
-                "Slug",
-
-                slug
-
-            ],
-
-            [
-
-                "Project ID",
-
-                id
-
-            ]
-
-        ];
+        fallback.className =
+            "project-logo-fallback";
 
 
-        details.forEach(
-
-            ([term, value]) => {
-
-                const rowElement =
-                    document.createElement(
-                        "div"
-                    );
+        fallback.textContent =
+            "A";
 
 
-                const dt =
-                    document.createElement(
-                        "dt"
-                    );
+        fallback.setAttribute(
 
+            "aria-label",
 
-                const dd =
-                    document.createElement(
-                        "dd"
-                    );
-
-
-                dt.textContent =
-                    term;
-
-
-                dd.textContent =
-                    value;
-
-
-                rowElement.appendChild(
-                    dt
-                );
-
-
-                rowElement.appendChild(
-                    dd
-                );
-
-
-                list.appendChild(
-                    rowElement
-                );
-
-            }
+            "Project logo unavailable"
 
         );
 
 
-        card.appendChild(
-            list
+        wrapper.appendChild(
+            fallback
         );
 
 
-        // =============================================
-        // ACTIONS
-        // =============================================
-
-        const actions =
-            document.createElement(
-                "div"
-            );
-
-
-        actions.className =
-            "project-actions";
-
-
-        const edit =
-            document.createElement(
-                "a"
-            );
-
-
-        edit.className =
-            "edit-project";
-
-
-        edit.href =
-
-            "admin-project-edit.html?id=" +
-
-            encodeURIComponent(
-                id
-            );
-
-
-        edit.textContent =
-            "Edit Project";
-
-
-        actions.appendChild(
-            edit
-        );
-
-
-        card.appendChild(
-            actions
-        );
-
-
-        // =============================================
-        // RAW RECORD
-        //
-        // Useful for administrative inspection.
-        // =================================================
-
-        const extra =
-            document.createElement(
-                "details"
-            );
-
-
-        const summary =
-            document.createElement(
-                "summary"
-            );
-
-
-        summary.textContent =
-            "View registry record";
-
-
-        const pre =
-            document.createElement(
-                "pre"
-            );
-
-
-        pre.textContent =
-            JSON.stringify(
-
-                row,
-
-                null,
-
-                2
-
-            );
-
-
-        extra.appendChild(
-            summary
-        );
-
-
-        extra.appendChild(
-            pre
-        );
-
-
-        card.appendChild(
-            extra
-        );
-
-
-        return card;
+        return wrapper;
 
     }
 
 
     // =====================================================
-    // RENDER PROJECTS
+    // RENDER PROJECT REGISTRY
     // =====================================================
 
     function render(
@@ -1229,10 +427,6 @@
 
         const box =
             $("projects");
-
-
-        const emptyState =
-            $("emptyState");
 
 
         if (!box) {
@@ -1246,18 +440,8 @@
             "";
 
 
-        const safeRows =
-            Array.isArray(
-                rows
-            )
-
-                ? rows
-
-                : [];
-
-
         $("recordCount").textContent =
-            safeRows.length;
+            rows.length;
 
 
         // =============================================
@@ -1266,13 +450,14 @@
 
         if (
 
-            !safeRows.length
+            !rows.length
 
         ) {
 
-            emptyState?.classList.remove(
-                "hidden"
-            );
+            $("emptyState")
+                ?.classList.remove(
+                    "hidden"
+                );
 
 
             return;
@@ -1280,30 +465,577 @@
         }
 
 
-        emptyState?.classList.add(
-            "hidden"
-        );
+        $("emptyState")
+            ?.classList.add(
+                "hidden"
+            );
 
 
         // =============================================
         // PROJECTS
         // =============================================
 
-        safeRows.forEach(
+        rows.forEach(
 
             (
                 row,
                 index
             ) => {
 
-                const card =
-                    createProjectCard(
+                // =====================================
+                // ID
+                // =====================================
+
+                const id =
+                    pick(
 
                         row,
 
-                        index
+                        [
+
+                            "id",
+
+                            "project_id",
+
+                            "uuid"
+
+                        ],
+
+                        String(
+                            index + 1
+                        )
 
                     );
+
+
+                // =====================================
+                // NAME
+                // =====================================
+
+                const name =
+                    pick(
+
+                        row,
+
+                        [
+
+                            "name",
+
+                            "project_name",
+
+                            "title"
+
+                        ],
+
+                        "Unnamed project"
+
+                    );
+
+
+                // =====================================
+                // STATUS
+                // =====================================
+
+                const statusValue =
+                    pick(
+
+                        row,
+
+                        [
+
+                            "status",
+
+                            "state"
+
+                        ],
+
+                        "—"
+
+                    );
+
+
+                // =====================================
+                // PROJECT TYPE
+                // =====================================
+
+                const projectType =
+                    pick(
+
+                        row,
+
+                        [
+
+                            "project_type",
+
+                            "category",
+
+                            "type"
+
+                        ],
+
+                        "—"
+
+                    );
+
+
+                // =====================================
+                // PROJECT CODE
+                // =====================================
+
+                const projectCode =
+                    pick(
+
+                        row,
+
+                        [
+
+                            "project_code",
+
+                            "code"
+
+                        ],
+
+                        "—"
+
+                    );
+
+
+                // =====================================
+                // NETWORK
+                // =====================================
+
+                const network =
+                    pick(
+
+                        row,
+
+                        [
+
+                            "network"
+
+                        ],
+
+                        "mainnet"
+
+                    );
+
+
+                // =====================================
+                // CARD
+                // =====================================
+
+                const card =
+                    document.createElement(
+                        "article"
+                    );
+
+
+                card.className =
+                    "project";
+
+
+                // =====================================
+                // PROJECT HEAD
+                // =====================================
+
+                const head =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                head.className =
+                    "project-head";
+
+
+                // =====================================
+                // PROJECT IDENTITY
+                // =====================================
+
+                const identity =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                identity.className =
+                    "project-identity";
+
+
+                // =====================================
+                // LOGO
+                // =====================================
+
+                const projectLogo =
+                    createProjectLogo(
+
+                        row,
+
+                        name
+
+                    );
+
+
+                // =====================================
+                // TITLE
+                // =====================================
+
+                const titleGroup =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                titleGroup.className =
+                    "project-title-group";
+
+
+                const indexElement =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                indexElement.className =
+                    "index";
+
+
+                indexElement.textContent =
+                    projectCode !== "—"
+
+                        ? String(
+                            projectCode
+                        )
+
+                        : "#" +
+
+                        String(
+                            index + 1
+                        );
+
+
+                const title =
+                    document.createElement(
+                        "h3"
+                    );
+
+
+                title.textContent =
+                    String(
+                        name
+                    );
+
+
+                titleGroup.appendChild(
+                    indexElement
+                );
+
+
+                titleGroup.appendChild(
+                    title
+                );
+
+
+                identity.appendChild(
+                    projectLogo
+                );
+
+
+                identity.appendChild(
+                    titleGroup
+                );
+
+
+                // =====================================
+                // STATUS BADGE
+                // =====================================
+
+                const statusBadge =
+                    document.createElement(
+                        "em"
+                    );
+
+
+                statusBadge.textContent =
+                    label(
+                        statusValue
+                    );
+
+
+                head.appendChild(
+                    identity
+                );
+
+
+                head.appendChild(
+                    statusBadge
+                );
+
+
+                // =====================================
+                // DETAILS LIST
+                // =====================================
+
+                const details =
+                    document.createElement(
+                        "dl"
+                    );
+
+
+                // =====================================
+                // TYPE
+                // =====================================
+
+                const typeRow =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                const typeTitle =
+                    document.createElement(
+                        "dt"
+                    );
+
+
+                const typeValue =
+                    document.createElement(
+                        "dd"
+                    );
+
+
+                typeTitle.textContent =
+                    "Project type";
+
+
+                typeValue.textContent =
+                    label(
+                        projectType
+                    );
+
+
+                typeRow.appendChild(
+                    typeTitle
+                );
+
+
+                typeRow.appendChild(
+                    typeValue
+                );
+
+
+                // =====================================
+                // NETWORK
+                // =====================================
+
+                const networkRow =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                const networkTitle =
+                    document.createElement(
+                        "dt"
+                    );
+
+
+                const networkValue =
+                    document.createElement(
+                        "dd"
+                    );
+
+
+                networkTitle.textContent =
+                    "Network";
+
+
+                networkValue.textContent =
+                    String(
+                        network
+                    )
+                        .toUpperCase();
+
+
+                networkRow.appendChild(
+                    networkTitle
+                );
+
+
+                networkRow.appendChild(
+                    networkValue
+                );
+
+
+                // =====================================
+                // PROJECT ID
+                // =====================================
+
+                const idRow =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                const idTitle =
+                    document.createElement(
+                        "dt"
+                    );
+
+
+                const idValue =
+                    document.createElement(
+                        "dd"
+                    );
+
+
+                idTitle.textContent =
+                    "Project ID";
+
+
+                idValue.textContent =
+                    String(
+                        id
+                    );
+
+
+                idRow.appendChild(
+                    idTitle
+                );
+
+
+                idRow.appendChild(
+                    idValue
+                );
+
+
+                details.appendChild(
+                    typeRow
+                );
+
+
+                details.appendChild(
+                    networkRow
+                );
+
+
+                details.appendChild(
+                    idRow
+                );
+
+
+                // =====================================
+                // ACTIONS
+                // =====================================
+
+                const actions =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                actions.className =
+                    "project-actions";
+
+
+                const editLink =
+                    document.createElement(
+                        "a"
+                    );
+
+
+                editLink.className =
+                    "edit-project";
+
+
+                editLink.href =
+
+                    "admin-project-edit.html?id=" +
+
+                    encodeURIComponent(
+                        id
+                    );
+
+
+                editLink.textContent =
+                    "Edit Project";
+
+
+                actions.appendChild(
+                    editLink
+                );
+
+
+                // =====================================
+                // RAW RECORD
+                // =====================================
+
+                const extra =
+                    document.createElement(
+                        "details"
+                    );
+
+
+                const summary =
+                    document.createElement(
+                        "summary"
+                    );
+
+
+                summary.textContent =
+                    "View registry record";
+
+
+                const pre =
+                    document.createElement(
+                        "pre"
+                    );
+
+
+                pre.textContent =
+                    JSON.stringify(
+
+                        row,
+
+                        null,
+
+                        2
+
+                    );
+
+
+                extra.appendChild(
+                    summary
+                );
+
+
+                extra.appendChild(
+                    pre
+                );
+
+
+                // =====================================
+                // BUILD CARD
+                // =====================================
+
+                card.appendChild(
+                    head
+                );
+
+
+                card.appendChild(
+                    details
+                );
+
+
+                card.appendChild(
+                    actions
+                );
+
+
+                card.appendChild(
+                    extra
+                );
 
 
                 box.appendChild(
@@ -1318,58 +1050,21 @@
 
 
     // =====================================================
-    // BUSY STATE
-    // =====================================================
-
-    function setLoading(
-        value
-    ) {
-
-        loading =
-            !!value;
-
-
-        const button =
-            $("refreshButton");
-
-
-        if (!button) {
-
-            return;
-
-        }
-
-
-        button.disabled =
-            loading;
-
-
-        button.textContent =
-            loading
-
-                ? "Refreshing..."
-
-                : "Refresh";
-
-    }
-
-
-    // =====================================================
     // LOAD PROJECT REGISTRY
     // =====================================================
 
     async function load() {
 
-        if (loading) {
+        const refreshButton =
+            $("refreshButton");
 
-            return;
+
+        if (refreshButton) {
+
+            refreshButton.disabled =
+                true;
 
         }
-
-
-        setLoading(
-            true
-        );
 
 
         $("sourceState").textContent =
@@ -1379,27 +1074,34 @@
         try {
 
             // =============================================
-            // MAINNET
-            // =============================================
-
-            requireMainnet();
-
-
-            // =============================================
-            // CLIENT
+            // SUPABASE
             // =============================================
 
             const client =
-                getClient();
+                window
+                    .ALBUKHR_SUPABASE
+                    ?.client;
+
+
+            if (!client) {
+
+                throw Error(
+
+                    "ALBUKHR Supabase Core is unavailable."
+
+                );
+
+            }
 
 
             // =============================================
-            // AUTHORITATIVE RPC
+            // AUTHORITATIVE REGISTRY RPC
             // =============================================
 
             const {
 
                 data,
+
                 error
 
             } =
@@ -1422,7 +1124,7 @@
 
 
             // =============================================
-            // JSONB RESPONSE
+            // RESPONSE
             // =============================================
 
             const payload =
@@ -1447,7 +1149,7 @@
             // =============================================
             // SERVER AUTHORIZATION
             //
-            // Never trust frontend role checks alone.
+            // Server remains authoritative.
             // =============================================
 
             if (
@@ -1456,22 +1158,9 @@
 
             ) {
 
-                $("authorization").textContent =
+                $("authorization")
+                    .textContent =
                     "DENIED";
-
-
-                $("sourceState").textContent =
-                    label(
-
-                        payload.source ||
-
-                        "ALBUKHR Security"
-
-                    );
-
-
-                $("recordCount").textContent =
-                    "0";
 
 
                 $("registryPanel")
@@ -1486,11 +1175,23 @@
                     );
 
 
+                $("sourceState")
+                    .textContent =
+
+                    label(
+
+                        payload.source ||
+
+                        "albukhr_security"
+
+                    );
+
+
                 status(
 
                     payload.message ||
 
-                    "Project Registry authorization denied.",
+                    "Project Registry authorization was denied.",
 
                     true
 
@@ -1503,43 +1204,11 @@
 
 
             // =============================================
-            // MAINNET RESPONSE VERIFICATION
-            // =============================================
-
-            if (
-
-                payload.network != null
-
-                &&
-
-                String(
-                    payload.network
-                )
-
-                    .trim()
-
-                    .toLowerCase()
-
-                !==
-
-                "mainnet"
-
-            ) {
-
-                throw Error(
-
-                    "Project Registry network verification failed."
-
-                );
-
-            }
-
-
-            // =============================================
             // RECORDS
             // =============================================
 
             const rows =
+
                 Array.isArray(
                     payload.records
                 )
@@ -1553,7 +1222,8 @@
             // SOURCE
             // =============================================
 
-            $("sourceState").textContent =
+            $("sourceState")
+                .textContent =
 
                 payload.source ===
                 "public.projects"
@@ -1563,7 +1233,6 @@
                     : label(
 
                         payload.source ||
-
                         "RPC"
 
                     );
@@ -1573,7 +1242,8 @@
             // DESCRIPTION
             // =============================================
 
-            $("registryDescription").textContent =
+            $("registryDescription")
+                .textContent =
 
                 payload.message ||
 
@@ -1581,10 +1251,11 @@
 
 
             // =============================================
-            // EMPTY TEXT
+            // EMPTY MESSAGE
             // =============================================
 
-            $("emptyText").textContent =
+            $("emptyText")
+                .textContent =
 
                 payload.message ||
 
@@ -1623,7 +1294,8 @@
             );
 
 
-            $("sourceState").textContent =
+            $("sourceState")
+                .textContent =
                 "ERROR";
 
 
@@ -1632,8 +1304,10 @@
                 "Project Registry could not be loaded: " +
 
                 String(
+
                     error?.message ||
                     error
+
                 ),
 
                 true
@@ -1644,9 +1318,12 @@
 
         finally {
 
-            setLoading(
-                false
-            );
+            if (refreshButton) {
+
+                refreshButton.disabled =
+                    false;
+
+            }
 
         }
 
@@ -1662,7 +1339,7 @@
         try {
 
             // =============================================
-            // ADMIN AUTH ENGINE
+            // AUTH ENGINE
             // =============================================
 
             if (!A()) {
@@ -1680,11 +1357,25 @@
             // MAINNET ONLY
             // =============================================
 
-            requireMainnet();
+            if (
+
+                !window
+                    .ALBukhrEnvironment
+                    ?.isMainnet()
+
+            ) {
+
+                throw Error(
+
+                    "Project Registry is available only on ALBUKHR MAINNET."
+
+                );
+
+            }
 
 
             // =============================================
-            // INITIALIZE AUTH
+            // INITIALIZE SESSION
             // =============================================
 
             await A().init();
@@ -1694,7 +1385,7 @@
             // REQUIRE ADMIN
             // =============================================
 
-            currentAdmin =
+            const admin =
                 await A().requireAdmin({
 
                     redirect:
@@ -1703,7 +1394,7 @@
                 });
 
 
-            if (!currentAdmin) {
+            if (!admin) {
 
                 location.replace(
 
@@ -1726,6 +1417,8 @@
 
             if (
 
+                admin.mfa_required &&
+
                 !mfa?.verified
 
             ) {
@@ -1742,40 +1435,31 @@
 
 
             // =============================================
-            // SECURITY STATE
+            // SECURITY STATUS
             // =============================================
 
-            $("securityState").textContent =
+            $("securityState")
+                .textContent =
 
                 "Authenticated • AAL2";
 
 
             // =============================================
-            // FRONTEND REGISTRY GUARD
-            //
-            // UI/UX only.
-            //
-            // get_project_registry RPC remains authoritative.
+            // FRONTEND UX AUTHORIZATION
             // =============================================
 
-            const allowed =
-                hasRegistryAccess(
+            if (
 
-                    currentAdmin
+                !authorized(
+                    admin
+                )
 
-                );
+            ) {
 
+                $("authorization")
+                    .textContent =
+                    "DENIED";
 
-            $("authorization").textContent =
-
-                allowed
-
-                    ? "AUTHORIZED"
-
-                    : "DENIED";
-
-
-            if (!allowed) {
 
                 $("deniedPanel")
                     ?.classList.remove(
@@ -1798,8 +1482,13 @@
 
 
             // =============================================
-            // SHOW REGISTRY
+            // FRONTEND AUTHORIZED
             // =============================================
+
+            $("authorization")
+                .textContent =
+                "AUTHORIZED";
+
 
             $("registryPanel")
                 ?.classList.remove(
@@ -1808,31 +1497,7 @@
 
 
             // =============================================
-            // CREATE BUTTON
-            //
-            // Only UI visibility.
-            //
-            // create_project RPC remains authoritative.
-            // =============================================
-
-            if (
-
-                hasCreationAccess(
-                    currentAdmin
-                )
-
-            ) {
-
-                $("createProjectButton")
-                    ?.classList.remove(
-                        "hidden"
-                    );
-
-            }
-
-
-            // =============================================
-            // LOAD
+            // LOAD AUTHORITATIVE REGISTRY
             // =============================================
 
             await load();
@@ -1852,26 +1517,28 @@
 
             status(
 
-                String(
-                    error?.message ||
-                    error
-                ),
+                "Admin authorization failed. Returning to secure login.",
 
                 true
 
             );
 
 
-            $("authorization").textContent =
-                "ERROR";
+            setTimeout(
 
+                () => {
 
-            $("sourceState").textContent =
-                "ERROR";
+                    location.replace(
 
+                        "admin-login.html"
 
-            $("refreshButton").disabled =
-                true;
+                    );
+
+                },
+
+                700
+
+            );
 
         }
 
@@ -1879,7 +1546,7 @@
 
 
     // =====================================================
-    // BIND EVENTS
+    // EVENTS
     // =====================================================
 
     function bind() {
@@ -1911,7 +1578,8 @@
 
                     try {
 
-                        await A()?.signOut();
+                        await A()
+                            ?.signOut();
 
                     }
 
@@ -1937,7 +1605,6 @@
     // =====================================================
 
     bind();
-
 
     init();
 
