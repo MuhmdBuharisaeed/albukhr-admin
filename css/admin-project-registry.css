@@ -1,83 +1,1374 @@
-*{box-sizing:border-box}
-:root{--g:#087a3e;--dark:#073b28;--muted:#60776d;--line:#d7e8df;--soft:#f1f8f4;--danger:#a62c27}
-html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--dark);background:linear-gradient(135deg,#f4faf7,#fff)}
-button{font:inherit}.topbar{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:#fff;border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--dark)}.brand img{width:44px;height:44px;border-radius:50%;object-fit:cover}.brand b{display:block;color:var(--g);font-size:18px;letter-spacing:1px}.brand small{display:block;font-size:9px;letter-spacing:1.5px;font-weight:800}
-.actions{display:flex;align-items:center;gap:9px}.actions span{font-size:10px;font-weight:900;color:var(--g);background:var(--soft);padding:7px 10px;border-radius:999px}.actions button,.panel-head button{border:1px solid var(--line);background:#fff;color:var(--g);padding:8px 12px;border-radius:10px;font-weight:800}
-main{width:min(1180px,100%);margin:auto;padding:20px 16px 45px}.back{margin:4px 0 18px}.back a{color:var(--g);font-size:13px;font-weight:800;text-decoration:none}
-.hero{display:flex;justify-content:space-between;align-items:end;gap:18px;padding:12px 0 24px}.hero small{color:var(--g);font-weight:900;letter-spacing:1px}.hero h1{font-size:clamp(28px,5vw,42px);margin:8px 0}.hero p{color:var(--muted);margin:0;line-height:1.5}.hero>strong{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 13px;font-size:11px;color:var(--g)}
-.status{min-height:20px;color:var(--g);font-size:13px;margin-bottom:10px}.status.error{color:var(--danger)}
-.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:15px}.summary article,.panel,.notice{background:#fff;border:1px solid var(--line);border-radius:18px;padding:17px;box-shadow:0 10px 30px rgba(0,0,0,.04)}.summary span{display:block;color:var(--muted);font-size:11px}.summary b{display:block;color:var(--g);font-size:19px;margin-top:6px}
-.panel{margin-top:15px}.hidden{display:none}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:15px}.panel h2{margin:0;font-size:21px}.panel-head p{color:var(--muted);font-size:12px;margin:6px 0 0}
-.projects{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}.project{border:1px solid var(--line);border-radius:15px;padding:15px;background:#fcfefd}.project-head{display:flex;justify-content:space-between;gap:10px}.project h3{margin:5px 0 0;font-size:16px}.index{font-size:10px;color:var(--muted)}.project em{font-style:normal;height:max-content;color:var(--g);background:var(--soft);padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900}
-dl{margin:14px 0 0}.project dl div{display:flex;justify-content:space-between;border-top:1px solid #edf3ef;padding:9px 0;font-size:11px}.project dt{color:var(--muted)}.project dd{margin:0;font-weight:800;text-align:right;max-width:60%;overflow-wrap:anywhere}
-details{margin-top:8px;border-top:1px solid #edf3ef;padding-top:9px;font-size:11px}summary{cursor:pointer;color:var(--g);font-weight:800}pre{white-space:pre-wrap;overflow:auto;background:#f6faf8;border-radius:10px;padding:10px;color:#3c554a;font-size:9px}
-.empty{margin-top:16px;border:1px dashed var(--line);border-radius:14px;padding:20px;text-align:center;display:grid;gap:5px}.empty span{font-size:12px;color:var(--muted)}
-.notice{margin-top:15px;background:var(--soft);display:grid;gap:5px;font-size:12px;line-height:1.5}.notice span{color:var(--muted)}
-@media(max-width:680px){main{padding:17px 13px 35px}.summary,.projects{grid-template-columns:1fr}.hero{flex-direction:column;align-items:flex-start}.actions span{display:none}}
+/* =========================================================
+   ALBUKHR ADMIN PROJECT REGISTRY
+========================================================= */
 
-.registry-actions{
-  display:flex;
-  align-items:center;
-  gap:9px;
-  flex-wrap:wrap;
+
+/* =========================================================
+   RESET
+========================================================= */
+
+*{
+    box-sizing:border-box;
 }
 
-.create-project-button{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  border:1px solid var(--g);
-  background:var(--g);
-  color:#fff;
-  padding:8px 12px;
-  border-radius:10px;
-  font-size:13px;
-  font-weight:900;
-  text-decoration:none;
-  white-space:nowrap;
+
+/* =========================================================
+   ROOT
+========================================================= */
+
+:root{
+
+    --g:#087a3e;
+
+    --dark:#073b28;
+
+    --muted:#60776d;
+
+    --line:#d7e8df;
+
+    --soft:#f1f8f4;
+
+    --danger:#a62c27;
+
+    --white:#ffffff;
+
 }
 
-.create-project-button:hover{
-  opacity:.92;
+
+/* =========================================================
+   DOCUMENT
+========================================================= */
+
+html,
+body{
+
+    margin:0;
+
+    min-height:100%;
+
+    font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        sans-serif;
+
+    color:var(--dark);
+
+    background:
+        linear-gradient(
+            135deg,
+            #f4faf7,
+            #ffffff
+        );
+
 }
 
-@media(max-width:680px){
-  .registry-actions{
-    width:100%;
-  }
 
-  .create-project-button,
-  #refreshButton{
-    flex:1;
-  }
-    }
+/* =========================================================
+   BUTTON
+========================================================= */
+
+button{
+
+    font:inherit;
+
+}
+
+
+/* =========================================================
+   TOPBAR
+========================================================= */
+
+.topbar{
+
+    position:sticky;
+
+    top:0;
+
+    z-index:5;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:12px 18px;
+
+    background:#ffffff;
+
+    border-bottom:
+        1px solid
+        var(--line);
+
+}
+
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.brand{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    text-decoration:none;
+
+    color:var(--dark);
+
+}
+
+
+/* =========================================================
+   ALBUKHR BRAND LOGO
+========================================================= */
+
+.brand img{
+
+    width:44px;
+
+    height:44px;
+
+    flex:0 0 44px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    display:block;
+
+}
+
+
+/* =========================================================
+   BRAND TEXT
+========================================================= */
+
+.brand b{
+
+    display:block;
+
+    color:var(--g);
+
+    font-size:18px;
+
+    letter-spacing:1px;
+
+}
+
+
+.brand small{
+
+    display:block;
+
+    font-size:9px;
+
+    letter-spacing:1.5px;
+
+    font-weight:800;
+
+}
+
+
+/* =========================================================
+   TOPBAR ACTIONS
+========================================================= */
+
+.actions{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:9px;
+
+}
+
+
+.actions span{
+
+    font-size:10px;
+
+    font-weight:900;
+
+    color:var(--g);
+
+    background:var(--soft);
+
+    padding:7px 10px;
+
+    border-radius:999px;
+
+}
+
+
+.actions button,
+.panel-head button{
+
+    border:
+        1px solid
+        var(--line);
+
+    background:#ffffff;
+
+    color:var(--g);
+
+    padding:8px 12px;
+
+    border-radius:10px;
+
+    font-weight:800;
+
+    cursor:pointer;
+
+}
+
+
+.actions button:disabled,
+.panel-head button:disabled{
+
+    opacity:.65;
+
+    cursor:not-allowed;
+
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+main{
+
+    width:
+        min(
+            1180px,
+            100%
+        );
+
+    margin:auto;
+
+    padding:
+        20px
+        16px
+        45px;
+
+}
+
+
+/* =========================================================
+   BACK
+========================================================= */
+
+.back{
+
+    margin:
+        4px
+        0
+        18px;
+
+}
+
+
+.back a{
+
+    color:var(--g);
+
+    font-size:13px;
+
+    font-weight:800;
+
+    text-decoration:none;
+
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.hero{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:end;
+
+    gap:18px;
+
+    padding:
+        12px
+        0
+        24px;
+
+}
+
+
+.hero small{
+
+    color:var(--g);
+
+    font-weight:900;
+
+    letter-spacing:1px;
+
+}
+
+
+.hero h1{
+
+    font-size:
+        clamp(
+            28px,
+            5vw,
+            42px
+        );
+
+    margin:
+        8px
+        0;
+
+}
+
+
+.hero p{
+
+    color:var(--muted);
+
+    margin:0;
+
+    line-height:1.5;
+
+}
+
+
+.hero > strong{
+
+    white-space:nowrap;
+
+    border:
+        1px solid
+        var(--line);
+
+    background:#ffffff;
+
+    border-radius:999px;
+
+    padding:
+        10px
+        13px;
+
+    font-size:11px;
+
+    color:var(--g);
+
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.status{
+
+    min-height:20px;
+
+    color:var(--g);
+
+    font-size:13px;
+
+    margin-bottom:10px;
+
+}
+
+
+.status.error{
+
+    color:var(--danger);
+
+}
+
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+
+.summary{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            1fr
+        );
+
+    gap:12px;
+
+    margin-bottom:15px;
+
+}
+
+
+.summary article,
+.panel,
+.notice{
+
+    background:#ffffff;
+
+    border:
+        1px solid
+        var(--line);
+
+    border-radius:18px;
+
+    padding:17px;
+
+    box-shadow:
+        0
+        10px
+        30px
+        rgba(
+            0,
+            0,
+            0,
+            .04
+        );
+
+}
+
+
+.summary span{
+
+    display:block;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+}
+
+
+.summary b{
+
+    display:block;
+
+    color:var(--g);
+
+    font-size:19px;
+
+    margin-top:6px;
+
+}
+
+
+/* =========================================================
+   PANEL
+========================================================= */
+
+.panel{
+
+    margin-top:15px;
+
+}
+
 
 .hidden{
-  display:none !important;
+
+    display:none !important;
+
 }
+
+
+/* =========================================================
+   PANEL HEAD
+========================================================= */
+
+.panel-head{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:15px;
+
+}
+
+
+.panel h2{
+
+    margin:0;
+
+    font-size:21px;
+
+}
+
+
+.panel-head p{
+
+    color:var(--muted);
+
+    font-size:12px;
+
+    margin:
+        6px
+        0
+        0;
+
+}
+
+
+/* =========================================================
+   REGISTRY ACTIONS
+========================================================= */
+
+.registry-actions{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:9px;
+
+    flex-wrap:wrap;
+
+}
+
+
+/* =========================================================
+   CREATE PROJECT BUTTON
+========================================================= */
+
+.create-project-button{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    border:
+        1px solid
+        var(--g);
+
+    background:var(--g);
+
+    color:#ffffff;
+
+    padding:
+        8px
+        12px;
+
+    border-radius:10px;
+
+    font-size:13px;
+
+    font-weight:900;
+
+    text-decoration:none;
+
+    white-space:nowrap;
+
+}
+
+
+.create-project-button:hover{
+
+    opacity:.92;
+
+}
+
+
+/* =========================================================
+   PROJECT GRID
+========================================================= */
+
+.projects{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(
+                0,
+                1fr
+            )
+        );
+
+    gap:12px;
+
+    margin-top:16px;
+
+}
+
+
+/* =========================================================
+   PROJECT CARD
+========================================================= */
+
+.project{
+
+    min-width:0;
+
+    border:
+        1px solid
+        var(--line);
+
+    border-radius:15px;
+
+    padding:15px;
+
+    background:#fcfefd;
+
+    overflow:hidden;
+
+}
+
+
+/* =========================================================
+   PROJECT HEADER
+========================================================= */
+
+.project-head{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    gap:12px;
+
+}
+
+
+/* =========================================================
+   PROJECT IDENTITY
+========================================================= */
+
+.project-identity{
+
+    min-width:0;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+
+/* =========================================================
+   PROJECT LOGO
+   ---------------------------------------------------------
+   IMPORTANT:
+
+   This is the main fix.
+
+   The container is permanently constrained.
+
+   Original images such as:
+
+       853 × 1280
+
+   cannot expand the card.
+========================================================= */
+
+.project-logo{
+
+    width:64px;
+
+    height:64px;
+
+    flex:
+        0
+        0
+        64px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    overflow:hidden;
+
+    border:
+        1px solid
+        var(--line);
+
+    border-radius:18px;
+
+    background:var(--soft);
+
+    box-shadow:
+        0
+        4px
+        12px
+        rgba(
+            0,
+            0,
+            0,
+            .05
+        );
+
+}
+
+
+/* =========================================================
+   PROJECT LOGO IMAGE
+========================================================= */
+
+.project-logo-image{
+
+    display:block;
+
+    width:100%;
+
+    height:100%;
+
+    max-width:100%;
+
+    max-height:100%;
+
+    object-fit:cover;
+
+}
+
+
+/* =========================================================
+   PROJECT LOGO FALLBACK
+========================================================= */
+
+.project-logo-fallback{
+
+    color:var(--g);
+
+    font-size:18px;
+
+    font-weight:900;
+
+    letter-spacing:.5px;
+
+}
+
+
+/* =========================================================
+   PROJECT TITLE
+========================================================= */
+
+.project-title{
+
+    min-width:0;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+}
+
+
+/* =========================================================
+   PROJECT CODE
+========================================================= */
+
+.project-code{
+
+    display:block;
+
+    color:var(--muted);
+
+    font-size:10px;
+
+    font-weight:800;
+
+    letter-spacing:.4px;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+
+}
+
+
+/* =========================================================
+   PROJECT NAME
+========================================================= */
+
+.project h3{
+
+    margin:
+        3px
+        0
+        3px;
+
+    color:var(--dark);
+
+    font-size:16px;
+
+    line-height:1.3;
+
+    overflow-wrap:anywhere;
+
+}
+
+
+/* =========================================================
+   PROJECT TYPE
+========================================================= */
+
+.project-type{
+
+    display:block;
+
+    color:var(--muted);
+
+    font-size:10px;
+
+    line-height:1.4;
+
+}
+
+
+/* =========================================================
+   PROJECT STATUS
+========================================================= */
+
+.project em{
+
+    flex:0 0 auto;
+
+    font-style:normal;
+
+    height:max-content;
+
+    color:var(--g);
+
+    background:var(--soft);
+
+    padding:
+        5px
+        8px;
+
+    border-radius:999px;
+
+    font-size:9px;
+
+    font-weight:900;
+
+    text-transform:uppercase;
+
+    white-space:nowrap;
+
+}
+
+
+/* =========================================================
+   PROJECT DESCRIPTION
+========================================================= */
+
+.project-description{
+
+    margin:
+        13px
+        0
+        0;
+
+    padding:
+        10px
+        11px;
+
+    background:#f7fbf8;
+
+    border-radius:10px;
+
+    color:var(--muted);
+
+    font-size:11px;
+
+    line-height:1.5;
+
+    overflow-wrap:anywhere;
+
+}
+
+
+/* =========================================================
+   PROJECT DETAILS
+========================================================= */
+
+.project dl{
+
+    margin:
+        14px
+        0
+        0;
+
+}
+
+
+.project dl div{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    gap:15px;
+
+    border-top:
+        1px solid
+        #edf3ef;
+
+    padding:
+        9px
+        0;
+
+    font-size:11px;
+
+}
+
+
+.project dt{
+
+    flex:0 0 auto;
+
+    color:var(--muted);
+
+}
+
+
+.project dd{
+
+    min-width:0;
+
+    margin:0;
+
+    font-weight:800;
+
+    text-align:right;
+
+    max-width:65%;
+
+    overflow-wrap:anywhere;
+
+}
+
+
+/* =========================================================
+   PROJECT ACTIONS
+========================================================= */
 
 .project-actions{
-  margin-top:12px;
-  padding-top:12px;
-  border-top:1px solid #edf3ef;
+
+    margin-top:12px;
+
+    padding-top:12px;
+
+    border-top:
+        1px solid
+        #edf3ef;
+
 }
+
+
+/* =========================================================
+   EDIT PROJECT
+========================================================= */
 
 .edit-project{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  text-decoration:none;
-  color:#087a3e;
-  background:#f1f8f4;
-  border:1px solid #d7e8df;
-  border-radius:10px;
-  padding:9px 12px;
-  font-size:11px;
-  font-weight:900;
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    text-decoration:none;
+
+    color:var(--g);
+
+    background:var(--soft);
+
+    border:
+        1px solid
+        var(--line);
+
+    border-radius:10px;
+
+    padding:
+        9px
+        12px;
+
+    font-size:11px;
+
+    font-weight:900;
+
 }
 
+
 .edit-project:hover{
-  background:#087a3e;
-  color:#fff;
+
+    background:var(--g);
+
+    color:#ffffff;
+
 }
+
+
+/* =========================================================
+   RAW REGISTRY RECORD
+========================================================= */
+
+details{
+
+    margin-top:8px;
+
+    border-top:
+        1px solid
+        #edf3ef;
+
+    padding-top:9px;
+
+    font-size:11px;
+
+}
+
+
+summary{
+
+    cursor:pointer;
+
+    color:var(--g);
+
+    font-weight:800;
+
+}
+
+
+pre{
+
+    max-width:100%;
+
+    margin-top:10px;
+
+    white-space:pre-wrap;
+
+    overflow:auto;
+
+    background:#f6faf8;
+
+    border-radius:10px;
+
+    padding:10px;
+
+    color:#3c554a;
+
+    font-size:9px;
+
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty{
+
+    margin-top:16px;
+
+    border:
+        1px dashed
+        var(--line);
+
+    border-radius:14px;
+
+    padding:20px;
+
+    text-align:center;
+
+    display:grid;
+
+    gap:5px;
+
+}
+
+
+.empty span{
+
+    font-size:12px;
+
+    color:var(--muted);
+
+}
+
+
+/* =========================================================
+   NOTICE
+========================================================= */
+
+.notice{
+
+    margin-top:15px;
+
+    background:var(--soft);
+
+    display:grid;
+
+    gap:5px;
+
+    font-size:12px;
+
+    line-height:1.5;
+
+}
+
+
+.notice span{
+
+    color:var(--muted);
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(
+    max-width:680px
+){
+
+    main{
+
+        padding:
+            17px
+            13px
+            35px;
+
+    }
+
+
+    /* =============================================
+       SUMMARY
+    ============================================= */
+
+    .summary{
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    /* =============================================
+       PROJECT GRID
+    ============================================= */
+
+    .projects{
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    /* =============================================
+       HERO
+    ============================================= */
+
+    .hero{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+
+    /* =============================================
+       TOPBAR
+    ============================================= */
+
+    .actions span{
+
+        display:none;
+
+    }
+
+
+    /* =============================================
+       REGISTRY ACTIONS
+    ============================================= */
+
+    .registry-actions{
+
+        width:100%;
+
+        margin-top:4px;
+
+    }
+
+
+    .create-project-button,
+    #refreshButton{
+
+        flex:1;
+
+    }
+
+
+    /* =============================================
+       PANEL HEAD
+    ============================================= */
+
+    .panel-head{
+
+        align-items:flex-start;
+
+        flex-direction:column;
+
+    }
+
+
+    /* =============================================
+       PROJECT LOGO
+       ------------------------------------------------
+       Still constrained on mobile.
+    ============================================= */
+
+    .project-logo{
+
+        width:60px;
+
+        height:60px;
+
+        flex:
+            0
+            0
+            60px;
+
+        border-radius:17px;
+
+    }
+
+
+    /* =============================================
+       PROJECT TITLE
+    ============================================= */
+
+    .project h3{
+
+        font-size:15px;
+
+    }
+
+
+    /* =============================================
+       STATUS BADGE
+    ============================================= */
+
+    .project em{
+
+        font-size:8px;
+
+    }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media(
+    max-width:420px
+){
+
+    .topbar{
+
+        padding:
+            10px
+            12px;
+
+    }
+
+
+    .brand img{
+
+        width:40px;
+
+        height:40px;
+
+        flex:
+            0
+            0
+            40px;
+
+    }
+
+
+    .brand b{
+
+        font-size:16px;
+
+    }
+
+
+    .brand small{
+
+        font-size:8px;
+
+    }
+
+
+    .project-head{
+
+        gap:8px;
+
+    }
+
+
+    .project-identity{
+
+        gap:9px;
+
+    }
+
+
+    .project-logo{
+
+        width:56px;
+
+        height:56px;
+
+        flex:
+            0
+            0
+            56px;
+
+        border-radius:16px;
+
+    }
+
+
+    .project dd{
+
+        max-width:58%;
+
+    }
+
+  }
