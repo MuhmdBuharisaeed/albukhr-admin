@@ -9,7 +9,7 @@ button,input,select{font:inherit}
 .brand small{display:block;font-size:9px;letter-spacing:1.5px;font-weight:800}
 .actions{display:flex;align-items:center;gap:9px}
 .actions span{font-size:10px;font-weight:900;color:var(--g);background:var(--soft);padding:7px 10px;border-radius:999px}
-.actions button,.panel-head button{border:1px solid var(--line);background:#fff;color:var(--g);padding:8px 12px;border-radius:10px;font-weight:800;cursor:pointer}
+.actions button,.panel-head button,#copyTokenButton{border:1px solid var(--line);background:#fff;color:var(--g);padding:8px 12px;border-radius:10px;font-weight:800;cursor:pointer}
 main{width:min(1180px,100%);margin:auto;padding:20px 16px 45px}
 .back{margin:4px 0 18px}.back a{color:var(--g);font-size:13px;font-weight:800;text-decoration:none}
 .hero{display:flex;justify-content:space-between;align-items:end;gap:18px;padding:12px 0 24px}
