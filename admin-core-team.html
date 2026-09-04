@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087a3e">
+<meta name="robots" content="noindex,nofollow">
+<title>ALBUKHR — Core Team</title>
+<link rel="stylesheet" href="css/admin-core-team.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/core/environment-core.js" defer></script>
+<script src="js/core/supabase-core.js" defer></script>
+<script src="js/core/supabase-admin-auth.js" defer></script>
+<script src="js/admin-core-team.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="admin-dashboard.html">
+<img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR">
+<span><b>ALBUKHR</b><small>ADMINISTRATION</small></span>
+</a>
+<div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div>
+</header>
+<main>
+<nav class="back"><a href="admin-dashboard.html">← Admin Control Center</a></nav>
+<section class="hero">
+<div><small>ALBUKHR CORE TEAM</small><h1>Core Team</h1><p>Manage the official seven-member ALBUKHR Core Team through the existing Mainnet administration security boundary.</p></div>
+<strong id="securityState">Verifying security...</strong>
+</section>
+<div id="pageStatus" class="status" aria-live="polite"></div>
+<section class="summary">
+<article><span>Authorization</span><b id="authorization">CHECKING</b></article>
+<article><span>Core Team members</span><b id="memberCount">0 / 7</b></article>
+<article><span>Security level</span><b id="securityLevel">CHECKING</b></article>
+</section>
+<section id="deniedPanel" class="panel hidden">
+<h2>Core Team access denied</h2>
+<p>You are authenticated, but your Mainnet admin role does not authorize Core Team management.</p>
+</section>
+<section id="corePanel" class="panel hidden">
+<div class="panel-head">
+<div><h2>Invite Core Team Member</h2><p>Super Admin creates the invitation. Membership authority remains server-side.</p></div>
+<span class="badge">7 OFFICIAL SLOTS</span>
+</div>
+<form id="inviteForm" novalidate>
+<div class="grid">
+<label>Email<input id="inviteEmail" type="email" maxlength="320" autocomplete="email" placeholder="member@example.com" required></label>
+<label>Core Slot<select id="coreSlot" required><option value="">Select slot</option><option value="1">Core Slot 1</option><option value="2">Core Slot 2</option><option value="3">Core Slot 3</option><option value="4">Core Slot 4</option><option value="5">Core Slot 5</option><option value="6">Core Slot 6</option><option value="7">Core Slot 7</option></select></label>
+</div>
+<label>Role / Note<input id="inviteNote" maxlength="300" autocomplete="off" placeholder="Optional assignment note"></label>
+<button id="inviteButton" class="primary" type="submit">Create Core Team Invitation</button>
+</form>
+</section>
+<section id="recordsPanel" class="panel hidden">
+<div class="panel-head">
+<div><h2>Core Team Invitations</h2><p>Server-authoritative invitation and membership records.</p></div>
+<button id="refreshButton" type="button">Refresh</button>
+</div>
+<div id="emptyState" class="empty"><b>No invitation records returned.</b><span>The Core Team invitation RPC returned no records.</span></div>
+<div id="invitationList" class="records"></div>
+</section>
+<section class="notice"><b>Security boundary</b><span>Core Team does not create a second login system. Existing Supabase Admin Auth, MFA/AAL2 and server-side authorization remain the authority.</span></section>
+</main>
+</body>
+</html>
