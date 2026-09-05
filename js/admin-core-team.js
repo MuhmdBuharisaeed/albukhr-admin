@@ -1591,29 +1591,711 @@
     //
     // =========================================================
 
-    function showInvitationToken(
-        token
+    // =========================================================
+// SHOW INVITATION TOKEN
+//
+// SECURITY RULES:
+//
+// - Raw token is returned only once by the server.
+// - Never write token to localStorage.
+// - Never write token to sessionStorage.
+// - Never send token to another RPC.
+// - Never modify or normalize the token.
+// - Remove token from DOM when dialog closes.
+// =========================================================
+
+function showInvitationToken(token) {
+
+    if (
+        typeof token !== "string" ||
+        !token
     ) {
 
-        if (!token) {
-
-            return;
-
-        }
-
-
-        window.prompt(
-
-            "Copy this invitation token now. " +
-            "It is shown only from this creation response.",
-
-            token
-
+        throw new Error(
+            "Invitation token was not returned."
         );
 
     }
 
 
+    // =====================================================
+    // REMOVE ANY PREVIOUS TOKEN DIALOG
+    // =====================================================
+
+    const existingDialog =
+        document.getElementById(
+            "albukhrInvitationTokenDialog"
+        );
+
+
+    if (existingDialog) {
+
+        existingDialog.remove();
+
+    }
+
+
+    // =====================================================
+    // CREATE DIALOG
+    // =====================================================
+
+    const overlay =
+        document.createElement(
+            "div"
+        );
+
+
+    overlay.id =
+        "albukhrInvitationTokenDialog";
+
+
+    overlay.setAttribute(
+        "role",
+        "dialog"
+    );
+
+
+    overlay.setAttribute(
+        "aria-modal",
+        "true"
+    );
+
+
+    overlay.setAttribute(
+        "aria-labelledby",
+        "albukhrInvitationTokenTitle"
+    );
+
+
+    // =====================================================
+    // OVERLAY STYLE
+    // =====================================================
+
+    Object.assign(
+        overlay.style,
+        {
+
+            position:
+                "fixed",
+
+            top:
+                "0",
+
+            left:
+                "0",
+
+            right:
+                "0",
+
+            bottom:
+                "0",
+
+            zIndex:
+                "999999",
+
+            display:
+                "flex",
+
+            alignItems:
+                "center",
+
+            justifyContent:
+                "center",
+
+            padding:
+                "20px",
+
+            background:
+                "rgba(0, 0, 0, 0.65)",
+
+            boxSizing:
+                "border-box"
+
+        }
+    );
+
+
+    // =====================================================
+    // DIALOG BOX
+    // =====================================================
+
+    const dialog =
+        document.createElement(
+            "section"
+        );
+
+
+    Object.assign(
+        dialog.style,
+        {
+
+            width:
+                "100%",
+
+            maxWidth:
+                "560px",
+
+            background:
+                "#ffffff",
+
+            color:
+                "#102a1c",
+
+            borderRadius:
+                "20px",
+
+            padding:
+                "24px",
+
+            boxSizing:
+                "border-box",
+
+            boxShadow:
+                "0 20px 60px rgba(0,0,0,0.35)"
+
+        }
+    );
+
+
+    // =====================================================
+    // TITLE
+    // =====================================================
+
+    const title =
+        document.createElement(
+            "h2"
+        );
+
+
+    title.id =
+        "albukhrInvitationTokenTitle";
+
+
+    title.textContent =
+        "Core Team Invitation Token";
+
+
+    Object.assign(
+        title.style,
+        {
+
+            margin:
+                "0 0 12px",
+
+            fontSize:
+                "22px",
+
+            color:
+                "#0f7a3d"
+
+        }
+    );
+
+
+    // =====================================================
+    // SECURITY MESSAGE
+    // =====================================================
+
+    const message =
+        document.createElement(
+            "p"
+        );
+
+
+    message.textContent =
+
+        "Copy this invitation token now. " +
+
+        "It is shown only from this creation response. " +
+
+        "Store it securely and send it only to the intended Core Team member.";
+
+
+    Object.assign(
+        message.style,
+        {
+
+            margin:
+                "0 0 18px",
+
+            lineHeight:
+                "1.6",
+
+            color:
+                "#46554c"
+
+        }
+    );
+
+
+    // =====================================================
+    // TOKEN FIELD
+    //
+    // IMPORTANT:
+    //
+    // textContent/value receives the original token exactly.
+    //
+    // No trim().
+    // No lowercase().
+    // No normalization().
+    // =====================================================
+
+    const tokenField =
+        document.createElement(
+            "textarea"
+        );
+
+
+    tokenField.value =
+        token;
+
+
+    tokenField.readOnly =
+        true;
+
+
+    tokenField.spellcheck =
+        false;
+
+
+    tokenField.setAttribute(
+        "aria-label",
+        "Invitation token"
+    );
+
+
+    Object.assign(
+        tokenField.style,
+        {
+
+            width:
+                "100%",
+
+            minHeight:
+                "100px",
+
+            padding:
+                "14px",
+
+            boxSizing:
+                "border-box",
+
+            border:
+                "1px solid #c8d4cc",
+
+            borderRadius:
+                "12px",
+
+            background:
+                "#f7faf8",
+
+            color:
+                "#102a1c",
+
+            fontFamily:
+                "monospace",
+
+            fontSize:
+                "14px",
+
+            lineHeight:
+                "1.5",
+
+            resize:
+                "none",
+
+            wordBreak:
+                "break-all"
+
+        }
+    );
+
+
+    // =====================================================
+    // STATUS MESSAGE
+    // =====================================================
+
+    const copyStatus =
+        document.createElement(
+            "p"
+        );
+
+
+    copyStatus.textContent =
+        "";
+
+
+    Object.assign(
+        copyStatus.style,
+        {
+
+            minHeight:
+                "20px",
+
+            margin:
+                "12px 0",
+
+            fontSize:
+                "14px",
+
+            color:
+                "#0f7a3d"
+
+        }
+    );
+
+
+    // =====================================================
+    // BUTTON CONTAINER
+    // =====================================================
+
+    const actions =
+        document.createElement(
+            "div"
+        );
+
+
+    Object.assign(
+        actions.style,
+        {
+
+            display:
+                "flex",
+
+            gap:
+                "10px",
+
+            justifyContent:
+                "flex-end",
+
+            flexWrap:
+                "wrap",
+
+            marginTop:
+                "18px"
+
+        }
+    );
+
+
+    // =====================================================
+    // COPY BUTTON
+    // =====================================================
+
+    const copyButton =
+        document.createElement(
+            "button"
+        );
+
+
+    copyButton.type =
+        "button";
+
+
+    copyButton.textContent =
+        "Copy Token";
+
+
+    Object.assign(
+        copyButton.style,
+        {
+
+            border:
+                "none",
+
+            borderRadius:
+                "10px",
+
+            padding:
+                "12px 18px",
+
+            background:
+                "#0f7a3d",
+
+            color:
+                "#ffffff",
+
+            fontWeight:
+                "700",
+
+            cursor:
+                "pointer"
+
+        }
+    );
+
+
+    // =====================================================
+    // CLOSE BUTTON
+    // =====================================================
+
+    const closeButton =
+        document.createElement(
+            "button"
+        );
+
+
+    closeButton.type =
+        "button";
+
+
+    closeButton.textContent =
+        "I Have Copied It";
+
+
+    Object.assign(
+        closeButton.style,
+        {
+
+            border:
+                "1px solid #c8d4cc",
+
+            borderRadius:
+                "10px",
+
+            padding:
+                "12px 18px",
+
+            background:
+                "#ffffff",
+
+            color:
+                "#102a1c",
+
+            fontWeight:
+                "700",
+
+            cursor:
+                "pointer"
+
+        }
+    );
+
+
+    // =====================================================
+    // CLOSE FUNCTION
+    //
+    // Clear the raw token from the DOM before removing it.
+    // =====================================================
+
+    function closeDialog() {
+
+        tokenField.value =
+            "";
+
+
+        copyStatus.textContent =
+            "";
+
+
+        overlay.remove();
+
+    }
+
+
+    // =====================================================
+    // COPY TOKEN
+    // =====================================================
+
+    async function copyToken() {
+
+        try {
+
+            // =============================================
+            // MODERN CLIPBOARD API
+            // =============================================
+
+            if (
+                navigator.clipboard &&
+                typeof navigator.clipboard.writeText ===
+                    "function"
+            ) {
+
+                await navigator.clipboard.writeText(
+                    token
+                );
+
+            } else {
+
+                // =========================================
+                // FALLBACK
+                // =========================================
+
+                tokenField.focus();
+
+                tokenField.select();
+
+                tokenField.setSelectionRange(
+                    0,
+                    tokenField.value.length
+                );
+
+
+                const copied =
+                    document.execCommand(
+                        "copy"
+                    );
+
+
+                if (!copied) {
+
+                    throw new Error(
+                        "Clipboard copy failed."
+                    );
+
+                }
+
+            }
+
+
+            copyStatus.textContent =
+                "Invitation token copied successfully.";
+
+
+            copyButton.textContent =
+                "Copied ✓";
+
+
+            // =============================================
+            // IMPORTANT:
+            //
+            // Do not automatically close immediately.
+            //
+            // User can verify that copying succeeded.
+            // =============================================
+
+        } catch (error) {
+
+            console.error(
+                "[ALBUKHR INVITATION TOKEN COPY]",
+                error
+            );
+
+
+            copyStatus.textContent =
+
+                "Automatic copy failed. " +
+
+                "Select and copy the token manually.";
+
+
+            tokenField.focus();
+
+            tokenField.select();
+
+        }
+
+    }
+
+
+    // =====================================================
+    // EVENTS
+    // =====================================================
+
+    copyButton.addEventListener(
+        "click",
+        copyToken
+    );
+
+
+    closeButton.addEventListener(
+        "click",
+        closeDialog
+    );
+
+
+    // =====================================================
+    // ESC KEY
+    // =====================================================
+
+    function handleKeyDown(event) {
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            closeDialog();
+
+        }
+
+    }
+
+
+    document.addEventListener(
+        "keydown",
+        handleKeyDown,
+        {
+            once:
+                true
+        }
+    );
+
+
+    // =====================================================
+    // APPEND
+    // =====================================================
+
+    actions.appendChild(
+        copyButton
+    );
+
+
+    actions.appendChild(
+        closeButton
+    );
+
+
+    dialog.appendChild(
+        title
+    );
+
+
+    dialog.appendChild(
+        message
+    );
+
+
+    dialog.appendChild(
+        tokenField
+    );
+
+
+    dialog.appendChild(
+        copyStatus
+    );
+
+
+    dialog.appendChild(
+        actions
+    );
+
+
+    overlay.appendChild(
+        dialog
+    );
+
+
+    document.body.appendChild(
+        overlay
+    );
+
+
+    // =====================================================
+    // SELECT TOKEN
+    //
+    // Makes manual copying easier.
+    // =====================================================
+
+    tokenField.focus();
+
+    tokenField.select();
+
+    tokenField.setSelectionRange(
+        0,
+        token.length
+    );
+
+                }
     // =========================================================
     // CREATE CORE TEAM INVITATION
     //
