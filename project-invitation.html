@@ -12,135 +12,83 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="js/core/environment-core.js" defer></script>
 <script src="js/core/supabase-core.js" defer></script>
+<script src="js/core/invitation-auth.js" defer></script>
 <script src="js/project-invitation.js" defer></script>
 </head>
 
 <body>
-
 <main class="shell">
+<section class="card" aria-labelledby="pageTitle">
 
-    <section class="card" aria-labelledby="pageTitle">
+<div class="brand">
+    <div class="brand-mark">A</div>
+    <div>
+        <strong>ALBUKHR</strong>
+        <span>INVITATION SECURITY</span>
+    </div>
+</div>
 
-        <div class="brand">
-            <div class="brand-mark">A</div>
+<div id="loadingState" class="state">
+    <div class="spinner" aria-hidden="true"></div>
+    <h1 id="pageTitle">Verifying invitation</h1>
+    <p>Please wait while ALBUKHR securely verifies your invitation.</p>
+</div>
 
-            <div>
-                <strong>ALBUKHR</strong>
-                <span>INVITATION SECURITY</span>
-            </div>
+<div id="invalidState" class="state hidden">
+    <div class="icon error-icon" aria-hidden="true">!</div>
+    <h1>Invitation unavailable</h1>
+    <p id="invalidMessage">This invitation is invalid or unavailable.</p>
+    <button id="returnButton" class="button secondary" type="button">Return to ALBUKHR</button>
+</div>
+
+<div id="validState" class="state hidden">
+    <div class="icon success-icon" aria-hidden="true">✓</div>
+    <p class="eyebrow">INVITATION VERIFIED</p>
+    <h1>Welcome to ALBUKHR</h1>
+    <p id="validMessage">Your invitation has been securely verified.</p>
+
+    <div class="details">
+        <div><span>Invitation type</span><strong id="projectType">—</strong></div>
+        <div><span>Expires</span><strong id="expiresAt">—</strong></div>
+    </div>
+
+    <div class="notice">
+        <b>Security notice</b>
+        <p>Your invitation token is being read from the secure URL fragment. It is not sent as a normal URL query parameter.</p>
+    </div>
+
+    <div id="accountState" class="account-state hidden">
+        <div id="accountSignedOut" class="hidden">
+            <p class="account-title">Authenticate your invitation</p>
+            <p class="account-copy">Sign in with the email address that received this invitation. If this is your first ALBUKHR invitation, you may create an account with that same email.</p>
+
+            <form id="invitationAuthForm" novalidate>
+                <label for="invitationEmail">Invitation email
+                    <input id="invitationEmail" type="email" autocomplete="email" maxlength="254" required>
+                </label>
+
+                <label for="invitationPassword">Password
+                    <input id="invitationPassword" type="password" autocomplete="current-password" minlength="12" required>
+                </label>
+
+                <button id="invitationSignInButton" class="button primary" type="submit">Sign In and Continue</button>
+                <button id="invitationCreateButton" class="button secondary" type="button">Create Account</button>
+            </form>
         </div>
 
-
-        <div id="loadingState" class="state">
-
-            <div class="spinner" aria-hidden="true"></div>
-
-            <h1 id="pageTitle">
-                Verifying invitation
-            </h1>
-
-            <p>
-                Please wait while ALBUKHR securely verifies your invitation.
-            </p>
-
+        <div id="accountSignedIn" class="hidden">
+            <p class="account-title">Signed-in account</p>
+            <p id="signedInEmail" class="account-copy">—</p>
+            <button id="continueButton" class="button primary" type="button">Accept Invitation</button>
+            <button id="switchAccountButton" class="button secondary" type="button">Use a Different Email</button>
         </div>
+    </div>
+</div>
 
+<div id="pageStatus" class="status" aria-live="polite"></div>
 
-        <div id="invalidState" class="state hidden">
-
-            <div class="icon error-icon" aria-hidden="true">
-                !
-            </div>
-
-            <h1>
-                Invitation unavailable
-            </h1>
-
-            <p id="invalidMessage">
-                This invitation is invalid or unavailable.
-            </p>
-
-            <a class="button secondary"
-               href="/">
-                Return to ALBUKHR
-            </a>
-
-        </div>
-
-
-        <div id="validState" class="state hidden">
-
-            <div class="icon success-icon" aria-hidden="true">
-                ✓
-            </div>
-
-            <p class="eyebrow">
-                INVITATION VERIFIED
-            </p>
-
-            <h1>
-                Welcome to ALBUKHR
-            </h1>
-
-            <p id="validMessage">
-                Your invitation has been securely verified.
-            </p>
-
-
-            <div class="details">
-
-                <div>
-                    <span>Invitation type</span>
-                    <strong id="projectType">—</strong>
-                </div>
-
-                <div>
-                    <span>Expires</span>
-                    <strong id="expiresAt">—</strong>
-                </div>
-
-            </div>
-
-
-            <div class="notice">
-
-                <b>Security notice</b>
-
-                <p>
-                    Your invitation token is being read from the secure
-                    URL fragment. It is not sent as a normal URL query
-                    parameter.
-                </p>
-
-            </div>
-
-
-            <button id="continueButton"
-                    class="button primary"
-                    type="button">
-
-                Continue
-
-            </button>
-
-        </div>
-
-
-        <div id="pageStatus"
-             class="status"
-             aria-live="polite">
-        </div>
-
-
-        <footer>
-            <span>
-                ALBUKHR Mainnet Security
-            </span>
-        </footer>
-
-    </section>
-
+<footer><span>ALBUKHR Mainnet Security</span></footer>
+</section>
 </main>
-
 </body>
 </html>
