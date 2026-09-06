@@ -69,10 +69,42 @@
         return value;
     }
 
+    /*
+     * A missing Auth session is a normal state on the invitation page.
+     * In particular, after "Use a Different Email", signOut() intentionally
+     * removes the current session before the UI refreshes to the signed-out
+     * authentication form.
+     *
+     * Supabase may report this state as AuthSessionMissingError / an
+     * "Auth session missing" message. That must map to a signed-out user,
+     * not to an application failure.
+     */
+    function isExpectedMissingSessionError(error) {
+        if (!error) {
+            return false;
+        }
+
+        const name = String(error.name || "").toLowerCase();
+        const code = String(error.code || "").toLowerCase();
+        const message = String(error.message || "").toLowerCase();
+
+        return (
+            name === "authsessionmissingerror" ||
+            code === "session_not_found" ||
+            message.includes("auth session missing") ||
+            message.includes("session missing") ||
+            message.includes("no session")
+        );
+    }
+
     async function getUser() {
         const response = await getClient().auth.getUser();
 
         if (response.error) {
+            if (isExpectedMissingSessionError(response.error)) {
+                return null;
+            }
+
             throw response.error;
         }
 
@@ -85,6 +117,10 @@
         const response = await getClient().auth.getSession();
 
         if (response.error) {
+            if (isExpectedMissingSessionError(response.error)) {
+                return null;
+            }
+
             throw response.error;
         }
 
