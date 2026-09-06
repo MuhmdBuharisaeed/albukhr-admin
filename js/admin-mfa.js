@@ -1,233 +1,1094 @@
-(function(window,document){"use strict";
+(function (window, document) {
+    "use strict";
 
-const A=()=>window.AlbukhrSupabaseAdminAuth;
-const qr=document.getElementById("qr");
-const secret=document.getElementById("secret");
-const code=document.getElementById("mfaCode");
-const verify=document.getElementById("verifyButton");
-const status=document.getElementById("mfaStatus");
-const enrollPanel=document.getElementById("enrollPanel");
-const successPanel=document.getElementById("successPanel");
-const continueButton=document.getElementById("continueButton");
+    /*
+     * ALBUKHR ADMIN MFA
+     *
+     * Canonical MFA page engine.
+     *
+     * SECURITY AUTHORITY:
+     *
+     * Supabase Auth MFA
+     * +
+     * Supabase AAL
+     * +
+     * ALBUKHR Admin Auth engine
+     *
+     * This engine intentionally delegates challenge/verify
+     * lifecycle handling to:
+     *
+     * AlbukhrSupabaseAdminAuth.verifyMfa()
+     */
 
-let factorId=null;
-let initialized=false;
+    const getAdminAuth =
+        function () {
+            return window.AlbukhrSupabaseAdminAuth;
+        };
 
-function msg(text,type){
-  if(!status)return;
-  status.textContent=String(text||"");
-  status.className="status"+(type?" "+type:"");
-}
+    const getElement =
+        function (id) {
+            return document.getElementById(id);
+        };
 
-function busy(value,text){
-  if(!verify)return;
-  verify.disabled=!!value;
-  verify.textContent=text||(value?"Verifying...":"Verify & Secure Admin");
-}
+    const qr =
+        getElement("qr");
 
-function depsReady(){
-  return !!(window.ALBukhrEnvironment&&window.ALBUKHR_SUPABASE&&A());
-}
+    const secret =
+        getElement("secret");
 
-function errText(e){
-  if(!e)return"Unknown error.";
-  const p=[];
-  if(e.name)p.push("name="+String(e.name));
-  if(e.code)p.push("code="+String(e.code));
-  if(e.status)p.push("status="+String(e.status));
-  if(e.message)p.push("message="+String(e.message));
-  return p.join(" | ")||String(e);
-}
+    const code =
+        getElement("mfaCode");
 
-function destination(){
-  const r=new URLSearchParams(location.search).get("redirect");
-  if(!r)return"admin-dashboard.html";
-  try{
-    const u=new URL(r,location.origin);
-    return u.origin===location.origin&&u.protocol===location.protocol
-      ?u.pathname+u.search+u.hash:"admin-dashboard.html";
-  }catch(_){return"admin-dashboard.html";}
-}
+    const verifyButton =
+        getElement("verifyButton");
 
-/*
- * Supabase JS returns TOTP enrollment data as:
- * data.id
- * data.totp.qr_code
- * data.totp.secret
- * data.totp.uri
- *
- * qr_code is already an SVG. No QR library is required.
- */
-function renderQr(qrCode){
-  if(!qr)throw new Error("QR container is missing from admin-mfa.html.");
-  qr.innerHTML="";
-  if(!qrCode)throw new Error("Supabase did not return a TOTP QR code.");
+    const status =
+        getElement("mfaStatus");
 
-  const img=document.createElement("img");
-  img.alt="ALBUKHR Admin authenticator QR code";
-  img.width=220;
-  img.height=220;
-  img.style.maxWidth="100%";
-  img.style.height="auto";
-  img.style.display="block";
-  img.style.margin="0 auto";
-  img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(String(qrCode));
-  qr.appendChild(img);
-}
+    const enrollPanel =
+        getElement("enrollPanel");
 
-function renderSecret(value){
-  if(!secret)return;
-  secret.textContent=value?String(value):"No manual setup key was returned by Supabase.";
-}
+    const successPanel =
+        getElement("successPanel");
 
-async function removeStaleUnverified(client,factors){
-  const stale=(Array.isArray(factors)?factors:[]).filter(
-    f=>f&&f.factor_type==="totp"&&f.status==="unverified"
-  );
-  for(const f of stale){
-    const r=await client.auth.mfa.unenroll({factorId:f.id});
-    if(r.error)throw r.error;
-  }
-}
+    const continueButton =
+        getElement("continueButton");
 
-async function enroll(){
-  const client=window.ALBUKHR_SUPABASE.client;
-  const existing=await client.auth.mfa.listFactors();
-  if(existing.error)throw existing.error;
 
-  const factors=Array.isArray(existing.data?.totp)?existing.data.totp:[];
-  const verified=factors.find(f=>f.status==="verified");
+    let factorId = null;
 
-  if(verified){
-    factorId=verified.id;
-    renderSecret("Already enrolled — use your authenticator app.");
-    if(qr)qr.innerHTML="";
-    msg("An authenticator is already enrolled. Enter its current 6-digit code.","success");
-    initialized=true;
-    return;
-  }
+    let initialized = false;
 
-  await removeStaleUnverified(client,factors);
 
-  const result=await client.auth.mfa.enroll({
-    factorType:"totp",
-    friendlyName:"ALBUKHR Admin Authenticator"
-  });
+    function message(
+        text,
+        type
+    ) {
 
-  if(result.error)throw result.error;
-  if(!result.data?.id)throw new Error("Supabase did not return a valid MFA factor.");
+        if (!status) {
+            return;
+        }
 
-  factorId=result.data.id;
+        status.textContent =
+            String(text || "");
 
-  const totp=result.data.totp||{};
-  const qrCode=totp.qr_code||"";
-  const totpSecret=totp.secret||"";
-  const uri=totp.uri||"";
+        status.className =
+            "status" +
+            (
+                type
+                    ? " " + type
+                    : ""
+            );
 
-  renderQr(qrCode);
-  renderSecret(totpSecret);
-
-  if(!qrCode&&!uri)throw new Error("Supabase returned no QR code or TOTP URI.");
-
-  msg("Authenticator setup is ready. Scan the QR code, then enter the 6-digit code shown in your authenticator app.");
-  initialized=true;
-}
-
-async function verifyMfa(){
-  const value=String(code?.value||"").replace(/\D/g,"");
-
-  if(!factorId)throw new Error("MFA factor is not available. Reload the page and try again.");
-  if(!/^\d{6}$/.test(value))throw new Error("Enter the 6-digit authenticator code.");
-
-  const client=window.ALBUKHR_SUPABASE.client;
-
-  const challenge=await client.auth.mfa.challenge({factorId});
-  if(challenge.error)throw challenge.error;
-
-  const result=await client.auth.mfa.verify({
-    factorId,
-    challengeId:challenge.data.id,
-    code:value
-  });
-  if(result.error)throw result.error;
-
-  const assurance=await client.auth.mfa.getAuthenticatorAssuranceLevel();
-  if(assurance.error)throw assurance.error;
-  if(assurance.data.currentLevel!=="aal2"){
-    throw new Error("MFA verification did not establish AAL2 assurance.");
-  }
-
-  const admin=await A().refreshAdminContext();
-  if(!admin||!admin.is_admin||admin.status!=="active"){
-    throw new Error("MFA succeeded, but ALBUKHR admin authorization could not be re-verified.");
-  }
-
-  if(enrollPanel)enrollPanel.hidden=true;
-  if(successPanel)successPanel.hidden=false;
-  if(code)code.value="";
-
-  msg("MFA verification successful. Your ALBUKHR admin session is now secured with AAL2.","success");
-}
-
-async function init(){
-  try{
-    if(!depsReady())throw new Error("Admin authentication system is unavailable.");
-    if(!window.ALBukhrEnvironment.isMainnet())throw new Error("Admin MFA is available only on ALBUKHR MAINNET.");
-
-    await A().init();
-
-    const admin=await A().requireAdmin({redirect:false});
-    if(!admin){
-      location.replace("admin-login.html");
-      return;
     }
 
-    const mfa=await A().ensureMfa();
 
-    if(mfa.required&&mfa.verified){
-      if(successPanel)successPanel.hidden=false;
-      if(enrollPanel)enrollPanel.hidden=true;
-      msg("MFA is already verified for this session.","success");
-      return;
+    function setBusy(
+        value,
+        text
+    ) {
+
+        if (!verifyButton) {
+            return;
+        }
+
+        verifyButton.disabled =
+            Boolean(value);
+
+        verifyButton.textContent =
+            text ||
+            (
+                value
+                    ? "Verifying..."
+                    : "Verify & Secure Admin"
+            );
+
     }
 
-    await enroll();
-  }catch(e){
-    console.error("[ALBUKHR ADMIN MFA]",e);
-    msg("MFA setup failed: "+errText(e),"error");
-    if(verify)verify.disabled=true;
-  }
-}
 
-verify?.addEventListener("click",async function(){
-  if(!initialized||!factorId)return;
-  try{
-    busy(true,"Verifying...");
-    msg("Verifying MFA assurance...");
-    await verifyMfa();
-    busy(false,"Verified ✓");
-  }catch(e){
-    console.error("[ALBUKHR ADMIN MFA VERIFY]",e);
-    msg("MFA verification failed: "+errText(e),"error");
-    busy(false,"Verify & Secure Admin");
-  }
-});
+    function dependenciesReady() {
 
-code?.addEventListener("input",function(){
-  code.value=code.value.replace(/\D/g,"").slice(0,6);
-});
+        const auth =
+            getAdminAuth();
 
-code?.addEventListener("keydown",function(e){
-  if(e.key==="Enter"){
-    e.preventDefault();
-    verify?.click();
-  }
-});
+        return Boolean(
 
-continueButton?.addEventListener("click",function(){
-  location.replace(destination());
-});
+            window.ALBukhrEnvironment &&
 
-init();
+            window.ALBUKHR_SUPABASE &&
 
-})(window,document);
+            window.ALBUKHR_SUPABASE.client &&
+
+            auth &&
+
+            typeof auth.init ===
+            "function" &&
+
+            typeof auth.requireAdmin ===
+            "function" &&
+
+            typeof auth.ensureMfa ===
+            "function" &&
+
+            typeof auth.verifyMfa ===
+            "function"
+
+        );
+
+    }
+
+
+    function errorText(error) {
+
+        if (!error) {
+            return "Unknown error.";
+        }
+
+        return String(
+
+            error.message ||
+
+            error.error_description ||
+
+            error.msg ||
+
+            error
+
+        );
+
+    }
+
+
+    function destination() {
+
+        const redirect =
+            new URLSearchParams(
+                window.location.search
+            )
+                .get(
+                    "redirect"
+                );
+
+
+        if (!redirect) {
+            return "admin-dashboard.html";
+        }
+
+
+        try {
+
+            const url =
+                new URL(
+                    redirect,
+                    window.location.origin
+                );
+
+
+            if (
+
+                url.origin !==
+                window.location.origin
+
+            ) {
+
+                return "admin-dashboard.html";
+
+            }
+
+
+            return (
+
+                url.pathname +
+
+                url.search +
+
+                url.hash
+
+            );
+
+        }
+
+        catch (_) {
+
+            return "admin-dashboard.html";
+
+        }
+
+    }
+
+
+    function showSuccess(
+        text
+    ) {
+
+        if (enrollPanel) {
+
+            enrollPanel.hidden =
+                true;
+
+        }
+
+
+        if (successPanel) {
+
+            successPanel.hidden =
+                false;
+
+        }
+
+
+        message(
+            text,
+            "success"
+        );
+
+    }
+
+
+    function renderQr(
+        qrCode
+    ) {
+
+        if (!qr) {
+
+            throw new Error(
+                "QR container is missing from admin-mfa.html."
+            );
+
+        }
+
+
+        qr.innerHTML =
+            "";
+
+
+        if (!qrCode) {
+
+            throw new Error(
+                "Supabase did not return a TOTP QR code."
+            );
+
+        }
+
+
+        const image =
+            document.createElement(
+                "img"
+            );
+
+
+        image.alt =
+            "ALBUKHR Admin authenticator QR code";
+
+        image.width =
+            220;
+
+        image.height =
+            220;
+
+        image.style.maxWidth =
+            "100%";
+
+        image.style.height =
+            "auto";
+
+        image.style.display =
+            "block";
+
+        image.style.margin =
+            "0 auto";
+
+
+        /*
+         * Supabase returns QR code SVG markup.
+         */
+
+        image.src =
+            "data:image/svg+xml;charset=utf-8," +
+
+            encodeURIComponent(
+                String(qrCode)
+            );
+
+
+        qr.appendChild(
+            image
+        );
+
+    }
+
+
+    function renderSecret(
+        value
+    ) {
+
+        if (!secret) {
+            return;
+        }
+
+        secret.textContent =
+            value
+
+                ? String(value)
+
+                : "No manual setup key was returned by Supabase.";
+
+    }
+
+
+    async function removeStaleUnverifiedFactors(
+        client,
+        factors
+    ) {
+
+        const stale =
+            (
+                Array.isArray(
+                    factors
+                )
+
+                    ? factors
+
+                    : []
+
+            )
+                .filter(
+
+                    function (
+                        factor
+                    ) {
+
+                        return (
+
+                            factor &&
+
+                            factor.factor_type ===
+                            "totp" &&
+
+                            factor.status ===
+                            "unverified"
+
+                        );
+
+                    }
+
+                );
+
+
+        for (
+            const factor of stale
+        ) {
+
+            const response =
+                await client.auth.mfa
+                    .unenroll({
+
+                        factorId:
+                            factor.id
+
+                    });
+
+
+            if (
+                response.error
+            ) {
+
+                throw response.error;
+
+            }
+
+        }
+
+    }
+
+
+    async function enroll() {
+
+        const client =
+            window.ALBUKHR_SUPABASE
+                .client;
+
+
+        const existing =
+            await client.auth.mfa
+                .listFactors();
+
+
+        if (
+            existing.error
+        ) {
+
+            throw existing.error;
+
+        }
+
+
+        const factors =
+
+            Array.isArray(
+
+                existing.data &&
+
+                existing.data.totp
+
+            )
+
+                ? existing.data.totp
+
+                : [];
+
+
+        const verified =
+            factors.find(
+
+                function (
+                    factor
+                ) {
+
+                    return (
+
+                        factor &&
+
+                        factor.status ===
+                        "verified"
+
+                    );
+
+                }
+
+            );
+
+
+        if (
+            verified
+        ) {
+
+            factorId =
+                verified.id;
+
+
+            if (qr) {
+
+                qr.innerHTML =
+                    "";
+
+            }
+
+
+            renderSecret(
+                "Already enrolled — use your authenticator app."
+            );
+
+
+            message(
+
+                "An authenticator is already enrolled. Enter its current 6-digit code.",
+
+                "success"
+
+            );
+
+
+            initialized =
+                true;
+
+
+            return;
+
+        }
+
+
+        await removeStaleUnverifiedFactors(
+
+            client,
+
+            factors
+
+        );
+
+
+        const result =
+            await client.auth.mfa
+                .enroll({
+
+                    factorType:
+                        "totp",
+
+                    friendlyName:
+                        "ALBUKHR Admin Authenticator"
+
+                });
+
+
+        if (
+            result.error
+        ) {
+
+            throw result.error;
+
+        }
+
+
+        if (
+
+            !result.data ||
+
+            !result.data.id
+
+        ) {
+
+            throw new Error(
+
+                "Supabase did not return a valid MFA factor."
+
+            );
+
+        }
+
+
+        factorId =
+            result.data.id;
+
+
+        const totp =
+            result.data.totp ||
+            {};
+
+
+        const qrCode =
+            totp.qr_code ||
+            "";
+
+
+        const totpSecret =
+            totp.secret ||
+            "";
+
+
+        renderQr(
+            qrCode
+        );
+
+
+        renderSecret(
+            totpSecret
+        );
+
+
+        message(
+
+            "Authenticator setup is ready. Scan the QR code, then enter the 6-digit code shown in your authenticator app."
+
+        );
+
+
+        initialized =
+            true;
+
+    }
+
+
+    async function verifyMfa() {
+
+        const value =
+            String(
+
+                code
+
+                    ? code.value
+
+                    : ""
+
+            )
+
+                .replace(
+                    /\D/g,
+                    ""
+                );
+
+
+        if (
+            !factorId
+        ) {
+
+            throw new Error(
+
+                "MFA factor is not available. Reload the page and try again."
+
+            );
+
+        }
+
+
+        if (
+
+            !/^\d{6}$/.test(
+                value
+            )
+
+        ) {
+
+            throw new Error(
+
+                "Enter the 6-digit authenticator code."
+
+            );
+
+        }
+
+
+        /*
+         * Canonical verification:
+         *
+         * Admin Auth engine performs:
+         *
+         * challenge
+         * → verify
+         * → refresh session
+         * → clear old context
+         * → reload server context
+         */
+
+        const result =
+            await getAdminAuth()
+                .verifyMfa(
+
+                    factorId,
+
+                    value
+
+                );
+
+
+        const assurance =
+            await window.ALBUKHR_SUPABASE
+                .client
+                .auth
+                .mfa
+                .getAuthenticatorAssuranceLevel();
+
+
+        if (
+            assurance.error
+        ) {
+
+            throw assurance.error;
+
+        }
+
+
+        if (
+
+            !assurance.data ||
+
+            assurance.data.currentLevel !==
+            "aal2"
+
+        ) {
+
+            throw new Error(
+
+                "MFA verification did not establish AAL2 assurance."
+
+            );
+
+        }
+
+
+        const admin =
+            await getAdminAuth()
+                .refreshAdminContext();
+
+
+        if (
+
+            !admin ||
+
+            admin.is_admin !== true ||
+
+            admin.status !==
+            "active"
+
+        ) {
+
+            throw new Error(
+
+                "MFA succeeded, but ALBUKHR admin authorization could not be re-verified."
+
+            );
+
+        }
+
+
+        if (code) {
+
+            code.value =
+                "";
+
+        }
+
+
+        showSuccess(
+
+            "MFA verification successful. Your ALBUKHR admin session is now secured with AAL2."
+
+        );
+
+
+        return result;
+
+    }
+
+
+    async function init() {
+
+        try {
+
+            if (
+                !dependenciesReady()
+            ) {
+
+                throw new Error(
+
+                    "Admin authentication system is unavailable."
+
+                );
+
+            }
+
+
+            if (
+
+                !window.ALBukhrEnvironment
+                    .isMainnet()
+
+            ) {
+
+                throw new Error(
+
+                    "Admin MFA is available only on ALBUKHR MAINNET."
+
+                );
+
+            }
+
+
+            const auth =
+                getAdminAuth();
+
+
+            await auth.init();
+
+
+            const admin =
+                await auth.requireAdmin({
+
+                    redirect:
+                        false
+
+                });
+
+
+            if (
+                !admin
+            ) {
+
+                window.location.replace(
+                    "admin-login.html"
+                );
+
+                return;
+
+            }
+
+
+            const mfa =
+                await auth.ensureMfa();
+
+
+            if (
+                mfa.required === false
+            ) {
+
+                showSuccess(
+
+                    "MFA is not required for this admin session."
+
+                );
+
+                return;
+
+            }
+
+
+            if (
+
+                mfa.required ===
+                true &&
+
+                mfa.verified ===
+                true
+
+            ) {
+
+                showSuccess(
+
+                    "MFA is already verified for this session."
+
+                );
+
+                return;
+
+            }
+
+
+            if (
+
+                mfa.enrolled ===
+                true &&
+
+                mfa.factorId
+
+            ) {
+
+                factorId =
+                    mfa.factorId;
+
+                initialized =
+                    true;
+
+
+                if (qr) {
+
+                    qr.innerHTML =
+                        "";
+
+                }
+
+
+                renderSecret(
+
+                    "Already enrolled — use your authenticator app."
+
+                );
+
+
+                message(
+
+                    "Enter the current 6-digit code from your authenticator app."
+
+                );
+
+
+                return;
+
+            }
+
+
+            await enroll();
+
+        }
+
+        catch (
+            error
+        ) {
+
+            console.error(
+
+                "[ALBUKHR ADMIN MFA]",
+
+                error
+
+            );
+
+
+            message(
+
+                "MFA setup failed: " +
+
+                errorText(
+                    error
+                ),
+
+                "error"
+
+            );
+
+
+            if (
+                verifyButton
+            ) {
+
+                verifyButton.disabled =
+                    true;
+
+            }
+
+        }
+
+    }
+
+
+    verifyButton?.addEventListener(
+
+        "click",
+
+        async function () {
+
+            if (
+
+                !initialized ||
+
+                !factorId
+
+            ) {
+
+                return;
+
+            }
+
+
+            try {
+
+                setBusy(
+
+                    true,
+
+                    "Verifying..."
+
+                );
+
+
+                message(
+
+                    "Verifying MFA assurance..."
+
+                );
+
+
+                await verifyMfa();
+
+
+                setBusy(
+
+                    false,
+
+                    "Verified ✓"
+
+                );
+
+            }
+
+            catch (
+                error
+            ) {
+
+                console.error(
+
+                    "[ALBUKHR ADMIN MFA VERIFY]",
+
+                    error
+
+                );
+
+
+                message(
+
+                    "MFA verification failed: " +
+
+                    errorText(
+                        error
+                    ),
+
+                    "error"
+
+                );
+
+
+                setBusy(
+
+                    false,
+
+                    "Verify & Secure Admin"
+
+                );
+
+            }
+
+        }
+
+    );
+
+
+    code?.addEventListener(
+
+        "input",
+
+        function () {
+
+            code.value =
+
+                code.value
+
+                    .replace(
+                        /\D/g,
+                        ""
+                    )
+
+                    .slice(
+                        0,
+                        6
+                    );
+
+        }
+
+    );
+
+
+    code?.addEventListener(
+
+        "keydown",
+
+        function (
+            event
+        ) {
+
+            if (
+
+                event.key ===
+                "Enter"
+
+            ) {
+
+                event.preventDefault();
+
+                verifyButton?.click();
+
+            }
+
+        }
+
+    );
+
+
+    continueButton?.addEventListener(
+
+        "click",
+
+        function () {
+
+            window.location.replace(
+                destination()
+            );
+
+        }
+
+    );
+
+
+    init();
+
+})(
+    window,
+    document
+);
