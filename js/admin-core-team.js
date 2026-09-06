@@ -1365,48 +1365,64 @@
     // =========================================================
 
     function buildInvitationUrl(
-        token
+    token
+) {
+
+    if (
+
+        typeof token !==
+        "string" ||
+
+        !token
+
     ) {
 
-        if (
+        throw new Error(
 
-            typeof token !==
-            "string" ||
+            "Invitation token is invalid."
 
-            !token
+        );
 
-        ) {
-
-            throw new Error(
-
-                "Invitation token is invalid."
-
-            );
-
-        }
+    }
 
 
-        const url =
+    const url =
 
-            new URL(
+        new URL(
 
-                PROJECT_INVITATION_PAGE,
+            PROJECT_INVITATION_PAGE,
 
-                window.location.href
-
-            );
-
-
-        url.searchParams.set(
-
-            "token",
-
-            token
+            window.location.href
 
         );
 
 
-        return url.toString();
+    // =============================================
+    // SECURITY:
+    //
+    // Raw invitation token is stored in URL fragment.
+    //
+    // Example:
+    //
+    // project-invitation.html
+    // #token=albukhr_inv_...
+    //
+    // This matches project-invitation.js.
+    // =============================================
+
+    url.search = "";
+
+
+    url.hash =
+
+        "token=" +
+
+        encodeURIComponent(
+            token
+        );
+
+
+    return url.toString();
 
     }
 
