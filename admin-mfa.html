@@ -5,56 +5,197 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#087a3e">
 <meta name="robots" content="noindex,nofollow">
-<title>ALBUKHR Admin MFA</title>
-<link rel="stylesheet" href="css/admin-auth.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" defer></script>
-<script src="js/core/environment-core.js" defer></script>
-<script src="js/core/supabase-core.js" defer></script>
-<script src="js/core/supabase-admin-auth.js" defer></script>
-<script src="js/admin-mfa.js" defer></script>
-</head>
-<body>
-<main class="admin-auth">
-<section class="admin-card" aria-labelledby="mfaTitle">
-<div class="brand-mark"><img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR" onerror="this.style.display='none'"></div>
-<div class="admin-brand">ALBUKHR</div>
-<div class="admin-label">ADMINISTRATION</div>
-<div class="security-badge">MAINNET SECURITY GATE</div>
 
-<h1 id="mfaTitle">Secure Admin MFA</h1>
-<p class="muted">Multi-factor authentication is required for ALBUKHR administration.</p>
+<title>ALBUKHR Admin MFA</title>
+
+<link rel="stylesheet" href="css/admin-auth.css">
+
+<!--
+    Dependency order is security-sensitive.
+
+    1. Supabase JS SDK
+    2. Admin Environment Core
+    3. Mainnet Supabase Core
+    4. Server-authoritative Admin Auth Engine
+    5. Canonical MFA Page Engine
+-->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    defer
+></script>
+
+<script
+    src="js/core/environment-core.js"
+    defer
+></script>
+
+<script
+    src="js/core/supabase-core.js"
+    defer
+></script>
+
+<script
+    src="js/core/supabase-admin-auth.js"
+    defer
+></script>
+
+<script
+    src="js/core/albukhr-mfa.js"
+    defer
+></script>
+
+</head>
+
+<body>
+
+<main class="admin-auth">
+
+<section
+    class="admin-card"
+    aria-labelledby="mfaTitle"
+>
+
+<div class="brand-mark">
+
+<img
+    src="images/file_00000000064c7246ae2d8ac819ddf9fc.png"
+    alt="ALBUKHR"
+    onerror="this.style.display='none'"
+>
+
+</div>
+
+<div class="admin-brand">
+    ALBUKHR
+</div>
+
+<div class="admin-label">
+    ADMINISTRATION
+</div>
+
+<div class="security-badge">
+    MAINNET SECURITY GATE
+</div>
+
+<h1 id="mfaTitle">
+    Secure Admin MFA
+</h1>
+
+<p class="muted">
+    Multi-factor authentication is required for ALBUKHR administration.
+</p>
+
+
+<!-- ================================================
+     MFA SETUP / VERIFICATION
+     ================================================ -->
 
 <div id="enrollPanel">
-<h2>Set up your authenticator</h2>
-<p class="muted">Scan the QR code with Google Authenticator, Microsoft Authenticator, or another TOTP authenticator.</p>
 
-<div id="qr" aria-label="Authenticator QR code"></div>
+<h2>
+    Set up your authenticator
+</h2>
+
+<p class="muted">
+    Scan the QR code with Google Authenticator,
+    Microsoft Authenticator, or another TOTP authenticator.
+</p>
+
+<div
+    id="qr"
+    aria-label="Authenticator QR code"
+></div>
 
 <div class="secret-box">
-<strong>Manual setup key</strong>
-<code id="secret">Loading...</code>
+
+<strong>
+    Manual setup key
+</strong>
+
+<code id="secret">
+    Loading...
+</code>
+
 </div>
 
-<label for="mfaCode">6-digit verification code
-<input id="mfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000">
+<label for="mfaCode">
+
+6-digit verification code
+
+<input
+    id="mfaCode"
+    type="text"
+    inputmode="numeric"
+    autocomplete="one-time-code"
+    maxlength="6"
+    pattern="[0-9]{6}"
+    placeholder="000000"
+>
+
 </label>
 
-<button id="verifyButton" type="button">Verify &amp; Secure Admin</button>
-<div id="mfaStatus" class="status" aria-live="polite" aria-atomic="true"></div>
+<button
+    id="verifyButton"
+    type="button"
+>
+    Verify &amp; Secure Admin
+</button>
+
+<div
+    id="mfaStatus"
+    class="status"
+    aria-live="polite"
+    aria-atomic="true"
+></div>
+
 </div>
 
-<div id="successPanel" hidden>
-<h2>MFA verified</h2>
-<p class="muted">Your administrator authenticator has been enrolled and verified successfully.</p>
-<button id="continueButton" type="button">Open Admin Control Center</button>
+
+<!-- ================================================
+     SUCCESS
+     ================================================ -->
+
+<div
+    id="successPanel"
+    hidden
+>
+
+<h2>
+    MFA verified
+</h2>
+
+<p class="muted">
+    Your administrator MFA assurance has been verified successfully.
+</p>
+
+<button
+    id="continueButton"
+    type="button"
+>
+    Open Admin Control Center
+</button>
+
 </div>
+
 
 <div class="security-note">
-<strong>Protected administration</strong>
-<span>Password authentication and MFA assurance are verified through the ALBUKHR Mainnet security layer.</span>
+
+<strong>
+    Protected administration
+</strong>
+
+<span>
+    Password authentication, MFA assurance and administrator
+    authorization are verified through the ALBUKHR Mainnet
+    security layer.
+</span>
+
 </div>
+
 </section>
+
 </main>
+
 </body>
 </html>
