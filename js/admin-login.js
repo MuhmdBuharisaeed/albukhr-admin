@@ -1,1 +1,763 @@
-(function(window,document){"use strict";const form=document.getElementById("adminLoginForm"),email=document.getElementById("adminEmail"),password=document.getElementById("adminPassword"),login=document.getElementById("loginButton"),forgot=document.getElementById("forgotPasswordButton"),toggle=document.getElementById("togglePassword"),status=document.getElementById("authStatus");const A=()=>window.AlbukhrSupabaseAdminAuth;function msg(x,t=""){status.textContent=String(x||"");status.className="status"+(t?" "+t:"");}function busy(v,t){login.disabled=!!v;login.textContent=t||(v?"Authenticating...":"Sign In Securely");}function deps(){return !!(window.ALBukhrEnvironment&&window.ALBUKHR_SUPABASE&&A());}function redirect(){const r=new URLSearchParams(location.search).get("redirect");if(!r)return"admin-dashboard.html";try{const u=new URL(r,location.origin);return u.origin===location.origin&&u.protocol===location.protocol?u.pathname+u.search+u.hash:"admin-dashboard.html";}catch{return"admin-dashboard.html";}}async function init(){try{if(!deps()||!window.ALBukhrEnvironment.isMainnet())throw Error("Admin authentication system is unavailable.");await A().init();const s=await A().getSession();if(s){const a=await A().requireAdmin({redirect:false});if(a){const m=await A().ensureMfa();if(m.required&&!m.verified){if(!m.enrolled){location.replace("admin-mfa.html?redirect="+encodeURIComponent(redirect()));return;}sessionStorage.setItem("albukhr_admin_mfa_factor",String(m.factorId));location.replace("admin-mfa.html?redirect="+encodeURIComponent(redirect()));return;}msg("Existing admin session verified. Opening Control Center...","success");setTimeout(()=>location.replace(redirect()),350);return;}}msg("Secure admin login ready.");}catch(e){console.error(e);busy(true,"Login unavailable");msg("Admin authentication system is unavailable.","error");}}async function submit(e){e.preventDefault();try{if(!deps())throw Error("Admin authentication system is unavailable.");const em=String(email.value||"").trim().toLowerCase(),pw=String(password.value||"");if(!em)throw Error("Enter your admin email address.");if(!pw)throw Error("Enter your admin password.");if(pw.length<12)throw Error("Admin password must contain at least 12 characters.");busy(true);msg("Verifying secure admin credentials...");const a=await A().signIn(em,pw);if(!a||!a.is_admin||a.status!=="active"){await A().signOut();throw Error("Admin authorization denied.");}const m=await A().ensureMfa();if(m.required&&!m.verified){sessionStorage.setItem("albukhr_admin_mfa_factor",String(m.factorId||""));location.replace("admin-mfa.html?redirect="+encodeURIComponent(redirect()));return;}password.value="";busy(true,"Opening Admin...");msg("Admin authorization verified. Opening Control Center...","success");setTimeout(()=>location.replace(redirect()),450);}catch(e){console.error(e);busy(false);let m="Admin sign-in failed. Check your credentials and try again.",r=String(e?.message||"").toLowerCase();if(r.includes("invalid login credentials"))m="Invalid email or password.";else if(r.includes("email not confirmed"))m="This admin account has not completed email verification.";else if(r.includes("too many requests"))m="Too many attempts. Please wait before trying again.";msg(m,"error");}}async function recover(){try{if(!deps())throw Error();const em=String(email.value||"").trim().toLowerCase();if(!em){msg("Enter your admin email first, then select Forgot password.","error");email.focus();return;}forgot.disabled=true;msg("Preparing secure password recovery...");await A().resetPassword(em,location.origin+"/admin-reset-password.html");msg("If this email is registered for an ALBUKHR admin account, a password recovery message has been sent.","success");}catch(e){console.error(e);msg("If this email is registered for an ALBUKHR admin account, a password recovery message has been sent.","success");}finally{forgot.disabled=false;}}function showpw(){const v=password.type==="text";password.type=v?"password":"text";toggle.textContent=v?"Show":"Hide";toggle.setAttribute("aria-pressed",String(!v));}form?.addEventListener("submit",submit);forgot?.addEventListener("click",recover);toggle?.addEventListener("click",showpw);init();})(window,document);
+(function (window, document) {
+    "use strict";
+
+    /*
+     * ALBUKHR ADMIN LOGIN
+     *
+     * Client role:
+     * authenticate through the shared Admin Auth engine,
+     * then route according to server-authoritative admin
+     * context and MFA assurance.
+     *
+     * No admin authority is created in this file.
+     */
+
+    const form =
+        document.getElementById(
+            "adminLoginForm"
+        );
+
+    const email =
+        document.getElementById(
+            "adminEmail"
+        );
+
+    const password =
+        document.getElementById(
+            "adminPassword"
+        );
+
+    const login =
+        document.getElementById(
+            "loginButton"
+        );
+
+    const forgot =
+        document.getElementById(
+            "forgotPasswordButton"
+        );
+
+    const toggle =
+        document.getElementById(
+            "togglePassword"
+        );
+
+    const status =
+        document.getElementById(
+            "authStatus"
+        );
+
+
+    function getAdminAuth() {
+
+        return window.AlbukhrSupabaseAdminAuth;
+
+    }
+
+
+    function message(
+        text,
+        type = ""
+    ) {
+
+        if (!status) {
+            return;
+        }
+
+        status.textContent =
+            String(text || "");
+
+        status.className =
+            "status" +
+            (
+                type
+                    ? " " + type
+                    : ""
+            );
+
+    }
+
+
+    function setBusy(
+        value,
+        text
+    ) {
+
+        if (!login) {
+            return;
+        }
+
+        login.disabled =
+            Boolean(value);
+
+        login.textContent =
+            text ||
+            (
+                value
+                    ? "Authenticating..."
+                    : "Sign In Securely"
+            );
+
+    }
+
+
+    function dependenciesReady() {
+
+        return Boolean(
+
+            window.ALBukhrEnvironment &&
+
+            window.ALBUKHR_SUPABASE &&
+
+            getAdminAuth()
+
+        );
+
+    }
+
+
+    function destination() {
+
+        const redirect =
+            new URLSearchParams(
+                window.location.search
+            )
+                .get(
+                    "redirect"
+                );
+
+
+        if (!redirect) {
+            return "admin-dashboard.html";
+        }
+
+
+        try {
+
+            const url =
+                new URL(
+                    redirect,
+                    window.location.origin
+                );
+
+
+            return (
+
+                url.origin ===
+                window.location.origin
+
+                &&
+
+                url.protocol ===
+                window.location.protocol
+
+            )
+
+                ? (
+
+                    url.pathname +
+
+                    url.search +
+
+                    url.hash
+
+                )
+
+                : "admin-dashboard.html";
+
+        }
+
+        catch (_) {
+
+            return "admin-dashboard.html";
+
+        }
+
+    }
+
+
+    function mfaUrl() {
+
+        return (
+
+            "admin-mfa.html?redirect=" +
+
+            encodeURIComponent(
+                destination()
+            )
+
+        );
+
+    }
+
+
+    async function routeAuthenticatedAdmin(
+        admin
+    ) {
+
+        if (
+
+            !admin ||
+
+            admin.is_admin !==
+            true ||
+
+            admin.status !==
+            "active"
+
+        ) {
+
+            throw new Error(
+                "Admin authorization denied."
+            );
+
+        }
+
+
+        const mfa =
+            await getAdminAuth()
+                .ensureMfa();
+
+
+        if (
+
+            mfa.required ===
+            true &&
+
+            mfa.verified !==
+            true
+
+        ) {
+
+            window.location.replace(
+                mfaUrl()
+            );
+
+            return false;
+
+        }
+
+
+        window.location.replace(
+            destination()
+        );
+
+        return true;
+
+    }
+
+
+    async function init() {
+
+        try {
+
+            if (
+
+                !dependenciesReady() ||
+
+                !window.ALBukhrEnvironment
+                    .isMainnet()
+
+            ) {
+
+                throw new Error(
+                    "Admin authentication system is unavailable."
+                );
+
+            }
+
+
+            await getAdminAuth()
+                .init();
+
+
+            const session =
+                await getAdminAuth()
+                    .getSession();
+
+
+            if (
+                !session
+            ) {
+
+                message(
+                    "Secure admin login ready."
+                );
+
+                return;
+
+            }
+
+
+            const admin =
+                await getAdminAuth()
+                    .requireAdmin({
+
+                        redirect:
+                            false
+
+                    });
+
+
+            if (
+                !admin
+            ) {
+
+                return;
+
+            }
+
+
+            const mfa =
+                await getAdminAuth()
+                    .ensureMfa();
+
+
+            if (
+
+                mfa.required ===
+                true &&
+
+                mfa.verified !==
+                true
+
+            ) {
+
+                window.location.replace(
+                    mfaUrl()
+                );
+
+                return;
+
+            }
+
+
+            message(
+
+                "Existing admin session verified. Opening Control Center...",
+
+                "success"
+
+            );
+
+
+            window.setTimeout(
+
+                function () {
+
+                    window.location.replace(
+                        destination()
+                    );
+
+                },
+
+                350
+
+            );
+
+        }
+
+        catch (
+            error
+        ) {
+
+            console.error(
+                "[ALBUKHR ADMIN LOGIN]",
+                error
+            );
+
+
+            setBusy(
+                true,
+                "Login unavailable"
+            );
+
+
+            message(
+
+                "Admin authentication system is unavailable.",
+
+                "error"
+
+            );
+
+        }
+
+    }
+
+
+    async function submit(
+        event
+    ) {
+
+        event.preventDefault();
+
+
+        try {
+
+            if (
+                !dependenciesReady()
+            ) {
+
+                throw new Error(
+                    "Admin authentication system is unavailable."
+                );
+
+            }
+
+
+            const normalizedEmail =
+                String(
+                    email
+                        ? email.value
+                        : ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            const enteredPassword =
+                String(
+                    password
+                        ? password.value
+                        : ""
+                );
+
+
+            if (
+                !normalizedEmail
+            ) {
+
+                throw new Error(
+                    "Enter your admin email address."
+                );
+
+            }
+
+
+            if (
+                !enteredPassword
+            ) {
+
+                throw new Error(
+                    "Enter your admin password."
+                );
+
+            }
+
+
+            if (
+                enteredPassword.length <
+                12
+            ) {
+
+                throw new Error(
+                    "Admin password must contain at least 12 characters."
+                );
+
+            }
+
+
+            setBusy(
+                true
+            );
+
+
+            message(
+                "Verifying secure admin credentials..."
+            );
+
+
+            const admin =
+                await getAdminAuth()
+                    .signIn(
+
+                        normalizedEmail,
+
+                        enteredPassword
+
+                    );
+
+
+            if (password) {
+
+                password.value =
+                    "";
+
+            }
+
+
+            const routed =
+                await routeAuthenticatedAdmin(
+                    admin
+                );
+
+
+            if (!routed) {
+
+                return;
+
+            }
+
+        }
+
+        catch (
+            error
+        ) {
+
+            console.error(
+                "[ALBUKHR ADMIN LOGIN]",
+                error
+            );
+
+
+            setBusy(
+                false
+            );
+
+
+            let text =
+                "Admin sign-in failed. Check your credentials and try again.";
+
+
+            const reason =
+                String(
+
+                    error &&
+                    error.message
+
+                        ? error.message
+
+                        : ""
+
+                )
+                    .toLowerCase();
+
+
+            if (
+
+                reason.includes(
+                    "invalid login credentials"
+                )
+
+            ) {
+
+                text =
+                    "Invalid email or password.";
+
+            }
+
+            else if (
+
+                reason.includes(
+                    "email not confirmed"
+                )
+
+            ) {
+
+                text =
+                    "This admin account has not completed email verification.";
+
+            }
+
+            else if (
+
+                reason.includes(
+                    "too many requests"
+                )
+
+            ) {
+
+                text =
+                    "Too many attempts. Please wait before trying again.";
+
+            }
+
+
+            message(
+                text,
+                "error"
+            );
+
+        }
+
+    }
+
+
+    async function recover() {
+
+        try {
+
+            if (
+                !dependenciesReady()
+            ) {
+
+                throw new Error(
+                    "Admin authentication system is unavailable."
+                );
+
+            }
+
+
+            const normalizedEmail =
+                String(
+                    email
+                        ? email.value
+                        : ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            if (
+                !normalizedEmail
+            ) {
+
+                message(
+
+                    "Enter your admin email first, then select Forgot password.",
+
+                    "error"
+
+                );
+
+
+                email?.focus();
+
+                return;
+
+            }
+
+
+            forgot.disabled =
+                true;
+
+
+            message(
+                "Preparing secure password recovery..."
+            );
+
+
+            await getAdminAuth()
+                .resetPassword(
+
+                    normalizedEmail,
+
+                    window.location.origin +
+                    "/admin-reset-password.html"
+
+                );
+
+
+            /*
+             * Intentionally generic to avoid account enumeration.
+             */
+
+            message(
+
+                "If this email is registered for an ALBUKHR admin account, a password recovery message has been sent.",
+
+                "success"
+
+            );
+
+        }
+
+        catch (
+            error
+        ) {
+
+            console.error(
+                "[ALBUKHR ADMIN RECOVERY]",
+                error
+            );
+
+
+            message(
+
+                "If this email is registered for an ALBUKHR admin account, a password recovery message has been sent.",
+
+                "success"
+
+            );
+
+        }
+
+        finally {
+
+            if (forgot) {
+
+                forgot.disabled =
+                    false;
+
+            }
+
+        }
+
+    }
+
+
+    function togglePassword() {
+
+        if (
+            !password ||
+            !toggle
+        ) {
+
+            return;
+
+        }
+
+
+        const visible =
+            password.type ===
+            "text";
+
+
+        password.type =
+            visible
+                ? "password"
+                : "text";
+
+
+        toggle.textContent =
+            visible
+                ? "Show"
+                : "Hide";
+
+
+        toggle.setAttribute(
+
+            "aria-pressed",
+
+            String(
+                !visible
+            )
+
+        );
+
+    }
+
+
+    form?.addEventListener(
+        "submit",
+        submit
+    );
+
+    forgot?.addEventListener(
+        "click",
+        recover
+    );
+
+    toggle?.addEventListener(
+        "click",
+        togglePassword
+    );
+
+
+    init();
+
+})(
+    window,
+    document
+);
