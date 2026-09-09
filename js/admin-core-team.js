@@ -9,7 +9,7 @@ const INVITATION_EXPIRATION_HOURS=168;
 
 const RPC_GET_CORE_TEAM_MEMBERS="get_core_team_members";
 const RPC_GET_ACTIVE_CORE_INVITATIONS="get_active_core_invitations";
-const RPC_GET_PROJECT_REGISTRY="get_project_registry";
+const RPC_GET_REGISTERED_CORE_PROJECTS="get_registered_core_projects";
 const RPC_CREATE_PROJECT_INVITATION="create_project_invitation";
 const RPC_REVOKE_PROJECT_INVITATION="revoke_project_invitation";
 const RPC_REVOKE_LEGACY_CORE_INVITATIONS="revoke_legacy_core_invitations";
@@ -109,27 +109,19 @@ async function rpc(name,params,options){
 }
 async function loadCoreTeam(){const d=await rpc(RPC_GET_CORE_TEAM_MEMBERS);renderCoreTeam(Array.isArray(d)?d:[]);}
 async function loadActiveCoreInvitations(){const d=await rpc(RPC_GET_ACTIVE_CORE_INVITATIONS);renderActiveInvitations(Array.isArray(d)?d:[]);}
-function normalizeProjectRegistryResponse(data){
+function normalizeRegisteredCoreProjectsResponse(data){
  const payload=Array.isArray(data)
   ? (data[0] && typeof data[0]==="object" ? data[0] : {})
   : (data && typeof data==="object" ? data : null);
  if(!payload)return null;
- if(payload.authorized===false)fail(payload.message||"Project Registry authorization was denied.");
- if(payload.authorized===true)return Array.isArray(payload.records)?payload.records:[];
- if(Array.isArray(data))return data;
- if(Array.isArray(payload.records))return payload.records;
- if(Array.isArray(payload.projects))return payload.projects;
- if(Array.isArray(payload.project_registry))return payload.project_registry;
- if(Array.isArray(payload.registry))return payload.registry;
- if(Array.isArray(payload.rows))return payload.rows;
- if(Array.isArray(payload.data))return payload.data;
- if(payload.project&&typeof payload.project==="object")return [payload.project];
- return null;
+ if(payload.authorized!==true)fail(payload.message||"Registered Core Project Registry authorization was denied.");
+ if(!Array.isArray(payload.records))fail("Registered Core Project Registry returned no valid records array.");
+ return payload.records;
 }
 async function loadRegisteredCoreProjects(){
- const data=await rpc(RPC_GET_PROJECT_REGISTRY);
- const rows=normalizeProjectRegistryResponse(data);
- if(!rows)fail("Project Registry returned an unsupported response shape.");
+ const data=await rpc(RPC_GET_REGISTERED_CORE_PROJECTS);
+ const rows=normalizeRegisteredCoreProjectsResponse(data);
+ if(!rows)fail("Registered Core Project Registry returned an invalid response.");
  renderCoreProjects(rows);
 }
 
