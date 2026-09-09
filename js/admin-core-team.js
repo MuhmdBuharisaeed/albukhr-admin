@@ -109,7 +109,25 @@ async function rpc(name,params,options){
 }
 async function loadCoreTeam(){const d=await rpc(RPC_GET_CORE_TEAM_MEMBERS);renderCoreTeam(Array.isArray(d)?d:[]);}
 async function loadActiveCoreInvitations(){const d=await rpc(RPC_GET_ACTIVE_CORE_INVITATIONS);renderActiveInvitations(Array.isArray(d)?d:[]);}
-async function loadRegisteredCoreProjects(){const d=await rpc(RPC_GET_PROJECT_REGISTRY);if(!Array.isArray(d))fail("Project Registry returned an invalid response.");renderCoreProjects(d);}
+function normalizeProjectRegistryResponse(data){
+ if(Array.isArray(data))return data;
+ if(!data||typeof data!=="object")return null;
+ if(Array.isArray(data.projects))return data.projects;
+ if(Array.isArray(data.project_registry))return data.project_registry;
+ if(Array.isArray(data.registry))return data.registry;
+ if(Array.isArray(data.rows))return data.rows;
+ if(Array.isArray(data.data))return data.data;
+ if(data.project&&typeof data.project==="object")return [data.project];
+ if(data.success===false)fail(data.message||"Project Registry request was denied.");
+ return null;
+}
+
+async function loadRegisteredCoreProjects(){
+ const data=await rpc(RPC_GET_PROJECT_REGISTRY);
+ const rows=normalizeProjectRegistryResponse(data);
+ if(!rows)fail("Project Registry returned an unsupported response shape.");
+ renderCoreProjects(rows);
+}
 
 async function refreshCoreTeam(){await Promise.all([loadCoreTeam(),loadActiveCoreInvitations(),loadRegisteredCoreProjects()]);renderCoreProjects(currentCoreProjects);setStatus("Core Team security state refreshed.");}
 
