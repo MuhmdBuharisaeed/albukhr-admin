@@ -110,18 +110,22 @@ async function rpc(name,params,options){
 async function loadCoreTeam(){const d=await rpc(RPC_GET_CORE_TEAM_MEMBERS);renderCoreTeam(Array.isArray(d)?d:[]);}
 async function loadActiveCoreInvitations(){const d=await rpc(RPC_GET_ACTIVE_CORE_INVITATIONS);renderActiveInvitations(Array.isArray(d)?d:[]);}
 function normalizeProjectRegistryResponse(data){
+ const payload=Array.isArray(data)
+  ? (data[0] && typeof data[0]==="object" ? data[0] : {})
+  : (data && typeof data==="object" ? data : null);
+ if(!payload)return null;
+ if(payload.authorized===false)fail(payload.message||"Project Registry authorization was denied.");
+ if(payload.authorized===true)return Array.isArray(payload.records)?payload.records:[];
  if(Array.isArray(data))return data;
- if(!data||typeof data!=="object")return null;
- if(Array.isArray(data.projects))return data.projects;
- if(Array.isArray(data.project_registry))return data.project_registry;
- if(Array.isArray(data.registry))return data.registry;
- if(Array.isArray(data.rows))return data.rows;
- if(Array.isArray(data.data))return data.data;
- if(data.project&&typeof data.project==="object")return [data.project];
- if(data.success===false)fail(data.message||"Project Registry request was denied.");
+ if(Array.isArray(payload.records))return payload.records;
+ if(Array.isArray(payload.projects))return payload.projects;
+ if(Array.isArray(payload.project_registry))return payload.project_registry;
+ if(Array.isArray(payload.registry))return payload.registry;
+ if(Array.isArray(payload.rows))return payload.rows;
+ if(Array.isArray(payload.data))return payload.data;
+ if(payload.project&&typeof payload.project==="object")return [payload.project];
  return null;
 }
-
 async function loadRegisteredCoreProjects(){
  const data=await rpc(RPC_GET_PROJECT_REGISTRY);
  const rows=normalizeProjectRegistryResponse(data);
