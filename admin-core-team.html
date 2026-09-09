@@ -21,92 +21,58 @@
 </a>
 <div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div>
 </header>
-
 <main>
 <nav class="back"><a href="admin-dashboard.html">← Admin Control Center</a></nav>
-
 <section class="hero">
-<div>
-<small>ALBUKHR CORE TEAM</small>
-<h1>Core Team</h1>
-<p>Manage the official seven-member ALBUKHR Core Team through the Mainnet security boundary.</p>
-</div>
+<div><small>ALBUKHR CORE TEAM</small><h1>Core Team</h1>
+<p>Manage the official seven-member ALBUKHR Core Team through the Mainnet security boundary.</p></div>
 <strong id="securityState">Verifying security...</strong>
 </section>
-
 <div id="pageStatus" class="status" aria-live="polite"></div>
-
 <section class="summary">
 <article><span>Authorization</span><b id="authorization">CHECKING</b></article>
 <article><span>Core Team members</span><b id="memberCount">0 / 7</b></article>
 <article><span>Security level</span><b id="securityLevel">CHECKING</b></article>
 </section>
-
 <section id="deniedPanel" class="panel hidden">
-<h2>Core Team access denied</h2>
-<p>Your Mainnet session is not authorized for Core Team management.</p>
+<h2>Core Team access denied</h2><p>Your Mainnet session is not authorized for Core Team management.</p>
 </section>
-
 <section id="corePanel" class="panel hidden">
-<div class="panel-head">
-<div>
-<h2>Invite Core Team Member</h2>
-<p>Super Admin creates a secure invitation. Membership authority remains server-side.</p>
-</div>
-<span class="badge">7 OFFICIAL SLOTS</span>
-</div>
-
+<div class="panel-head"><div><h2>Invite Core Team Member</h2>
+<p>Super Admin creates a secure invitation for a registered Mainnet Core Project. Membership authority remains server-side.</p></div>
+<span class="badge">7 OFFICIAL SLOTS</span></div>
 <form id="inviteForm" novalidate>
 <div class="grid">
-<label>Email
-<input id="inviteEmail" type="email" maxlength="320" autocomplete="email" placeholder="member@example.com" required>
-</label>
-<label>Core Slot
-<select id="coreSlot" required>
-<option value="">Select available slot</option>
-<option value="1">Core Slot 1</option>
-<option value="2">Core Slot 2</option>
-<option value="3">Core Slot 3</option>
-<option value="4">Core Slot 4</option>
-<option value="5">Core Slot 5</option>
-<option value="6">Core Slot 6</option>
-<option value="7">Core Slot 7</option>
-</select>
+<label>Email<input id="inviteEmail" type="email" maxlength="320" autocomplete="email" placeholder="member@example.com" required></label>
+<label>Registered Core Project
+<select id="coreProject" required><option value="">Loading registered Core Projects...</option></select>
 </label>
 </div>
 <button id="inviteButton" class="primary" type="submit">Create Core Team Invitation</button>
 </form>
 </section>
-
 <section id="tokenPanel" class="panel hidden">
-<div class="panel-head"><div>
-<h2>Invitation Link</h2>
-<p>The raw token is shown only once and is never persisted by this page.</p>
-</div></div>
-<label>One-time invitation link
-<input id="invitationToken" type="text" readonly autocomplete="off" spellcheck="false">
-</label>
+<div class="panel-head"><div><h2>Invitation Link</h2>
+<p>The raw token is shown only once and is never persisted by this page.</p></div></div>
+<label>One-time invitation link<input id="invitationToken" type="text" readonly autocomplete="off" spellcheck="false"></label>
 <button id="copyTokenButton" type="button">Copy Invitation Link</button>
 </section>
-
 <section id="recordsPanel" class="panel hidden">
-<div class="panel-head"><div>
-<h2>Official Core Team</h2>
-<p>Active Core Team membership bindings authorized by the server.</p>
-</div>
-<button id="refreshButton" type="button">Refresh</button>
-</div>
-<div id="emptyState" class="empty">
-<b>No active Core Team members.</b>
-<span>No active Core Team membership bindings are currently available.</span>
-</div>
+<div class="panel-head"><div><h2>Official Core Team</h2>
+<p>Active Core Team membership bindings authorized by the server.</p></div>
+<button id="refreshButton" type="button">Refresh</button></div>
+<div id="emptyState" class="empty"><b>No active Core Team members.</b>
+<span>No active Core Team membership bindings are currently available.</span></div>
 <div id="invitationList" class="records"></div>
+<div class="panel-head invitations-head"><div><h2>Active Invitations</h2>
+<p>Unused Core Team invitations. Revoke an invitation from this authenticated Super Admin session when it should no longer be valid.</p></div>
+<button id="cleanupLegacyButton" type="button">Revoke Legacy Invitations</button></div>
+<div id="invitationEmptyState" class="empty"><b>No active invitations.</b>
+<span>There are no unused active Core Team invitations.</span></div>
+<div id="activeInvitationList" class="records"></div>
 </section>
-
-<section class="notice">
-<b>Security boundary</b>
-<span>Supabase Auth, MFA/AAL2, RLS, database constraints and SECURITY DEFINER RPCs remain the authority.</span>
-</section>
+<section class="notice"><b>Security boundary</b>
+<span>Supabase Auth, MFA/AAL2, RLS, database constraints and SECURITY DEFINER RPCs remain the authority.</span></section>
 </main>
 </body>
 </html>
