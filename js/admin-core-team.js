@@ -165,7 +165,7 @@ async function handleInviteSubmit(e){
 
 async function revokeProjectInvitation(id,reason){
  const uuid=normalizeUuid(id);if(!uuid)fail("Invalid invitation identifier.");
- const d=await rpc(RPC_REVOKE_PROJECT_INVITATION,{p_invitation_id:uuid,p_reason:String(reason||"Revoked by Super Admin").slice(0,500)});
+ const d=await rpc(RPC_REVOKE_PROJECT_INVITATION,{p_invitation_id:uuid,p_revoke_reason:String(reason||"Revoked by Super Admin").slice(0,500)});
  if(!d||typeof d!=="object")fail("The invitation revocation service returned an invalid response.");
  if(d.success===false||d.authorized===false)fail(d.message||"Invitation revocation was denied.");return d;
 }
