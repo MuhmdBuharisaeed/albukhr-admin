@@ -7,10 +7,10 @@
 <title>ALBUKHR Admin Module</title>
 <link rel="stylesheet" href="css/admin-module.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="js/core/environment-core.js" defer></script>
-<script src="js/core/supabase-core.js" defer></script>
-<script src="js/core/supabase-admin-auth.js" defer></script>
-<script src="js/admin-module.js" defer></script>
+<script src="js/core/environment-core.js?v=20260910-18" defer></script>
+<script src="js/core/supabase-core.js?v=20260910-18" defer></script>
+<script src="js/core/supabase-admin-auth.js?v=20260910-18" defer></script>
+<script src="js/admin-module.js?v=20260910-18" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -18,7 +18,7 @@
 <img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR">
 <span><b>ALBUKHR</b><small>ADMINISTRATION</small></span>
 </a>
-<div class="actions"><span>MAINNET</span><button id="logoutButton">Sign out</button></div>
+<div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div>
 </header>
 <main>
 <a class="back" href="admin-dashboard.html">← Admin Control Center</a>
@@ -26,7 +26,7 @@
 <div><small>ADMINISTRATION MODULE</small><h1 id="moduleTitle">Loading...</h1><p id="moduleDescription">Checking authorization.</p></div>
 <strong id="securityState">Verifying...</strong>
 </section>
-<div id="pageStatus" class="status"></div>
+<div id="pageStatus" class="status" aria-live="polite"></div>
 <section class="grid">
 <article class="card">
 <header>Authorization <em id="authorizationState">CHECKING</em></header>
