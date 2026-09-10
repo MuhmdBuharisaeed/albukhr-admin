@@ -681,6 +681,81 @@
         }
     }
 
+
+    function passwordResetRedirectUrl() {
+        const invitationId =
+            invitationData &&
+            invitationData.invitation_id
+                ? String(invitationData.invitation_id).trim()
+                : getInvitationId();
+
+        if (!invitationId) {
+            throw new Error(
+                "Invitation context is unavailable for password recovery."
+            );
+        }
+
+        return (
+            window.location.origin +
+            "/invitation-password-reset.html?invitation_id=" +
+            encodeURIComponent(invitationId)
+        );
+    }
+
+    async function handleForgotPassword() {
+        try {
+            const email = $("invitationEmail");
+            const value = email ? String(email.value || "").trim() : "";
+
+            if (!value) {
+                throw new Error(
+                    "Enter the invitation email address before requesting a password reset."
+                );
+            }
+
+            setButtonBusy(
+                "invitationForgotButton",
+                true,
+                "Sending reset email...",
+                "Forgot Password"
+            );
+
+            setStatus(
+                "Sending a password recovery email to the invitation address...",
+                false
+            );
+
+            await getInvitationAuth().requestPasswordReset(
+                value,
+                passwordResetRedirectUrl()
+            );
+
+            setStatus(
+                "If this email is eligible for password recovery, a reset message has been sent. Open it from the invitation email address and return here after setting the new password.",
+                false
+            );
+        } catch (error) {
+            console.error(
+                "[ALBUKHR INVITATION PASSWORD RESET REQUEST]",
+                error
+            );
+
+            setStatus(
+                error && error.message
+                    ? error.message
+                    : "Password recovery request failed.",
+                true
+            );
+        } finally {
+            setButtonBusy(
+                "invitationForgotButton",
+                false,
+                "Sending reset email...",
+                "Forgot Password"
+            );
+        }
+    }
+
     async function handleCreateAccount() {
         try {
             const email =
@@ -947,6 +1022,16 @@
                 form.addEventListener(
                     "submit",
                     handleSignIn
+                );
+            }
+
+            const forgotButton =
+                $("invitationForgotButton");
+
+            if (forgotButton) {
+                forgotButton.addEventListener(
+                    "click",
+                    handleForgotPassword
                 );
             }
 
