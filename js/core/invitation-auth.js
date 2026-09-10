@@ -4,13 +4,11 @@
     /*
      * ALBUKHR INVITATION AUTH
      *
-     * Purpose:
-     * Authenticate an invited person with ordinary Supabase Auth.
+     * MAINNET ONLY.
      *
-     * IMPORTANT:
-     * This engine DOES NOT create admin authority.
-     * Admin authority remains server-side and is granted only by
-     * the invitation acceptance RPC + database security rules.
+     * This engine authenticates invitation users but DOES NOT create admin
+     * authority. Admin authority remains server-side through the invitation
+     * acceptance RPC and database security rules.
      */
 
     const CORE_NAME = "ALBUKHR Invitation Auth";
@@ -69,16 +67,6 @@
         return value;
     }
 
-    /*
-     * A missing Auth session is a normal state on the invitation page.
-     * In particular, after "Use a Different Email", signOut() intentionally
-     * removes the current session before the UI refreshes to the signed-out
-     * authentication form.
-     *
-     * Supabase may report this state as AuthSessionMissingError / an
-     * "Auth session missing" message. That must map to a signed-out user,
-     * not to an application failure.
-     */
     function isExpectedMissingSessionError(error) {
         if (!error) {
             return false;
@@ -177,6 +165,82 @@
         });
     }
 
+    async function requestPasswordReset(email, redirectTo) {
+        const normalizedEmail = normalizeEmail(email);
+        const target = String(redirectTo || "").trim();
+
+        if (!target) {
+            fail("Password reset redirect is unavailable.");
+        }
+
+        const response = await getClient().auth.resetPasswordForEmail(
+            normalizedEmail,
+            {
+                redirectTo: target
+            }
+        );
+
+        if (response.error) {
+            throw response.error;
+        }
+
+        return true;
+    }
+
+    async function updatePassword(password) {
+        const normalizedPassword = normalizePassword(password);
+
+        const response = await getClient().auth.updateUser({
+            password: normalizedPassword
+        });
+
+        if (response.error) {
+            throw response.error;
+        }
+
+        if (!response.data || !response.data.user) {
+            fail("Password update did not return a valid user.");
+        }
+
+        return response.data.user;
+    }
+
+
+    async function requestPasswordResetForInvitation(email) {
+        const normalizedEmail = normalizeEmail(email);
+        const hash = String(window.location.hash || "");
+        const token = hash.startsWith("#")
+            ? (new URLSearchParams(hash.slice(1)).get("token") || "")
+            : "";
+
+        if (!token) {
+            fail("Invitation token is unavailable for password recovery.");
+        }
+
+        const validation = await getClient()
+            .schema("albukhr_security")
+            .rpc("validate_project_invitation", {
+                p_invitation_token: token
+            });
+
+        if (validation.error) {
+            throw validation.error;
+        }
+
+        const data = validation.data;
+
+        if (!data || data.success !== true || data.valid !== true || !data.invitation_id) {
+            fail(data && data.message ? data.message : "Invitation validation failed.");
+        }
+
+        const redirectTo =
+            window.location.origin +
+            "/invitation-password-reset.html?invitation_id=" +
+            encodeURIComponent(String(data.invitation_id));
+
+        return requestPasswordReset(normalizedEmail, redirectTo);
+    }
+
     async function signOut() {
         const response = await getClient().auth.signOut();
 
@@ -192,8 +256,11 @@
         getSession,
         signIn,
         signUp,
+        requestPasswordReset,
+        requestPasswordResetForInvitation,
+        updatePassword,
         signOut
     });
 
-    console.info("ALBUKHR Invitation Auth loaded.");
+    console.info(CORE_NAME + " loaded.");
 })(window);
