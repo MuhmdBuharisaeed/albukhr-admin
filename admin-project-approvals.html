@@ -5,35 +5,38 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>ALBUKHR Core Project Approvals</title>
-<link rel="stylesheet" href="/css/admin-module.css?v=20260911-01">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="/js/core/environment-core.js?v=20260911-01" defer></script>
-<script src="/js/core/supabase-core.js?v=20260911-01" defer></script>
-<script src="/js/core/supabase-admin-auth.js?v=20260911-01" defer></script>
-<script src="/js/admin-module-core-approval.js?v=20260911-01" defer></script>
-<script src="/js/admin-project-approvals.js?v=20260911-01" defer></script>
+<link rel="stylesheet" href="css/admin-module.css?v=20260911-10">
 </head>
 <body>
 <header class="topbar">
-<a class="brand" href="/admin-dashboard.html">
-<img src="/images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR">
+<a class="brand" href="admin-dashboard.html">
+<img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR">
 <span><b>ALBUKHR</b><small>ADMINISTRATION</small></span>
 </a>
 <div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div>
 </header>
+
 <main>
-<a class="back" href="/admin-dashboard.html">← Admin Control Center</a>
+<a class="back" href="admin-dashboard.html">← Admin Control Center</a>
+
 <section class="hero">
-<div><small>CORE PROJECT APPROVALS</small><h1>Project Approval Workflow</h1><p>Server-authoritative approval of registered ALBUKHR Core Projects.</p></div>
-<strong id="securityState">Verifying...</strong>
+<div>
+<small>CORE PROJECT APPROVALS</small>
+<h1>Project Approval Workflow</h1>
+<p>Server-authoritative approval of registered ALBUKHR Core Projects.</p>
+</div>
+<strong id="securityState">Starting secure loader...</strong>
 </section>
-<div id="pageStatus" class="status" aria-live="polite"></div>
+
+<div id="pageStatus" class="status" aria-live="polite">Loading Admin security core...</div>
+
 <section class="grid">
 <article class="card">
 <header>Authorization <em id="authorizationState">CHECKING</em></header>
 <h2 id="authorizationTitle">Server-authoritative access</h2>
 <p id="authorizationText">Authorization is derived from the authenticated identity and Mainnet security layer.</p>
 </article>
+
 <article class="card">
 <header>Administrator <em>VERIFIED</em></header>
 <h2 id="adminEmail">—</h2>
@@ -42,11 +45,81 @@
 <p>MFA <b id="mfaStatus">—</b></p>
 </article>
 </section>
+
 <section class="workspace">
 <h2>Core Project Approval Queue</h2>
 <div id="workspaceText">Loading secured approval queue.</div>
-<div class="notice"><b>Security boundary</b><span>Client-side roles, query parameters, and page routes are not authorities. Approval is performed only by the existing Mainnet server-side Core Approval Engine.</span></div>
+<div class="notice">
+<b>Security boundary</b>
+<span>Client-side roles and page routes are not authorities. Approval is performed only through the existing Mainnet server-side Core Approval Engine.</span>
+</div>
 </section>
 </main>
+
+<script>
+(function (w, d) {
+"use strict";
+
+var statusEl = d.getElementById("pageStatus");
+var securityEl = d.getElementById("securityState");
+
+function show(text, error) {
+  if (statusEl) {
+    statusEl.textContent = text || "";
+    statusEl.className = "status" + (error ? " error" : "");
+  }
+}
+
+function fail(text) {
+  show(text, true);
+  if (securityEl) securityEl.textContent = "Security check failed";
+}
+
+function loadScript(src) {
+  return new Promise(function(resolve, reject) {
+    var s = d.createElement("script");
+    s.src = src;
+    s.async = false;
+    s.onload = function() { resolve(src); };
+    s.onerror = function() {
+      reject(new Error("Failed to load Admin dependency: " + src));
+    };
+    d.head.appendChild(s);
+  });
+}
+
+async function boot() {
+  try {
+    /*
+     * Deliberately sequential.
+     * Do not use defer here: each security layer must exist before
+     * the next layer is initialized.
+     */
+    await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");
+    await loadScript("js/core/environment-core.js?v=20260911-10");
+    if (!w.AlbukhrEnvironment) {
+      throw new Error("ALBUKHR Environment Core did not initialize.");
+    }
+
+    await loadScript("js/core/supabase-core.js?v=20260911-10");
+    if (!w.ALBUKHR_SUPABASE || !w.ALBUKHR_SUPABASE.client) {
+      throw new Error("ALBUKHR Supabase Core did not initialize.");
+    }
+
+    await loadScript("js/core/supabase-admin-auth.js?v=20260911-10");
+    if (!w.AlbukhrSupabaseAdminAuth) {
+      throw new Error("ALBUKHR Admin Auth did not initialize.");
+    }
+
+    await loadScript("js/admin-project-approvals.js?v=20260911-10");
+  } catch (e) {
+    console.error("[ALBUKHR APPROVAL BOOT]", e);
+    fail(e && e.message ? e.message : "Required Admin security dependency failed to load.");
+  }
+}
+
+boot();
+})(window, document);
+</script>
 </body>
 </html>
