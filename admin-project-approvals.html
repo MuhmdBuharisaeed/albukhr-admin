@@ -6,59 +6,27 @@
 <meta name="theme-color" content="#087a3e">
 <meta name="robots" content="noindex,nofollow">
 <title>ALBUKHR — Core Project Approvals</title>
-<link rel="stylesheet" href="css/admin-module.css?v=20260911-12">
+<link rel="stylesheet" href="css/admin-module.css?v=20260911-14">
 
 <!--
-  Compatibility bootstrap:
-  The existing environment-core.js is still the canonical shared engine.
-  This exact bootstrap only guarantees that the environment object exists
-  before deferred shared scripts execute on this route.
+  ALBUKHR Core Project Approval page — Migration 1.14
+
+  MAINNET ADMIN ONLY.
+
+  This route uses the existing canonical shared engines:
+    - js/core/environment-core.js
+    - js/core/supabase-core.js
+    - js/core/supabase-admin-auth.js
+
+  IMPORTANT:
+  admin-module-core-approval.js is intentionally NOT loaded here.
+  The page-local controller below prevents the previous auto-init race while
+  keeping Supabase/RPC/security authority in the existing architecture.
 -->
-<script>
-(function (window) {
-    "use strict";
-
-    if (window.ALBukhrEnvironment) return;
-
-    const host = String(window.location.hostname || "").toLowerCase();
-    const known = host === "admin.albukhr.com";
-
-    const config = Object.freeze({
-        key: "mainnet",
-        name: "App Albukhr",
-        network: "mainnet",
-        appUrl: "https://app.albukhr.com",
-        adminUrl: "https://admin.albukhr.com",
-        testnetUrl: "https://test.albukhr.com",
-        supabaseUrl: "https://ribpntyqdleytsyktdfb.supabase.co"
-    });
-
-    window.ALBukhrEnvironment = Object.freeze({
-        isKnown: function () { return known; },
-        isMainnet: function () { return known; },
-        isTestnet: function () { return false; },
-        getKey: function () { return config.key; },
-        getName: function () { return config.name; },
-        getNetwork: function () { return config.network; },
-        getAppUrl: function () { return config.appUrl; },
-        getAdminUrl: function () { return config.adminUrl; },
-        getTestnetUrl: function () { return config.testnetUrl; },
-        getSupabaseUrl: function () { return config.supabaseUrl; }
-    });
-
-    console.info(
-        known
-            ? "ALBUKHR Approval Environment Bootstrap: MAINNET"
-            : "ALBUKHR Approval Environment Bootstrap: unknown host."
-    );
-})(window);
-</script>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="js/core/environment-core.js?v=20260911-12" defer></script>
-<script src="js/core/supabase-core.js?v=20260911-12" defer></script>
-<script src="js/core/supabase-admin-auth.js?v=20260911-12" defer></script>
-<script src="js/admin-module-core-approval.js?v=20260911-12" defer></script>
+<script src="js/core/environment-core.js?v=20260911-14" defer></script>
+<script src="js/core/supabase-core.js?v=20260911-14" defer></script>
+<script src="js/core/supabase-admin-auth.js?v=20260911-14" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -113,12 +81,358 @@
 </main>
 
 <script>
+(function (window, document) {
+    "use strict";
+
+    const RPC_QUEUE = "get_core_project_approval_queue";
+    const RPC_HISTORY = "get_core_project_approval_history";
+    const RPC_APPROVE = "approve_core_project";
+
+    const $ = function (id) {
+        return document.getElementById(id);
+    };
+
+    function setStatus(text, error) {
+        const el = $("pageStatus");
+        if (!el) return;
+        el.textContent = text || "";
+        el.className = "status" + (error ? " error" : "");
+    }
+
+    function esc(value) {
+        return String(value == null ? "" : value).replace(/[&<>"']/g, function (c) {
+            return {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[c];
+        });
+    }
+
+    function getAuth() {
+        const auth = window.AlbukhrSupabaseAdminAuth;
+        if (!auth) {
+            throw new Error("ALBUKHR Admin Auth Core is unavailable.");
+        }
+        return auth;
+    }
+
+    function getClient() {
+        const core = window.ALBUKHR_SUPABASE;
+
+        if (!core || !core.client) {
+            throw new Error("ALBUKHR Supabase Core is unavailable.");
+        }
+
+        if (
+            String(core.environment || "").toLowerCase() !== "mainnet" ||
+            String(core.network || "").toLowerCase() !== "mainnet"
+        ) {
+            throw new Error("Admin approval workspace requires MAINNET.");
+        }
+
+        return core.client;
+    }
+
+    async function rpc(name, params) {
+        const client = getClient();
+
+        const result = await client
+            .schema("albukhr_security")
+            .rpc(name, params || {});
+
+        if (result.error) {
+            throw result.error;
+        }
+
+        return result.data;
+    }
+
+    function renderAdmin(admin, mfa) {
+        if ($("adminEmail")) {
+            $("adminEmail").textContent =
+                admin.email || admin.email_snapshot || "—";
+        }
+
+        if ($("adminId")) {
+            $("adminId").textContent = admin.user_id || "—";
+        }
+
+        if ($("adminStatus")) {
+            $("adminStatus").textContent = admin.status || "—";
+        }
+
+        if ($("mfaStatus")) {
+            $("mfaStatus").textContent =
+                mfa && mfa.verified ? "AAL2 VERIFIED" : "NOT VERIFIED";
+        }
+    }
+
+    function renderQueue(records) {
+        const host = $("workspaceText");
+        if (!host) return;
+
+        if (!Array.isArray(records) || records.length === 0) {
+            host.innerHTML =
+                '<div class="notice">' +
+                "<b>No Core Projects awaiting approval.</b>" +
+                "<span>The server-authoritative approval queue is empty.</span>" +
+                "</div>";
+            return;
+        }
+
+        host.innerHTML = records.map(function (project) {
+            const id = esc(project.project_id);
+            const status = esc(String(project.status || "").toUpperCase());
+
+            return (
+                '<article class="approval-item" data-project-id="' + id + '">' +
+                    '<div class="approval-main">' +
+                        "<small>CORE SLOT " + esc(project.core_slot) + " • MAINNET</small>" +
+                        "<h3>" + esc(project.name) + "</h3>" +
+                        "<p>" + esc(project.project_code) + " • " +
+                            esc(project.slug) + "</p>" +
+                        "<p>Project ID: <code>" + id + "</code></p>" +
+                        "<p>Status: <strong>" + status + "</strong></p>" +
+                    "</div>" +
+                    '<div class="approval-actions">' +
+                        '<button type="button" data-action="history">Approval History</button>' +
+                        '<button type="button" data-action="approve">Approve Project</button>' +
+                    "</div>" +
+                    '<div class="approval-history" hidden></div>' +
+                "</article>"
+            );
+        }).join("");
+
+        host.querySelectorAll("[data-action]").forEach(function (button) {
+            button.addEventListener("click", async function () {
+                const card = button.closest(".approval-item");
+                const projectId = card && card.dataset.projectId;
+
+                if (!projectId) return;
+
+                if (button.dataset.action === "history") {
+                    await loadHistory(card, projectId);
+                } else {
+                    await approveProject(projectId, button);
+                }
+            });
+        });
+    }
+
+    async function loadHistory(card, projectId) {
+        const box = card.querySelector(".approval-history");
+        if (!box) return;
+
+        box.hidden = false;
+        box.textContent = "Loading approval history...";
+
+        try {
+            const result = await rpc(RPC_HISTORY, {
+                p_project_id: projectId
+            });
+
+            const records = Array.isArray(result && result.records)
+                ? result.records
+                : [];
+
+            if (!records.length) {
+                box.textContent = "No Core approval decisions recorded.";
+                return;
+            }
+
+            box.innerHTML = records.map(function (record) {
+                return (
+                    "<div>" +
+                        "<b>" + esc(String(record.decision || "").toUpperCase()) + "</b>" +
+                        " <span>" + esc(record.previous_status) +
+                        " → " + esc(record.new_status) + "</span>" +
+                        "<small>" + esc(record.created_at) + "</small>" +
+                        (record.reason
+                            ? "<p>" + esc(record.reason) + "</p>"
+                            : "") +
+                    "</div>"
+                );
+            }).join("");
+        } catch (error) {
+            console.error("[ALBUKHR CORE APPROVAL] History error:", error);
+            box.textContent =
+                error && error.message
+                    ? error.message
+                    : "Unable to load approval history.";
+        }
+    }
+
+    async function approveProject(projectId, button) {
+        const reason = window.prompt(
+            "Approval reason (optional):",
+            "Core Project approved after administrative review."
+        );
+
+        if (reason === null) return;
+
+        button.disabled = true;
+        setStatus("Submitting approval to the server...");
+
+        try {
+            const result = await rpc(RPC_APPROVE, {
+                p_project_id: projectId,
+                p_reason: reason
+            });
+
+            if (!result || result.success !== true) {
+                throw new Error("Server did not confirm the approval.");
+            }
+
+            setStatus(
+                "Core Project approved successfully. Project status is now APPROVED."
+            );
+
+            await loadQueue();
+        } catch (error) {
+            console.error("[ALBUKHR CORE APPROVAL] Approval error:", error);
+
+            setStatus(
+                error && error.message
+                    ? error.message
+                    : "Core Project approval failed.",
+                true
+            );
+
+            button.disabled = false;
+        }
+    }
+
+    async function loadQueue() {
+        const result = await rpc(RPC_QUEUE);
+
+        if (!result || result.authorized !== true) {
+            throw new Error("Core Project approval authorization denied.");
+        }
+
+        const records = Array.isArray(result.records)
+            ? result.records
+            : [];
+
+        renderQueue(records);
+    }
+
+    async function init() {
+        try {
+            const environment = window.ALBukhrEnvironment;
+
+            if (
+                !environment ||
+                typeof environment.isKnown !== "function" ||
+                typeof environment.isMainnet !== "function" ||
+                !environment.isKnown() ||
+                !environment.isMainnet()
+            ) {
+                throw new Error("Admin approval workspace requires known MAINNET.");
+            }
+
+            const auth = getAuth();
+
+            await auth.init();
+
+            const admin = await auth.requireAdmin({
+                redirect: false
+            });
+
+            if (!admin) {
+                window.location.replace("admin-login.html");
+                return;
+            }
+
+            const mfa = await auth.ensureMfa();
+
+            renderAdmin(admin, mfa);
+
+            if (admin.mfa_required && !mfa.verified) {
+                window.location.replace("admin-mfa.html");
+                return;
+            }
+
+            const roles = Array.isArray(admin.roles)
+                ? admin.roles
+                : [];
+
+            const authorized = roles.some(function (role) {
+                return (
+                    role === "super_admin" ||
+                    role === "approval_admin"
+                );
+            });
+
+            if (!authorized) {
+                if ($("authorizationState")) {
+                    $("authorizationState").textContent = "DENIED";
+                }
+
+                setStatus(
+                    "You are authenticated but not authorized for Core Project approvals.",
+                    true
+                );
+                return;
+            }
+
+            if ($("authorizationState")) {
+                $("authorizationState").textContent = "AUTHORIZED";
+            }
+
+            if ($("securityState")) {
+                $("securityState").textContent = "Authenticated • AAL2";
+            }
+
+            if ($("authorizationTitle")) {
+                $("authorizationTitle").textContent =
+                    "Server-authoritative Core approval access granted";
+            }
+
+            if ($("authorizationText")) {
+                $("authorizationText").textContent =
+                    "Accepted roles: super_admin / approval_admin";
+            }
+
+            if ($("workspaceText")) {
+                $("workspaceText").textContent =
+                    "Loading Core Project approval queue...";
+            }
+
+            await loadQueue();
+
+            setStatus("Core Project approval workspace ready.");
+        } catch (error) {
+            console.error("[ALBUKHR CORE APPROVAL] Initialization error:", error);
+
+            setStatus(
+                error && error.message
+                    ? error.message
+                    : "Unable to load Core Project approval workspace.",
+                true
+            );
+        }
+    }
+
+    window.AlbukhrCoreProjectApprovalPage = Object.freeze({
+        init: init,
+        loadQueue: loadQueue
+    });
+
+    document.addEventListener("DOMContentLoaded", init);
+})(window, document);
+</script>
+
+<script>
 document.addEventListener("DOMContentLoaded", function () {
-    var button = document.getElementById("logoutButton");
+    const button = document.getElementById("logoutButton");
     if (!button) return;
 
     button.addEventListener("click", async function () {
         button.disabled = true;
+
         try {
             if (window.AlbukhrSupabaseAdminAuth) {
                 await window.AlbukhrSupabaseAdminAuth.signOut();
