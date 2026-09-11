@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -6,12 +6,59 @@
 <meta name="theme-color" content="#087a3e">
 <meta name="robots" content="noindex,nofollow">
 <title>ALBUKHR — Core Project Approvals</title>
-<link rel="stylesheet" href="css/admin-module.css?v=20260911-11">
+<link rel="stylesheet" href="css/admin-module.css?v=20260911-12">
+
+<!--
+  Compatibility bootstrap:
+  The existing environment-core.js is still the canonical shared engine.
+  This exact bootstrap only guarantees that the environment object exists
+  before deferred shared scripts execute on this route.
+-->
+<script>
+(function (window) {
+    "use strict";
+
+    if (window.ALBukhrEnvironment) return;
+
+    const host = String(window.location.hostname || "").toLowerCase();
+    const known = host === "admin.albukhr.com";
+
+    const config = Object.freeze({
+        key: "mainnet",
+        name: "App Albukhr",
+        network: "mainnet",
+        appUrl: "https://app.albukhr.com",
+        adminUrl: "https://admin.albukhr.com",
+        testnetUrl: "https://test.albukhr.com",
+        supabaseUrl: "https://ribpntyqdleytsyktdfb.supabase.co"
+    });
+
+    window.ALBukhrEnvironment = Object.freeze({
+        isKnown: function () { return known; },
+        isMainnet: function () { return known; },
+        isTestnet: function () { return false; },
+        getKey: function () { return config.key; },
+        getName: function () { return config.name; },
+        getNetwork: function () { return config.network; },
+        getAppUrl: function () { return config.appUrl; },
+        getAdminUrl: function () { return config.adminUrl; },
+        getTestnetUrl: function () { return config.testnetUrl; },
+        getSupabaseUrl: function () { return config.supabaseUrl; }
+    });
+
+    console.info(
+        known
+            ? "ALBUKHR Approval Environment Bootstrap: MAINNET"
+            : "ALBUKHR Approval Environment Bootstrap: unknown host."
+    );
+})(window);
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="js/core/environment-core.js?v=20260911-11" defer></script>
-<script src="js/core/supabase-core.js?v=20260911-11" defer></script>
-<script src="js/core/supabase-admin-auth.js?v=20260911-11" defer></script>
-<script src="js/admin-module-core-approval.js?v=20260911-11" defer></script>
+<script src="js/core/environment-core.js?v=20260911-12" defer></script>
+<script src="js/core/supabase-core.js?v=20260911-12" defer></script>
+<script src="js/core/supabase-admin-auth.js?v=20260911-12" defer></script>
+<script src="js/admin-module-core-approval.js?v=20260911-12" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -19,7 +66,10 @@
 <img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR">
 <span><b>ALBUKHR</b><small>ADMINISTRATION</small></span>
 </a>
-<div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div>
+<div class="actions">
+<span>MAINNET</span>
+<button id="logoutButton" type="button">Sign out</button>
+</div>
 </header>
 
 <main>
@@ -40,7 +90,7 @@
 <article class="card">
 <header>Authorization <em id="authorizationState">CHECKING</em></header>
 <h2 id="authorizationTitle">Server-authoritative access</h2>
-<p id="authorizationText">Authorization is derived from the authenticated identity.</p>
+<p id="authorizationText">Authorization is derived from the authenticated identity and Mainnet security layer.</p>
 </article>
 
 <article class="card">
@@ -63,25 +113,20 @@
 </main>
 
 <script>
-/*
- * Minimal page-only logout wiring.
- * Security initialization is handled by the existing shared Admin Auth core
- * and the existing Core Project Approval engine loaded above with defer.
- */
 document.addEventListener("DOMContentLoaded", function () {
-  var button = document.getElementById("logoutButton");
-  if (!button) return;
+    var button = document.getElementById("logoutButton");
+    if (!button) return;
 
-  button.addEventListener("click", async function () {
-    button.disabled = true;
-    try {
-      if (window.AlbukhrSupabaseAdminAuth) {
-        await window.AlbukhrSupabaseAdminAuth.signOut();
-      }
-    } finally {
-      window.location.replace("admin-login.html");
-    }
-  });
+    button.addEventListener("click", async function () {
+        button.disabled = true;
+        try {
+            if (window.AlbukhrSupabaseAdminAuth) {
+                await window.AlbukhrSupabaseAdminAuth.signOut();
+            }
+        } finally {
+            window.location.replace("admin-login.html");
+        }
+    });
 });
 </script>
 </body>
