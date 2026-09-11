@@ -1,11 +1,17 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087a3e">
 <meta name="robots" content="noindex,nofollow">
-<title>ALBUKHR Core Project Approvals</title>
-<link rel="stylesheet" href="css/admin-module.css?v=20260911-10">
+<title>ALBUKHR — Core Project Approvals</title>
+<link rel="stylesheet" href="css/admin-module.css?v=20260911-11">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/core/environment-core.js?v=20260911-11" defer></script>
+<script src="js/core/supabase-core.js?v=20260911-11" defer></script>
+<script src="js/core/supabase-admin-auth.js?v=20260911-11" defer></script>
+<script src="js/admin-module-core-approval.js?v=20260911-11" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -17,7 +23,7 @@
 </header>
 
 <main>
-<a class="back" href="admin-dashboard.html">← Admin Control Center</a>
+<nav class="back"><a href="admin-dashboard.html">← Admin Control Center</a></nav>
 
 <section class="hero">
 <div>
@@ -25,16 +31,16 @@
 <h1>Project Approval Workflow</h1>
 <p>Server-authoritative approval of registered ALBUKHR Core Projects.</p>
 </div>
-<strong id="securityState">Starting secure loader...</strong>
+<strong id="securityState">Verifying security...</strong>
 </section>
 
-<div id="pageStatus" class="status" aria-live="polite">Loading Admin security core...</div>
+<div id="pageStatus" class="status" aria-live="polite"></div>
 
 <section class="grid">
 <article class="card">
 <header>Authorization <em id="authorizationState">CHECKING</em></header>
 <h2 id="authorizationTitle">Server-authoritative access</h2>
-<p id="authorizationText">Authorization is derived from the authenticated identity and Mainnet security layer.</p>
+<p id="authorizationText">Authorization is derived from the authenticated identity.</p>
 </article>
 
 <article class="card">
@@ -57,69 +63,26 @@
 </main>
 
 <script>
-(function (w, d) {
-"use strict";
+/*
+ * Minimal page-only logout wiring.
+ * Security initialization is handled by the existing shared Admin Auth core
+ * and the existing Core Project Approval engine loaded above with defer.
+ */
+document.addEventListener("DOMContentLoaded", function () {
+  var button = document.getElementById("logoutButton");
+  if (!button) return;
 
-var statusEl = d.getElementById("pageStatus");
-var securityEl = d.getElementById("securityState");
-
-function show(text, error) {
-  if (statusEl) {
-    statusEl.textContent = text || "";
-    statusEl.className = "status" + (error ? " error" : "");
-  }
-}
-
-function fail(text) {
-  show(text, true);
-  if (securityEl) securityEl.textContent = "Security check failed";
-}
-
-function loadScript(src) {
-  return new Promise(function(resolve, reject) {
-    var s = d.createElement("script");
-    s.src = src;
-    s.async = false;
-    s.onload = function() { resolve(src); };
-    s.onerror = function() {
-      reject(new Error("Failed to load Admin dependency: " + src));
-    };
-    d.head.appendChild(s);
+  button.addEventListener("click", async function () {
+    button.disabled = true;
+    try {
+      if (window.AlbukhrSupabaseAdminAuth) {
+        await window.AlbukhrSupabaseAdminAuth.signOut();
+      }
+    } finally {
+      window.location.replace("admin-login.html");
+    }
   });
-}
-
-async function boot() {
-  try {
-    /*
-     * Deliberately sequential.
-     * Do not use defer here: each security layer must exist before
-     * the next layer is initialized.
-     */
-    await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");
-    await loadScript("js/core/environment-core.js?v=20260911-10");
-    if (!w.AlbukhrEnvironment) {
-      throw new Error("ALBUKHR Environment Core did not initialize.");
-    }
-
-    await loadScript("js/core/supabase-core.js?v=20260911-10");
-    if (!w.ALBUKHR_SUPABASE || !w.ALBUKHR_SUPABASE.client) {
-      throw new Error("ALBUKHR Supabase Core did not initialize.");
-    }
-
-    await loadScript("js/core/supabase-admin-auth.js?v=20260911-10");
-    if (!w.AlbukhrSupabaseAdminAuth) {
-      throw new Error("ALBUKHR Admin Auth did not initialize.");
-    }
-
-    await loadScript("js/admin-project-approvals.js?v=20260911-10");
-  } catch (e) {
-    console.error("[ALBUKHR APPROVAL BOOT]", e);
-    fail(e && e.message ? e.message : "Required Admin security dependency failed to load.");
-  }
-}
-
-boot();
-})(window, document);
+});
 </script>
 </body>
 </html>
