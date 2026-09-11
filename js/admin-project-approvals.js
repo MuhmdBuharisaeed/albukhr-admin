@@ -1,107 +1,227 @@
-/* ALBUKHR Canonical Core Project Approvals page
- * 1.9 route-hardening companion.
- * Mainnet only. Uses existing server-authoritative Core Approval Engine.
+/* ALBUKHR Core Project Approvals 1.10
+ * Canonical page controller.
+ * Mainnet only.
+ * Reuses the existing server-authoritative Core Approval RPCs.
  */
 (function (w, d) {
-  "use strict";
+"use strict";
 
-  const wait = (fn, ms) => new Promise((resolve, reject) => {
-    const started = Date.now();
-    (function tick() {
-      try {
-        const value = fn();
-        if (value) return resolve(value);
-      } catch (_) {}
-      if (Date.now() - started >= ms) {
-        return reject(new Error("Required Admin security dependencies are unavailable."));
-      }
-      setTimeout(tick, 50);
-    })();
+var AUTH = function(){ return w.AlbukhrSupabaseAdminAuth; };
+var CLIENT = function(){ return w.ALBUKHR_SUPABASE && w.ALBUKHR_SUPABASE.client; };
+
+function $(id){ return d.getElementById(id); }
+
+function setStatus(text, error){
+  var el = $("pageStatus");
+  if (!el) return;
+  el.textContent = text || "";
+  el.className = "status" + (error ? " error" : "");
+}
+
+function esc(value){
+  return String(value == null ? "" : value).replace(/[&<>\"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
   });
+}
 
-  async function initPage() {
-    const auth = await wait(() => w.AlbukhrSupabaseAdminAuth, 8000);
-    const env = await wait(() => w.AlbukhrEnvironment, 8000);
+async function rpc(name, params){
+  var client = CLIENT();
+  if (!client) throw new Error("ALBUKHR Supabase Core is unavailable.");
+  var result = await client.schema("albukhr_security").rpc(name, params || {});
+  if (result.error) throw result.error;
+  return result.data;
+}
 
-    if (!env.isKnown || !env.isKnown() || !env.isMainnet()) {
-      throw new Error("ALBUKHR Admin is Mainnet only.");
-    }
+function renderQueue(records){
+  var host = $("workspaceText");
+  if (!host) return;
 
-    await auth.init();
-    const admin = await auth.requireAdmin({ redirect: false });
-
-    if (!admin) {
-      w.location.replace("/admin-login.html");
-      return;
-    }
-
-    const mfa = await auth.ensureMfa();
-    if (admin.mfa_required && !mfa.verified) {
-      w.location.replace("/admin-mfa.html");
-      return;
-    }
-
-    const roles = Array.isArray(admin.roles) ? admin.roles : [];
-    const authorized =
-      roles.includes("super_admin") || roles.includes("approval_admin");
-
-    const set = (id, value) => {
-      const el = d.getElementById(id);
-      if (el) el.textContent = value == null ? "—" : String(value);
-    };
-
-    set("adminEmail", admin.email || admin.email_snapshot || "Authenticated administrator");
-    set("adminId", admin.user_id || "Authenticated session");
-    set("adminStatus", admin.status || "active");
-    set("mfaStatus", mfa.verified ? "AAL2 verified" : "Not verified");
-
-    if (!authorized) {
-      set("authorizationState", "DENIED");
-      set("securityState", mfa.verified ? "Authenticated • AAL2" : "Authenticated");
-      set("authorizationTitle", "Approval authorization denied");
-      set("authorizationText", "Required role: super_admin or approval_admin.");
-      const status = d.getElementById("pageStatus");
-      if (status) {
-        status.textContent =
-          "You are authenticated but not authorized for Core Project approvals.";
-        status.className = "status error";
-      }
-      return;
-    }
-
-    set("authorizationState", "AUTHORIZED");
-    set("securityState", "Authenticated • AAL2");
-    set("authorizationTitle", "Server-authoritative Core approval access granted");
-    set("authorizationText", "Accepted roles: super_admin / approval_admin");
-
-    const logout = d.getElementById("logoutButton");
-    if (logout) {
-      logout.addEventListener("click", async function () {
-        logout.disabled = true;
-        try {
-          await auth.signOut();
-        } finally {
-          w.location.replace("/admin-login.html");
-        }
-      });
-    }
-
-    if (!w.AlbukhrCoreProjectApproval ||
-        typeof w.AlbukhrCoreProjectApproval.init !== "function") {
-      throw new Error("Core Project Approval Engine UI is unavailable.");
-    }
+  if (!records.length) {
+    host.innerHTML =
+      '<div class="notice"><b>No Core Projects awaiting approval.</b>' +
+      '<span>The server-authoritative Core approval queue is empty.</span></div>';
+    return;
   }
 
-  d.addEventListener("DOMContentLoaded", function () {
-    initPage().catch(function (error) {
-      console.error("[ALBUKHR CORE PROJECT APPROVALS]", error);
-      const status = d.getElementById("pageStatus");
-      if (status) {
-        status.textContent = error && error.message
-          ? error.message
-          : "Unable to initialize Core Project Approvals.";
-        status.className = "status error";
+  host.innerHTML = records.map(function(project){
+    var id = esc(project.project_id);
+    return '<article class="approval-item" data-project-id="' + id + '">' +
+      '<div class="approval-main">' +
+      '<small>CORE SLOT ' + esc(project.core_slot) + ' • MAINNET</small>' +
+      '<h3>' + esc(project.name) + '</h3>' +
+      '<p>' + esc(project.project_code) + ' • ' + esc(project.slug) + '</p>' +
+      '<p>Project ID: <code>' + id + '</code></p>' +
+      '<p>Status: <strong>' + esc(String(project.status || "").toUpperCase()) + '</strong></p>' +
+      '</div>' +
+      '<div class="approval-actions">' +
+      '<button type="button" data-action="history">Approval History</button>' +
+      '<button type="button" data-action="approve">Approve Project</button>' +
+      '</div>' +
+      '<div class="approval-history" hidden></div>' +
+      '</article>';
+  }).join("");
+
+  host.querySelectorAll("[data-action]").forEach(function(button){
+    button.addEventListener("click", async function(){
+      var card = button.closest(".approval-item");
+      var projectId = card && card.dataset.projectId;
+      if (!projectId) return;
+      if (button.dataset.action === "history") {
+        await loadHistory(card, projectId);
+      } else {
+        await approveProject(projectId, button);
       }
     });
   });
+}
+
+async function loadHistory(card, projectId){
+  var box = card.querySelector(".approval-history");
+  if (!box) return;
+  box.hidden = false;
+  box.textContent = "Loading approval history...";
+
+  try {
+    var result = await rpc("get_core_project_approval_history", {
+      p_project_id: projectId
+    });
+    var records = Array.isArray(result && result.records) ? result.records : [];
+
+    if (!records.length) {
+      box.textContent = "No Core approval decisions recorded.";
+      return;
+    }
+
+    box.innerHTML = records.map(function(record){
+      return "<div>" +
+        "<b>" + esc(String(record.decision || "").toUpperCase()) + "</b> " +
+        "<span>" + esc(record.previous_status) + " → " +
+        esc(record.new_status) + "</span>" +
+        "<small>" + esc(record.created_at) + "</small>" +
+        (record.reason ? "<p>" + esc(record.reason) + "</p>" : "") +
+        "</div>";
+    }).join("");
+  } catch (e) {
+    console.error(e);
+    box.textContent = e && e.message ? e.message : "Unable to load approval history.";
+  }
+}
+
+async function approveProject(projectId, button){
+  var reason = w.prompt(
+    "Approval reason (optional):",
+    "Core Project approved after administrative review."
+  );
+  if (reason === null) return;
+
+  button.disabled = true;
+  setStatus("Submitting approval to the server...");
+
+  try {
+    var result = await rpc("approve_core_project", {
+      p_project_id: projectId,
+      p_reason: reason
+    });
+
+    if (!result || result.success !== true) {
+      throw new Error("Server did not confirm the approval.");
+    }
+
+    setStatus("Core Project approved successfully. Project status is now APPROVED.");
+    await loadQueue();
+  } catch (e) {
+    console.error(e);
+    setStatus(e && e.message ? e.message : "Core Project approval failed.", true);
+    button.disabled = false;
+  }
+}
+
+async function loadQueue(){
+  var result = await rpc("get_core_project_approval_queue");
+  if (!result || result.authorized !== true) {
+    throw new Error("Core Project approval authorization denied.");
+  }
+  renderQueue(Array.isArray(result.records) ? result.records : []);
+}
+
+async function init(){
+  try {
+    if (!w.AlbukhrEnvironment ||
+        typeof w.AlbukhrEnvironment.isKnown !== "function" ||
+        !w.AlbukhrEnvironment.isKnown() ||
+        !w.AlbukhrEnvironment.isMainnet()) {
+      throw new Error("ALBUKHR Admin is Mainnet only.");
+    }
+
+    await AUTH().init();
+    var admin = await AUTH().requireAdmin({redirect:false});
+
+    if (!admin) {
+      w.location.replace("admin-login.html");
+      return;
+    }
+
+    var mfa = await AUTH().ensureMfa();
+    if (admin.mfa_required && !mfa.verified) {
+      w.location.replace("admin-mfa.html");
+      return;
+    }
+
+    var roles = Array.isArray(admin.roles) ? admin.roles : [];
+    var authorized =
+      roles.indexOf("super_admin") !== -1 ||
+      roles.indexOf("approval_admin") !== -1;
+
+    $("adminEmail").textContent =
+      admin.email || admin.email_snapshot || "Authenticated administrator";
+    $("adminId").textContent = admin.user_id || "Authenticated session";
+    $("adminStatus").textContent = admin.status || "active";
+    $("mfaStatus").textContent = mfa.verified ? "AAL2 verified" : "Not verified";
+
+    if (!authorized) {
+      $("authorizationState").textContent = "DENIED";
+      $("securityState").textContent = "Authenticated • AAL2";
+      $("authorizationTitle").textContent = "Approval authorization denied";
+      $("authorizationText").textContent =
+        "Required role: super_admin or approval_admin.";
+      setStatus(
+        "You are authenticated but not authorized for Core Project approvals.",
+        true
+      );
+      return;
+    }
+
+    $("authorizationState").textContent = "AUTHORIZED";
+    $("securityState").textContent = "Authenticated • AAL2";
+    $("authorizationTitle").textContent =
+      "Server-authoritative Core approval access granted";
+    $("authorizationText").textContent =
+      "Accepted roles: super_admin / approval_admin";
+    $("workspaceText").textContent =
+      "Loading Core Project approval queue...";
+
+    await loadQueue();
+    setStatus("Core Project approval workspace ready.");
+
+    $("logoutButton").addEventListener("click", async function(){
+      try { await AUTH().signOut(); }
+      finally { w.location.replace("admin-login.html"); }
+    });
+
+  } catch (e) {
+    console.error("[ALBUKHR CORE PROJECT APPROVALS]", e);
+    setStatus(
+      e && e.message ? e.message : "Unable to initialize Core Project Approvals.",
+      true
+    );
+    $("securityState").textContent = "Security check failed";
+  }
+}
+
+if (d.readyState === "loading") {
+  d.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+
 })(window, document);
