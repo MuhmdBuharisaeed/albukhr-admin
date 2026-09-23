@@ -5,6 +5,12 @@
 <meta name="theme-color" content="#087a3e"><meta name="robots" content="noindex,nofollow">
 <title>ALBUKHR Admin Control Center</title>
 <link rel="stylesheet" href="css/admin-dashboard.css">
+<style>
+.testnet-admin-link{display:inline-flex;align-items:center;justify-content:center;border:1px solid #087a3e;background:#087a3e;color:#fff;padding:8px 12px;border-radius:10px;font-size:11px;font-weight:900;line-height:1;text-decoration:none;white-space:nowrap}
+.testnet-admin-link:hover{filter:brightness(.95)}
+.testnet-admin-link:focus-visible{outline:3px solid rgba(8,122,62,.22);outline-offset:2px}
+@media(max-width:520px){.testnet-admin-link{padding:8px 10px;font-size:10px}}
+</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="js/core/environment-core.js" defer></script>
 <script src="js/core/supabase-core.js" defer></script>
@@ -12,7 +18,7 @@
 <script src="js/admin-dashboard.js" defer></script>
 </head>
 <body>
-<header class="topbar"><div class="brand"><img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR"><div><b>ALBUKHR</b><small>ADMINISTRATION</small></div></div><div class="actions"><span>MAINNET</span><button id="logoutButton">Sign out</button></div></header>
+<header class="topbar"><div class="brand"><img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR"><div><b>ALBUKHR</b><small>ADMINISTRATION</small></div></div><div class="actions"><span>MAINNET</span><a id="testnetAdminLink" class="testnet-admin-link" href="admin-testnet-access.html" hidden aria-label="Open ALBUKHR Testnet Admin Access">Testnet Admin</a><button id="logoutButton">Sign out</button></div></header>
 <main>
 <section class="hero"><div><small>MAINNET SECURITY GATE</small><h1>Admin Control Center</h1><p>Secure administrative operations for the ALBUKHR ecosystem.</p></div><strong id="securityState">Verifying security...</strong></section>
 <div id="pageStatus" class="status"></div>
