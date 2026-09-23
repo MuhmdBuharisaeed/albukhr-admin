@@ -8,6 +8,10 @@ function render(a,m){
  const roles=Array.isArray(a.roles)?a.roles:[];
  $("roleCount").textContent=roles.length;$("roles").innerHTML=roles.map(r=>'<span class="role">'+label(r)+"</span>").join("")||"<span>No roles returned.</span>";
  $("coreCount").textContent=Array.isArray(a.core_projects)?a.core_projects.length:0;$("scopedCount").textContent=Array.isArray(a.scoped_projects)?a.scoped_projects.length:0;$("testnetAccess").textContent=a.testnet_access?"Granted":"No";$("securityState").textContent=m.verified?"Authenticated • AAL2":"Authenticated";
+ const testnetLink=$("testnetAdminLink");
+ if(testnetLink){
+  testnetLink.hidden=!(a.testnet_access===true && (!a.mfa_required || m.verified));
+ }
  const defs=[
   ["Security & Access","Administrator roles and security controls.",["super_admin"],"admin-security.html"],
   ["Core Team","Invite and manage the seven official ALBUKHR Core Team members.",["super_admin"],"admin-core-team.html"],
