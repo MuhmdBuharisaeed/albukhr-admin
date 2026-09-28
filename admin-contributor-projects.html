@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087a3e">
+<meta name="robots" content="noindex,nofollow">
+<title>ALBUKHR — Contributor Project Approvals</title>
+<link rel="stylesheet" href="css/admin-module.css?v=20260928-contributor-projects">
+<link rel="stylesheet" href="css/admin-contributor-projects.css?v=20260928-contributor-projects">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/core/environment-core.js" defer></script>
+<script src="js/core/supabase-core.js" defer></script>
+<script src="js/core/supabase-admin-auth.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="admin-dashboard.html">
+    <img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR">
+    <span><b>ALBUKHR</b><small>ADMINISTRATION</small></span>
+  </a>
+  <div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div>
+</header>
+<main>
+  <nav class="back"><a href="admin-dashboard.html">← Admin Control Center</a></nav>
+  <section class="hero">
+    <div>
+      <small>CONTRIBUTOR PROJECT GOVERNANCE</small>
+      <h1>Contributor Project Approvals</h1>
+      <p>Review and decide Contributor-owned Internal Projects submitted to the Mainnet governance queue.</p>
+    </div>
+    <strong id="securityState">Verifying security...</strong>
+  </section>
+  <div id="pageStatus" class="status" aria-live="polite"></div>
+  <section class="summary">
+    <article><span>Authorization</span><b id="authorization">CHECKING</b></article>
+    <article><span>Pending projects</span><b id="pendingCount">0</b></article>
+    <article><span>Security level</span><b id="securityLevel">CHECKING</b></article>
+  </section>
+  <section id="deniedPanel" class="panel hidden">
+    <h2>Contributor Project approval access denied</h2>
+    <p>Your authenticated administrator session does not have the required approval authority.</p>
+  </section>
+  <section id="queuePanel" class="panel hidden">
+    <div class="panel-head">
+      <div><h2>Review Queue</h2><p>Only pending <code>contributor_internal</code> Mainnet projects appear here.</p></div>
+      <button id="refreshButton" type="button">Refresh</button>
+    </div>
+    <div id="emptyState" class="empty"><b>No Contributor Projects awaiting review.</b><span>The server-authoritative queue is currently empty.</span></div>
+    <div id="records" class="records"></div>
+  </section>
+  <section class="notice"><b>Security boundary</b><span>Approval authority is enforced by Supabase Auth, AAL2, database authorization and SECURITY DEFINER RPCs. Client-side buttons never grant approval authority.</span></section>
+</main>
+<script>
+(function(window,document){
+"use strict";
+const RPC_QUEUE="get_contributor_internal_project_approval_queue";
+const RPC_REVIEW="review_contributor_internal_project";
+const RPC_REVIEWS="get_contributor_internal_project_review_history";
+const $=id=>document.getElementById(id);
+function esc(value){return String(value==null?"":value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;",'\'':"&#39;"}[c]));}
+function setStatus(message,error){const el=$("pageStatus");if(!el)return;el.textContent=message||"";el.className="status"+(error?" error":"");}
+function getAuth(){if(!window.AlbukhrSupabaseAdminAuth)throw new Error("ALBUKHR Admin Auth Core is unavailable.");return window.AlbukhrSupabaseAdminAuth;}
+function getClient(){const core=window.ALBUKHR_SUPABASE;if(!core||!core.client)throw new Error("ALBUKHR Supabase Core is unavailable.");if(String(core.environment||"").toLowerCase()!=="mainnet"||String(core.network||"").toLowerCase()!=="mainnet")throw new Error("Contributor Project approvals require MAINNET.");return core.client;}
+async function rpc(name,params){const result=await getClient().schema("albukhr_security").rpc(name,params||{});if(result.error)throw result.error;return result.data;}
+function statusLabel(value){return String(value||"—").replace(/_/g," ").toUpperCase();}
+function renderRecord(project){
+  const card=document.createElement("article");card.className="approval-record";card.dataset.projectId=project.project_id;
+  const logo=project.logo_url?'<img class="approval-logo" src="'+esc(project.logo_url)+'" alt="Project logo">':'<div class="approval-logo placeholder">A</div>';
+  const owner=project.owner_email||"Contributor account";
+  card.innerHTML=`<div class="approval-top"><div class="approval-project">${logo}<div class="approval-heading"><small>CONTRIBUTOR INTERNAL · MAINNET</small><h3>${esc(project.name||"Unnamed Project")}</h3><p>${esc(project.project_code||"—")} · ${esc(project.slug||"—")}</p></div></div><span class="record-status">${statusLabel(project.status)}</span></div>
+  <div class="approval-grid"><div><span>Internal number</span><strong>${esc(project.internal_number||"—")}</strong></div><div><span>Contributor ID</span><strong>${esc(project.contributor_id||"—")}</strong></div><div><span>Owner email</span><strong>${esc(owner)}</strong></div><div><span>Submitted</span><strong>${esc(new Date(project.updated_at||project.created_at).toLocaleString())}</strong></div></div>
+  <div class="approval-description"><span>Description</span><p>${esc(project.description||"No description provided.")}</p></div>
+  <div class="approval-meta"><span>Logo: ${project.logo_url||project.logo_path?"present":"missing"}</span><span>${esc(String(project.logo_width||0))} × ${esc(String(project.logo_height||0))}</span><span>${esc(String(project.logo_format||"—").toUpperCase())}</span><span>${project.logo_size_bytes?Math.round(Number(project.logo_size_bytes)/1024)+" KB":"—"}</span></div>
+  <div class="approval-actions"><button type="button" data-action="history">Review History</button><button type="button" data-decision="revision">Request Revision</button><button type="button" data-decision="rejected" class="danger-button">Reject</button><button type="button" data-decision="approved" class="primary approval-primary">Approve</button></div>
+  <div class="decision-box hidden"><label>Decision reason<textarea rows="4" maxlength="2000" placeholder="Required for revision or rejection. Optional for approval."></textarea></label><div class="decision-actions"><button type="button" data-action="cancel-decision">Cancel</button><button type="button" class="primary" data-action="confirm-decision">Confirm Decision</button></div></div>
+  <div class="history-box hidden"></div>`;
+  card.querySelectorAll("[data-decision]").forEach(button=>button.addEventListener("click",()=>openDecision(card,button.dataset.decision)));
+  card.querySelector('[data-action="cancel-decision"]').addEventListener("click",()=>card.querySelector(".decision-box")?.classList.add("hidden"));
+  card.querySelector('[data-action="confirm-decision"]').addEventListener("click",()=>submitDecision(card,card.querySelector(".decision-box textarea").value));
+  card.querySelector('[data-action="history"]').addEventListener("click",()=>loadHistory(card,project.project_id));
+  return card;
+}
+function openDecision(card,decision){card.dataset.selectedDecision=decision;const box=card.querySelector(".decision-box");box.querySelector("textarea").value="";box.classList.remove("hidden");box.querySelector("textarea").focus();box.querySelector('[data-action="confirm-decision"]').textContent=decision==="approved"?"Confirm Approval":decision==="revision"?"Send Revision Request":"Confirm Rejection";}
+async function submitDecision(card,reason){
+  const projectId=card.dataset.projectId,decision=card.dataset.selectedDecision,cleanReason=String(reason||"").trim();
+  if(!projectId||!decision)return;
+  if((decision==="revision"||decision==="rejected")&&!cleanReason){setStatus("A reason is required for revision or rejection.",true);return;}
+  const button=card.querySelector('[data-action="confirm-decision"]');button.disabled=true;setStatus("Submitting the review decision to the server...");
+  try{const result=await rpc(RPC_REVIEW,{p_project_id:projectId,p_decision:decision,p_reason:cleanReason||null});if(!result?.success)throw new Error(result?.message||"Server did not confirm the review decision.");setStatus(result.message||"Review decision recorded.");await loadQueue();}
+  catch(error){console.error("[ALBUKHR CONTRIBUTOR PROJECT REVIEW]",error);setStatus(error?.message||"Review decision failed.",true);button.disabled=false;}
+}
+async function loadHistory(card,projectId){const box=card.querySelector(".history-box");if(!box)return;box.classList.remove("hidden");box.textContent="Loading review history...";try{const result=await rpc(RPC_REVIEWS,{p_project_id:projectId});const records=Array.isArray(result?.records)?result.records:[];if(!records.length){box.textContent="No review decisions recorded for this project.";return;}box.innerHTML=records.map(r=>`<div class="history-row"><b>${esc(statusLabel(r.decision))}</b><span>${esc(statusLabel(r.previous_status))} → ${esc(statusLabel(r.new_status))}</span><time>${esc(new Date(r.created_at).toLocaleString())}</time>${r.reason?'<p>'+esc(r.reason)+'</p>':''}</div>`).join("");}catch(error){box.textContent=error?.message||"Unable to load review history.";}}
+function renderQueue(records){const host=$("records"),empty=$("emptyState");if(!host||!empty)return;host.replaceChildren();const safe=Array.isArray(records)?records:[];$("pendingCount").textContent=String(safe.length);empty.classList.toggle("hidden",safe.length!==0);safe.forEach(p=>host.appendChild(renderRecord(p)));}
+async function loadQueue(){const result=await rpc(RPC_QUEUE);if(!result?.success||result.authorized!==true)throw new Error("Contributor Project approval authorization denied.");renderQueue(result.records);}
+async function init(){try{const env=window.ALBukhrEnvironment;if(!env?.isKnown?.()||!env.isMainnet?.())throw new Error("Contributor Project approval workspace requires known MAINNET.");const auth=getAuth();await auth.init();const admin=await auth.requireAdmin({redirect:false});if(!admin){location.replace("admin-login.html");return;}const mfa=await auth.ensureMfa();if(admin.mfa_required&&!mfa.verified){location.replace("admin-mfa.html");return;}const roles=Array.isArray(admin.roles)?admin.roles:[];const authorized=roles.includes("super_admin")||roles.includes("approval_admin");if(!authorized){$("authorization").textContent="DENIED";$("securityState").textContent="Authenticated";$("securityLevel").textContent=mfa.verified?"AAL2":"NOT VERIFIED";$("deniedPanel").classList.remove("hidden");setStatus("Your administrator role does not include Contributor Project approval authority.",true);return;}$("authorization").textContent="AUTHORIZED";$("securityState").textContent="Authenticated • AAL2";$("securityLevel").textContent="AAL2";$("queuePanel").classList.remove("hidden");await loadQueue();setStatus("Contributor Project approval workspace ready.");}catch(error){console.error("[ALBUKHR CONTRIBUTOR PROJECT APPROVALS]",error);setStatus(error?.message||"Unable to load Contributor Project approvals.",true);}}
+$("refreshButton")?.addEventListener("click",async()=>{try{$("refreshButton").disabled=true;setStatus("Refreshing approval queue...");await loadQueue();setStatus("Approval queue refreshed.");}catch(error){setStatus(error?.message||"Approval queue refresh failed.",true);}finally{$("refreshButton").disabled=false;}});
+$("logoutButton")?.addEventListener("click",async()=>{$("logoutButton").disabled=true;try{await window.AlbukhrSupabaseAdminAuth?.signOut();}finally{location.replace("admin-login.html");}});
+document.addEventListener("DOMContentLoaded",init);
+})(window,document);
+</script>
+</body>
+</html>
