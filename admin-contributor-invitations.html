@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087a3e"><meta name="robots" content="noindex,nofollow">
+<title>ALBUKHR — Contributor Invitations</title>
+<link rel="stylesheet" href="css/admin-module.css?v=20260928-contributor-invitations">
+<link rel="stylesheet" href="css/admin-contributor-invitations.css?v=20260928-contributor-invitations">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/core/environment-core.js" defer></script><script src="js/core/supabase-core.js" defer></script>
+<script src="js/core/supabase-admin-auth.js" defer></script>
+<script src="js/admin-contributor-invitations.js?v=20260928-contributor-invitations" defer></script>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="admin-dashboard.html"><img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR"><span><b>ALBUKHR</b><small>ADMINISTRATION</small></span></a><div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div></header>
+<main>
+<nav class="back"><a href="admin-dashboard.html">← Admin Control Center</a></nav>
+<section class="hero"><div><small>CONTRIBUTOR PROGRAM ADMINISTRATION</small><h1>Contributor Invitations</h1><p>Create one-time Mainnet Contributor onboarding invitations. The raw token is displayed once and is never persisted by this page.</p></div><strong id="securityState">Verifying security...</strong></section>
+<div id="pageStatus" class="status" aria-live="polite"></div>
+<section class="summary"><article><span>Authorization</span><b id="authorization">CHECKING</b></article><article><span>Active invitations</span><b id="activeCount">0</b></article><article><span>Security level</span><b id="securityLevel">CHECKING</b></article></section>
+<section id="deniedPanel" class="panel hidden"><h2>Contributor invitation access denied</h2><p>Contributor invitation creation and revocation require an active Mainnet Super Admin session with AAL2 assurance.</p></section>
+<section id="createPanel" class="panel hidden"><div class="panel-head"><div><h2>Create Contributor Invitation</h2><p>Use an email-bound invitation for a specific person whenever possible.</p></div><span class="badge">SUPER ADMIN</span></div><form id="inviteForm" novalidate><div class="grid"><label>Invited email<input id="inviteEmail" type="email" maxlength="320" autocomplete="email" placeholder="contributor@example.com" required></label><label>Expiration<select id="expiresHours" required><option value="24">24 hours</option><option value="72">72 hours</option><option value="168" selected>7 days</option><option value="720">30 days</option></select></label></div><button id="inviteButton" class="primary" type="submit">Create Contributor Invitation</button></form></section>
+<section id="tokenPanel" class="panel hidden"><div class="panel-head"><div><h2>One-time Invitation Link</h2><p>Copy this link now. The raw invitation token is returned only once and is not stored by the page.</p></div></div><label>Invitation link<input id="invitationLink" type="text" readonly autocomplete="off" spellcheck="false"></label><div class="token-actions"><button id="copyLinkButton" type="button">Copy Invitation Link</button><button id="clearTokenButton" type="button">Clear From Screen</button></div></section>
+<section id="recordsPanel" class="panel hidden"><div class="panel-head"><div><h2>Active Invitations</h2><p>Unused, unrevoked Contributor invitations that have not expired.</p></div><button id="refreshButton" type="button">Refresh</button></div><div id="emptyState" class="empty"><b>No active Contributor invitations.</b><span>Create an invitation above when a Contributor is ready to begin onboarding.</span></div><div id="records" class="records"></div></section>
+<section class="notice"><b>Security boundary</b><span>Invitation authorization is enforced by Supabase Auth, AAL2, Super Admin checks, SECURITY DEFINER RPCs and database audit logging. Client-side controls never grant authority.</span></section>
+</main></body></html>
