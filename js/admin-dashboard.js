@@ -17,6 +17,12 @@ function render(a,m){
   ["Core Team","Invite and manage the seven official ALBUKHR Core Team members.",["super_admin"],"admin-core-team.html"],
   ["Project Registry","Core project registry administration.",["super_admin","registry_admin","core_admin"],"admin-project-registry.html"],
   ["Project Approvals","Project approval workflow.",["super_admin","approval_admin"],"admin-project-approvals.html"],
+  [
+  "Contributor Project Approvals",
+  "Review Contributor-owned Internal Projects submitted to Mainnet governance.",
+  ["super_admin", "approval_admin"],
+  "admin-contributor-projects.html"
+],
   ["Finance","Administrative finance oversight.",["super_admin","finance_admin"],"admin-module.html?module=finance"],
   ["Internal Projects","Internal project scope administration.",["super_admin","internal_admin"],"admin-module.html?module=internal"],
   ["External Projects","External project scope administration.",["super_admin","external_admin"],"admin-module.html?module=external"]
