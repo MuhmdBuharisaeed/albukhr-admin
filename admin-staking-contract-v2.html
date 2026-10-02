@@ -30,18 +30,15 @@
     <strong id="securityState">Verifying security...</strong>
   </section>
   <div id="pageStatus" class="status" aria-live="polite"></div>
-
   <section class="grid">
     <article class="card"><header>Contract <em id="contractVersion">CHECKING</em></header><h2>V2 runtime</h2><p>The investment path reads published V2 terms. Approved terms remain non-investable until explicitly published.</p></article>
     <article class="card"><header>Authorization <em id="authorizationState">CHECKING</em></header><h2 id="authorizationTitle">Server-authoritative access</h2><p id="authorizationText">Required: authenticated Mainnet administrator with AAL2.</p></article>
   </section>
-
   <section class="contract-summary">
     <article class="contract-stat"><span>Global ALBUKHR transaction fee</span><b id="feeRate">—</b><small id="feeMethod">Loading authoritative fee policy…</small></article>
     <article class="contract-stat"><span>Approved V2 terms</span><b id="approvedCount">0</b><small>Published separately through the secured publication RPC.</small></article>
     <article class="contract-stat"><span>Published V2 terms</span><b id="publishedCount">0</b><small>Only currently published terms are eligible for runtime selection.</small></article>
   </section>
-
   <section class="workspace">
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
       <div><h2 style="margin:0">Mainnet Core Staking Terms</h2><p style="margin:7px 0 0;color:#60776d;font-size:12px">Read-only contract data until an administrator explicitly submits a publication action.</p></div>
@@ -49,10 +46,8 @@
     </div>
     <div id="projects"></div>
   </section>
-
   <section class="notice security-note"><b>Security boundary</b><span>This page never writes public.projects or term rows directly. Publication and authorization are enforced by the Mainnet <code>albukhr_security.publish_core_staking_term_version</code> SECURITY DEFINER RPC. Publishing a term does not by itself activate a Core Project; activation still requires its separate treasury, liquidity and published-term prerequisites.</span></section>
 </main>
-
 <div id="publishDialog" class="dialog-backdrop" hidden>
   <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="publishTitle">
     <h2 id="publishTitle">Publish staking term</h2>
@@ -64,244 +59,40 @@
     <div class="dialog-actions"><button id="publishCancel" type="button">Cancel</button><button id="publishConfirm" type="button" class="primary">Publish Term</button></div>
   </div>
 </div>
-
 <script>
 (function(window, document){
   "use strict";
-
   const RPC_WORKSPACE = "get_core_staking_contract_workspace";
   const RPC_PUBLISH = "publish_core_staking_term_version";
   const $ = id => document.getElementById(id);
   let selectedTerm = null;
   let workspace = null;
-
-  function setStatus(message, error){
-    const el = $("pageStatus");
-    if (!el) return;
-    el.textContent = message || "";
-    el.className = "status" + (error ? " error" : "");
-  }
-
-  function esc(value){
-    return String(value == null ? "" : value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  }
-
-  function auth(){
-    if (!window.AlbukhrSupabaseAdminAuth) throw new Error("ALBUKHR Admin Auth Core is unavailable.");
-    return window.AlbukhrSupabaseAdminAuth;
-  }
-
-  function client(){
-    const core = window.ALBUKHR_SUPABASE;
-    if (!core || !core.client) throw new Error("ALBUKHR Supabase Core is unavailable.");
-    if (String(core.environment || "").toLowerCase() !== "mainnet" || String(core.network || "").toLowerCase() !== "mainnet") {
-      throw new Error("Staking Contract V2 workspace requires MAINNET.");
-    }
-    return core.client;
-  }
-
-  async function rpc(name, params){
-    const result = await client().schema("albukhr_security").rpc(name, params || {});
-    if (result.error) throw result.error;
-    return result.data;
-  }
-
-  function statusBadge(status){
-    const s = String(status || "unknown").toLowerCase();
-    const cls = s === "published" ? "ready" : s === "approved" ? "neutral" : "blocked";
-    return '<span class="badge '+cls+'">'+esc(s.toUpperCase())+'</span>';
-  }
-
-  function money(value){
-    if (value == null || value === "") return "—";
-    const n = Number(value);
-    return Number.isFinite(n) ? n.toLocaleString(undefined,{maximumFractionDigits:9}) : String(value);
-  }
-
-  function rate(value){
-    const n = Number(value);
-    return Number.isFinite(n) ? (n * 100).toFixed(2) + "%" : "—";
-  }
-
-  function feeRate(value){
-    const n = Number(value);
-    return Number.isFinite(n) ? (n * 100).toFixed(2) + "%" : "—";
-  }
-
-  function effectiveLabel(term){
-    if (!term.effective_from) return "Not set";
-    const d = new Date(term.effective_from);
-    return Number.isNaN(d.getTime()) ? String(term.effective_from) : d.toLocaleString();
-  }
-
-  function renderTerm(project, term){
-    const isApproved = term.term_status === "approved";
-    const isPublished = term.term_status === "published";
-    const projectPublishable = project.project_status === "approved" || project.project_status === "active";
-    const canPublish = isApproved && projectPublishable;
-    const action = canPublish
-      ? '<button type="button" class="primary" data-action="publish" data-term-id="'+esc(term.id)+'">Publish Term</button>'
-      : '';
-    const statusText = isPublished ? 'Published · effective '+esc(effectiveLabel(term)) : isApproved ? 'Approved · publication pending' : statusBadge(term.term_status);
-    return '<article class="term">' +
-      '<div class="term-top"><div><h3>'+esc(term.term_key||"TERM")+' · Version '+esc(term.version_number)+'</h3><div style="margin-top:4px;color:#60776d;font-size:10px">'+esc(term.project_code||project.project_code)+' · '+esc(statusText)+'</div></div>'+statusBadge(term.term_status)+'</div>' +
-      '<div class="term-meta">' +
-        '<div><span>Duration</span><b>'+esc(term.duration_days)+' days</b></div>' +
-        '<div><span>Minimum stake</span><b>'+esc(money(term.min_stake))+' π</b></div>' +
-        '<div><span>Maximum stake</span><b>'+esc(term.max_stake == null ? "No cap" : money(term.max_stake))+'</b></div>' +
-        '<div><span>Reward rate</span><b>'+esc(rate(term.reward_rate))+'</b></div>' +
-      '</div>' +
-      '<div class="term-actions">' + action +
-        (isPublished ? '<button type="button" disabled>Published</button>' : '') +
-      '</div>' +
-    '</article>';
-  }
-
-  function renderProject(project){
-    const terms = Array.isArray(project.terms) ? project.terms : [];
-    const approved = terms.filter(t => t.term_status === "approved").length;
-    const published = terms.filter(t => t.term_status === "published").length;
-    return '<article class="project-card">' +
-      '<div class="project-head"><div><div class="slot">CORE SLOT '+esc(project.core_slot)+' · MAINNET</div><h2>'+esc(project.name)+'</h2><p>'+esc(project.project_code)+' · '+esc(project.project_status || "—")+'</p></div>'+statusBadge(project.project_status)+'</div>' +
-      '<div class="life-stats" style="margin-top:13px">' +
-        '<div class="life-stat"><span>Approved terms</span><b>'+esc(approved)+'</b></div>' +
-        '<div class="life-stat"><span>Published terms</span><b>'+esc(published)+'</b></div>' +
-        '<div class="life-stat"><span>Treasury</span><b>'+esc(project.treasury_status ? String(project.treasury_status).toUpperCase() : "NOT CONFIGURED")+'</b></div>' +
-        '<div class="life-stat"><span>Verified / Required</span><b>'+esc(money(project.verified_liquidity))+' / '+esc(money(project.required_liquidity))+' π</b></div>' +
-      '</div>' +
-      '<div class="term-grid">' + (terms.length ? terms.map(t => renderTerm(project,t)).join("") : '<div class="term"><b>No V2 term records found.</b></div>') + '</div>' +
-      '<div class="note">Publishing a term changes only its V2 contract publication state. The project remains subject to the separate Core lifecycle activation gate.</div>' +
-    '</article>';
-  }
-
-  function render(data){
-    workspace = data || {};
-    $("contractVersion").textContent = workspace.contract_version ? String(workspace.contract_version).toUpperCase() : "—";
-    const fee = workspace.global_fee_policy || null;
-    $("feeRate").textContent = fee ? feeRate(fee.rate) : "—";
-    $("feeMethod").textContent = fee ? String(fee.calculation_method || "percentage_of_gross") : "No active Mainnet fee policy returned.";
-    const projects = Array.isArray(workspace.projects) ? workspace.projects : [];
-    let approvedTotal = 0, publishedTotal = 0;
-    projects.forEach(p => (Array.isArray(p.terms) ? p.terms : []).forEach(t => { if(t.term_status === "approved") approvedTotal++; if(t.term_status === "published") publishedTotal++; }));
-    $("approvedCount").textContent = String(approvedTotal);
-    $("publishedCount").textContent = String(publishedTotal);
-    const host = $("projects");
-    host.innerHTML = projects.length ? projects.map(renderProject).join("") : '<div class="notice"><b>No Mainnet Core projects returned.</b><span>The server-authoritative workspace returned an empty set.</span></div>';
-    host.querySelectorAll('[data-action="publish"]').forEach(button => button.addEventListener("click", () => {
-      const termId = button.dataset.termId;
-      for (const project of projects) {
-        const term = (Array.isArray(project.terms) ? project.terms : []).find(t => String(t.id) === String(termId));
-        if (term) { openPublish(project, term); break; }
-      }
-    }));
-  }
-
-  async function load(){
-    const result = await rpc(RPC_WORKSPACE);
-    if (!result || result.success !== true) throw new Error("Staking Contract V2 workspace authorization denied.");
-    render(result);
-  }
-
-  function openPublish(project, term){
-    selectedTerm = {project, term};
-    $("publishText").textContent = project.name + " · " + project.project_code + " · " + term.term_key + " v" + term.version_number + " · " + term.duration_days + " days · min " + money(term.min_stake) + " π · reward " + rate(term.reward_rate) + ".";
-    $("disclosureVersion").value = term.disclosure_version || "";
-    $("consentVersion").value = term.consent_version || "";
-    $("effectiveFrom").value = "";
-    $("publishReason").value = "";
-    $("publishDialog").hidden = false;
-    $("disclosureVersion").focus();
-  }
-
-  function closePublish(){
-    $("publishDialog").hidden = true;
-    selectedTerm = null;
-  }
-
-  function localToIso(value){
-    if (!value) return null;
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) throw new Error("Effective publication time is invalid.");
-    return d.toISOString();
-  }
-
-  async function publish(){
-    if (!selectedTerm) return;
-    const disclosure = $("disclosureVersion").value.trim();
-    const consent = $("consentVersion").value.trim();
-    const reason = $("publishReason").value.trim();
-    if (!disclosure || !consent) {
-      setStatus("Disclosure version and consent version are required.", true);
-      return;
-    }
-    const button = $("publishConfirm");
-    button.disabled = true;
-    setStatus("Submitting term publication to the Mainnet security layer...");
-    try {
-      const result = await rpc(RPC_PUBLISH, {
-        p_term_version_id: selectedTerm.term.id,
-        p_disclosure_version: disclosure,
-        p_consent_version: consent,
-        p_effective_from: localToIso($("effectiveFrom").value),
-        p_reason: reason || null
-      });
-      if (!result || result.success !== true || result.status !== "published") {
-        throw new Error(result && result.message ? result.message : "Server did not confirm term publication.");
-      }
-      const publishedTermKey = result.term_key || selectedTerm.term.term_key;
-      closePublish();
-      setStatus("Staking term " + String(publishedTermKey) + " was published successfully. Core Project activation remains separately gated.");
-      await load();
-    } catch(error) {
-      console.error("[ALBUKHR STAKING CONTRACT V2]", error);
-      setStatus(error && error.message ? error.message : "Term publication failed.", true);
-    } finally {
-      button.disabled = false;
-    }
-  }
-
-  async function init(){
-    try{
-      const env = window.AlbukhrEnvironment;
-      if (!env || typeof env.isKnown !== "function" || !env.isKnown() || !env.isMainnet()) throw new Error("Staking Contract V2 workspace requires known MAINNET.");
-      const a = auth();
-      await a.init();
-      const admin = await a.requireAdmin({redirect:false});
-      if (!admin) { window.location.replace("admin-login.html"); return; }
-      const mfa = await a.ensureMfa();
-      if (admin.mfa_required && !mfa.verified) { window.location.replace("admin-mfa.html"); return; }
-      const roles = Array.isArray(admin.roles) ? admin.roles : [];
-      const authorized = roles.includes("super_admin") || roles.includes("approval_admin") || roles.includes("finance_admin");
-      if (!authorized) {
-        $("authorizationState").textContent = "DENIED";
-        $("securityState").textContent = "Authenticated";
-        setStatus("Your administrator role does not include Staking Contract V2 governance access.", true);
-        return;
-      }
-      $("authorizationState").textContent = "AUTHORIZED";
-      $("securityState").textContent = "Authenticated • AAL2";
-      $("authorizationTitle").textContent = "Staking contract governance access granted";
-      $("authorizationText").textContent = "Accepted roles: super_admin / approval_admin / finance_admin";
-      await load();
-      setStatus("Staking Contract V2 workspace ready. No term was published automatically.");
-    } catch(error){
-      console.error("[ALBUKHR STAKING CONTRACT V2] Initialization error", error);
-      setStatus(error && error.message ? error.message : "Unable to load Staking Contract V2 workspace.", true);
-      $("securityState").textContent = "Security check failed";
-    }
-  }
-
-  $("refreshButton")?.addEventListener("click", async () => {
-    try { $("refreshButton").disabled = true; setStatus("Refreshing Staking Contract V2 workspace..."); await load(); setStatus("Staking Contract V2 workspace refreshed."); }
-    catch(error){ setStatus(error && error.message ? error.message : "Refresh failed.", true); }
-    finally { $("refreshButton").disabled = false; }
-  });
-  $("publishCancel")?.addEventListener("click", closePublish);
-  $("publishConfirm")?.addEventListener("click", publish);
-  $("publishDialog")?.addEventListener("click", event => { if (event.target === $("publishDialog")) closePublish(); });
-  $("logoutButton")?.addEventListener("click", async () => { $("logoutButton").disabled = true; try { await auth().signOut(); } finally { window.location.replace("admin-login.html"); } });
-  document.addEventListener("DOMContentLoaded", init);
-})(window, document);
+  function setStatus(message, error){const el=$("pageStatus");if(!el)return;el.textContent=message||"";el.className="status"+(error?" error":"");}
+  function esc(value){return String(value==null?"":value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+  function auth(){if(!window.AlbukhrSupabaseAdminAuth)throw new Error("ALBUKHR Admin Auth Core is unavailable.");return window.AlbukhrSupabaseAdminAuth;}
+  function client(){const core=window.ALBUKHR_SUPABASE;if(!core||!core.client)throw new Error("ALBUKHR Supabase Core is unavailable.");if(String(core.environment||"").toLowerCase()!=="mainnet"||String(core.network||"").toLowerCase()!=="mainnet")throw new Error("Staking Contract V2 workspace requires MAINNET.");return core.client;}
+  async function rpc(name,params){const result=await client().schema("albukhr_security").rpc(name,params||{});if(result.error)throw result.error;return result.data;}
+  function statusBadge(status){const s=String(status||"unknown").toLowerCase();const cls=s==="published"?"ready":s==="approved"?"neutral":"blocked";return '<span class="badge '+cls+'">'+esc(s.toUpperCase())+'</span>';}
+  function money(value){if(value==null||value==="")return "—";const n=Number(value);return Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:9}):String(value);}
+  function rate(value){const n=Number(value);return Number.isFinite(n)?(n*100).toFixed(2)+"%":"—";}
+  function feeRate(value){const n=Number(value);return Number.isFinite(n)?(n*100).toFixed(2)+"%":"—";}
+  function effectiveLabel(term){if(!term.effective_from)return "Not set";const d=new Date(term.effective_from);return Number.isNaN(d.getTime())?String(term.effective_from):d.toLocaleString();}
+  function renderTerm(project,term){const isApproved=term.term_status==="approved",isPublished=term.term_status==="published",projectPublishable=project.project_status==="approved"||project.project_status==="active",canPublish=isApproved&&projectPublishable,action=canPublish?'<button type="button" class="primary" data-action="publish" data-term-id="'+esc(term.id)+'">Publish Term</button>':"",statusText=isPublished?'Published · effective '+esc(effectiveLabel(term)):isApproved?"Approved · publication pending":statusBadge(term.term_status);return '<article class="term">'+'<div class="term-top"><div><h3>'+esc(term.term_key||"TERM")+' · Version '+esc(term.version_number)+'</h3><div style="margin-top:4px;color:#60776d;font-size:10px">'+esc(term.project_code||project.project_code)+' · '+esc(statusText)+'</div></div>'+statusBadge(term.term_status)+'</div>'+'<div class="term-meta">'+'<div><span>Duration</span><b>'+esc(term.duration_days)+' days</b></div>'+'<div><span>Minimum stake</span><b>'+esc(money(term.min_stake))+' π</b></div>'+'<div><span>Maximum stake</span><b>'+esc(term.max_stake==null?"No cap":money(term.max_stake))+'</b></div>'+'<div><span>Reward rate</span><b>'+esc(rate(term.reward_rate))+'</b></div>'+'</div>'+'<div class="term-actions">'+action+(isPublished?'<button type="button" disabled>Published</button>':"")+'</div>'+'</article>';}
+  function renderProject(project){const terms=Array.isArray(project.terms)?project.terms:[],approved=terms.filter(t=>t.term_status==="approved").length,published=terms.filter(t=>t.term_status==="published").length;return '<article class="project-card">'+'<div class="project-head"><div><div class="slot">CORE SLOT '+esc(project.core_slot)+' · MAINNET</div><h2>'+esc(project.name)+'</h2><p>'+esc(project.project_code)+' · '+esc(project.project_status||"—")+'</p></div>'+statusBadge(project.project_status)+'</div>'+'<div class="life-stats" style="margin-top:13px">'+'<div class="life-stat"><span>Approved terms</span><b>'+esc(approved)+'</b></div>'+'<div class="life-stat"><span>Published terms</span><b>'+esc(published)+'</b></div>'+'<div class="life-stat"><span>Treasury</span><b>'+esc(project.treasury_status?String(project.treasury_status).toUpperCase():"NOT CONFIGURED")+'</b></div>'+'<div class="life-stat"><span>Verified / Required</span><b>'+esc(money(project.verified_liquidity))+' / '+esc(money(project.required_liquidity))+' π</b></div>'+'</div>'+'<div class="term-grid">'+(terms.length?terms.map(t=>renderTerm(project,t)).join(""):'<div class="term"><b>No V2 term records found.</b></div>')+'</div>'+'<div class="note">Publishing a term changes only its V2 contract publication state. The project remains subject to the separate Core lifecycle activation gate.</div>'+'</article>';}
+  function render(data){workspace=data||{};$("contractVersion").textContent=workspace.contract_version?String(workspace.contract_version).toUpperCase():"—";const fee=workspace.global_fee_policy||null;$("feeRate").textContent=fee?feeRate(fee.rate):"—";$("feeMethod").textContent=fee?String(fee.calculation_method||"percentage_of_gross"):"No active Mainnet fee policy returned.";const projects=Array.isArray(workspace.projects)?workspace.projects:[];let approvedTotal=0,publishedTotal=0;projects.forEach(p=>(Array.isArray(p.terms)?p.terms:[]).forEach(t=>{if(t.term_status==="approved")approvedTotal++;if(t.term_status==="published")publishedTotal++;}));$("approvedCount").textContent=String(approvedTotal);$("publishedCount").textContent=String(publishedTotal);const host=$("projects");host.innerHTML=projects.length?projects.map(renderProject).join(""):'<div class="notice"><b>No Mainnet Core projects returned.</b><span>The server-authoritative workspace returned an empty set.</span></div>';host.querySelectorAll('[data-action="publish"]').forEach(button=>button.addEventListener("click",()=>{const termId=button.dataset.termId;for(const project of projects){const term=(Array.isArray(project.terms)?project.terms:[]).find(t=>String(t.id)===String(termId));if(term){openPublish(project,term);break;}}}));}
+  async function load(){const result=await rpc(RPC_WORKSPACE);if(!result||result.success!==true)throw new Error("Staking Contract V2 workspace authorization denied.");render(result);}
+  function openPublish(project,term){selectedTerm={project,term};$("publishText").textContent=project.name+" · "+project.project_code+" · "+term.term_key+" v"+term.version_number+" · "+term.duration_days+" days · min "+money(term.min_stake)+" π · reward "+rate(term.reward_rate)+".";$("disclosureVersion").value=term.disclosure_version||"";$("consentVersion").value=term.consent_version||"";$("effectiveFrom").value="";$("publishReason").value="";$("publishDialog").hidden=false;$("disclosureVersion").focus();}
+  function closePublish(){$("publishDialog").hidden=true;selectedTerm=null;}
+  function localToIso(value){if(!value)return null;const d=new Date(value);if(Number.isNaN(d.getTime()))throw new Error("Effective publication time is invalid.");return d.toISOString();}
+  async function publish(){if(!selectedTerm)return;const disclosure=$("disclosureVersion").value.trim(),consent=$("consentVersion").value.trim(),reason=$("publishReason").value.trim();if(!disclosure||!consent){setStatus("Disclosure version and consent version are required.",true);return}const button=$("publishConfirm");button.disabled=true;setStatus("Submitting term publication to the Mainnet security layer...");try{const result=await rpc(RPC_PUBLISH,{p_term_version_id:selectedTerm.term.id,p_disclosure_version:disclosure,p_consent_version:consent,p_effective_from:localToIso($("effectiveFrom").value),p_reason:reason||null});if(!result||result.success!==true||result.status!=="published")throw new Error(result&&result.message?result.message:"Server did not confirm term publication.");const publishedTermKey=result.term_key||selectedTerm.term.term_key;closePublish();setStatus("Staking term "+String(publishedTermKey)+" was published successfully. Core Project activation remains separately gated.");await load();}catch(error){console.error("[ALBUKHR STAKING CONTRACT V2]",error);setStatus(error&&error.message?error.message:"Term publication failed.",true);}finally{button.disabled=false;}}
+  async function init(){try{const env=window.AlbukhrEnvironment;if(!env||typeof env.isKnown!=="function"||!env.isKnown()||!env.isMainnet())throw new Error("Staking Contract V2 workspace requires known MAINNET.");const a=auth();await a.init();const admin=await a.requireAdmin({redirect:false,preserveSessionOnContextError:true});if(!admin){window.location.replace("admin-login.html");return}const mfa=await a.ensureMfa();if(admin.mfa_required&&!mfa.verified){window.location.replace("admin-mfa.html");return}const roles=Array.isArray(admin.roles)?admin.roles:[],authorized=roles.includes("super_admin")||roles.includes("approval_admin")||roles.includes("finance_admin");if(!authorized){$("authorizationState").textContent="DENIED";$("securityState").textContent="Authenticated";setStatus("Your administrator role does not include Staking Contract V2 governance access.",true);return}$("authorizationState").textContent="AUTHORIZED";$("securityState").textContent="Authenticated • AAL2";$("authorizationTitle").textContent="Staking contract governance access granted";$("authorizationText").textContent="Accepted roles: super_admin / approval_admin / finance_admin";await load();setStatus("Staking Contract V2 workspace ready. No term was published automatically.");}catch(error){console.error("[ALBUKHR STAKING CONTRACT V2] Initialization error",error);setStatus(error&&error.message?error.message:"Unable to load Staking Contract V2 workspace.",true);$("securityState").textContent="Security check failed";}}
+  $("refreshButton")?.addEventListener("click",async()=>{try{$("refreshButton").disabled=true;setStatus("Refreshing Staking Contract V2 workspace...");await load();setStatus("Staking Contract V2 workspace refreshed.");}catch(error){setStatus(error&&error.message?error.message:"Refresh failed.",true);}finally{$("refreshButton").disabled=false;}});
+  $("publishCancel")?.addEventListener("click",closePublish);
+  $("publishConfirm")?.addEventListener("click",publish);
+  $("publishDialog")?.addEventListener("click",event=>{if(event.target===$("publishDialog"))closePublish();});
+  $("logoutButton")?.addEventListener("click",async()=>{$("logoutButton").disabled=true;try{await auth().signOut();}finally{window.location.replace("admin-login.html");}});
+  document.addEventListener("DOMContentLoaded",init);
+})(window,document);
 </script>
 </body>
 </html>
