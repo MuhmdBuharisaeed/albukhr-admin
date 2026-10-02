@@ -1,0 +1,23 @@
+ALBUKHR STAKING CONTRACT V2 — ADMIN UI
+
+Placement
+---------
+- admin-staking-contract-v2.html -> repository root
+- admin-dashboard.js -> repository root/js path exactly as the existing script location
+
+The dashboard JS adds the Staking Contract V2 administration module with the same role model as the secured Supabase publication workspace.
+
+Security
+--------
+- Mainnet only
+- AAL2 required by the existing admin auth/security layer
+- Reads get_core_staking_contract_workspace()
+- Publishes only through publish_core_staking_term_version()
+- No direct table writes from browser
+- No automatic publication
+- Publishing a term does not activate a project
+- The 1% global ALBUKHR transaction fee remains read-only and authoritative in the database
+
+Repository status
+-----------------
+GitHub write access remains blocked by HTTP 403: Resource not accessible by integration. This package therefore contains the prepared repository files without claiming they were pushed.
