@@ -87,6 +87,7 @@ function render(a,m){
   }
 
   const defs=[
+
     [
       "Security & Access",
       "Administrator roles and security controls.",
@@ -162,6 +163,17 @@ function render(a,m){
     ],
 
     [
+      "Contributor Internal Lifecycle",
+      "Internal Project treasury, contract readiness and activation.",
+      [
+        "super_admin",
+        "approval_admin",
+        "finance_admin"
+      ],
+      "admin-internal-lifecycle.html"
+    ],
+
+    [
       "Finance",
       "Administrative finance oversight.",
       [
@@ -234,21 +246,6 @@ async function init(){
 
     await A().init();
 
-    /*
-     * IMPORTANT:
-     *
-     * A temporary failure while retrieving the server-side admin
-     * context must not immediately destroy an otherwise valid
-     * authenticated Supabase session.
-     *
-     * requireAdmin() still performs the authoritative checks:
-     *   - authenticated session
-     *   - is_admin
-     *   - active status
-     *
-     * The option only prevents a temporary context/RPC error from
-     * forcing an unnecessary sign-out.
-     */
     const a=await A().requireAdmin({
       redirect:false,
       preserveSessionOnContextError:true
@@ -259,10 +256,6 @@ async function init(){
       return;
     }
 
-    /*
-     * MFA/AAL2 remains a separate security gate.
-     * No authorization is granted by this change.
-     */
     const m=await A().ensureMfa();
 
     if(a.mfa_required&&!m.verified){
@@ -289,10 +282,6 @@ async function init(){
         ""
       );
 
-    /*
-     * MFA/AAL2/factor failures remain directed to the dedicated
-     * MFA page rather than being treated as a generic login failure.
-     */
     if(
       /mfa|aal2|factor|authenticator/i.test(msg)
     ){
@@ -309,15 +298,6 @@ async function init(){
       return;
     }
 
-    /*
-     * First controlled recovery attempt.
-     *
-     * We refresh the Supabase session, then ask the authoritative
-     * requireAdmin() gate to verify the admin context again.
-     *
-     * Session preservation remains enabled so a temporary RPC
-     * failure does not itself cause logout.
-     */
     status(
       "Admin authorization could not be verified. Retrying secure session...",
       true
@@ -328,10 +308,6 @@ async function init(){
         resolve=>setTimeout(resolve,350)
       );
 
-      /*
-       * Refresh the underlying authenticated Supabase session.
-       * This does not grant admin authorization.
-       */
       const refreshedSession=
         await A()?.refreshSession();
 
@@ -341,15 +317,6 @@ async function init(){
         );
       }
 
-      /*
-       * Re-run the authoritative admin authorization gate.
-       *
-       * This is deliberately NOT replaced by a direct context read,
-       * because requireAdmin() also validates:
-       *   - active Supabase session
-       *   - is_admin
-       *   - active admin status
-       */
       const a=
         await A()?.requireAdmin({
           redirect:false,
@@ -399,10 +366,6 @@ async function init(){
           ""
         );
 
-      /*
-       * If the retry failed specifically because MFA/AAL2 is needed,
-       * keep the user inside the security flow.
-       */
       if(
         /mfa|aal2|factor|authenticator/i.test(
           retryMessage
@@ -421,15 +384,6 @@ async function init(){
         return;
       }
 
-      /*
-       * Only after the controlled retry fails do we return to the
-       * secure login page.
-       *
-       * We intentionally do not call signOut() here directly.
-       * requireAdmin() already preserves the session for temporary
-       * context failures, while definitive authorization failures
-       * retain the Auth Core's fail-closed behavior.
-       */
       status(
         "Admin authorization failed. Returning to secure login.",
         true
