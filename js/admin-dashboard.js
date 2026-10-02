@@ -14,6 +14,7 @@ function render(a,m){
  ["Contributor Invitations","Create and securely issue Mainnet Contributor onboarding invitations.",["super_admin"],"admin-contributor-invitations.html"],
  ["Project Approvals","Project approval workflow.",["super_admin","approval_admin"],"admin-project-approvals.html"],
  ["Core Project Lifecycle","Core treasury, liquidity, staking-term readiness and activation.",["super_admin","approval_admin","finance_admin"],"admin-core-lifecycle.html"],
+ ["Staking Contract V2","Review approved Core staking terms and publish them through the secured V2 publication gate.",["super_admin","approval_admin","finance_admin"],"admin-staking-contract-v2.html"],
  ["Contributor Project Approvals","Review Contributor-owned Internal Projects submitted to Mainnet governance.",["super_admin","approval_admin"],"admin-contributor-projects.html"],
  ["Finance","Administrative finance oversight.",["super_admin","finance_admin"],"admin-module.html?module=finance"],
  ["Internal Projects","Internal project scope administration.",["super_admin","internal_admin"],"admin-module.html?module=internal"],
