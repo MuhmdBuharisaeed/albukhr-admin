@@ -248,8 +248,9 @@
       if (!result || result.success !== true || result.status !== "published") {
         throw new Error(result && result.message ? result.message : "Server did not confirm term publication.");
       }
+      const publishedTermKey = result.term_key || selectedTerm.term.term_key;
       closePublish();
-      setStatus("Staking term " + String(result.term_key || selectedTerm.term.term_key) + " was published successfully. Core Project activation remains separately gated.");
+      setStatus("Staking term " + String(publishedTermKey) + " was published successfully. Core Project activation remains separately gated.");
       await load();
     } catch(error) {
       console.error("[ALBUKHR STAKING CONTRACT V2]", error);
