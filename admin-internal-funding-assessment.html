@@ -248,7 +248,7 @@ function renderRecord(project){
 
     <div class="actions-row">
       ${hasPlan&&a?.readiness_status==='ready_for_admin'&&canReviewFunding()?'<button type="button" data-action="review" class="primary">Review Funding</button>':""}
-      ${a?.id&&["ready_for_admin","approved"].includes(String(a.readiness_status||""))?'<button type="button" data-action="evaluate">Run Liquidity Assessment</button>':""}
+      ${a?.id&&a?.liquidity_assessment_status!=="approved"&&["ready_for_admin","approved"].includes(String(a.readiness_status||""))?'<button type="button" data-action="evaluate">Run Liquidity Assessment</button>':""}
       ${a?.id&&a?.system_recommended_liquidity!=null&&a?.liquidity_assessment_status==='ready_for_admin'&&canApproveLiquidity()?'<button type="button" data-action="liquidity" class="primary">Approve Liquidity</button>':""}
       ${(a?.liquidity_assessment_status==='approved'&&a?.approved_required_liquidity!=null)?'<a href="admin-internal-lifecycle.html">Open Internal Lifecycle</a>':""}
     </div>
