@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087a3e">
+<meta name="robots" content="noindex,nofollow">
+<title>ALBUKHR — Internal Funding Assessment</title>
+<link rel="stylesheet" href="css/admin-module.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/core/environment-core.js" defer></script>
+<script src="js/core/supabase-core.js" defer></script>
+<script src="js/core/supabase-admin-auth.js" defer></script>
+<style>
+:root{--g:#087a3e;--g2:#0f6f3c;--soft:#f3f8f5;--line:#dce9e2;--muted:#60776d;--danger:#b3261e;--warn:#8b6500;--ink:#073b28}
+*{box-sizing:border-box}.hidden{display:none!important}body{margin:0;background:#f5f8f6;color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.topbar{position:sticky;top:0;z-index:30}.brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:inherit}.brand img{width:36px;height:36px;border-radius:10px;object-fit:cover}.brand span,.brand b,.brand small{display:block}.brand small{font-size:8px;letter-spacing:1px;opacity:.75}.actions{display:flex;align-items:center;gap:8px}.actions button{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.09);color:#fff;padding:8px 10px;border-radius:9px;font-weight:800}
+main{width:min(1180px,calc(100% - 24px));margin:0 auto;padding:12px 0 28px}.back{margin:8px 0 12px}.back a{color:var(--g);font-weight:800;text-decoration:none;font-size:12px}.hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;padding:18px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.05)}.hero small{color:var(--g);font-size:9px;font-weight:900;letter-spacing:1px}.hero h1{margin:6px 0 5px;font-size:24px}.hero p{margin:0;max-width:760px;color:var(--muted);font-size:12px;line-height:1.55}.hero>strong{white-space:nowrap;font-size:10px;color:var(--g);background:var(--soft);padding:7px 9px;border-radius:999px}.status{margin:10px 0 0;padding:10px 12px;background:#edf8f1;border:1px solid #cfe7d8;color:var(--g);border-radius:11px;font-size:11px}.status.error{background:#fff4f2;border-color:#f0cbc6;color:var(--danger)}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px}.toolbar h2{margin:0;font-size:18px}.toolbar p{margin:4px 0 0;color:var(--muted);font-size:11px}.toolbar button{border:1px solid var(--line);background:#fff;color:var(--g);padding:9px 11px;border-radius:10px;font-weight:850}.records{display:grid;gap:14px;margin-top:12px}.record{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.04)}.record-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.record-title small{display:block;color:var(--g);font-size:9px;font-weight:900;letter-spacing:1px}.record-title h3{margin:5px 0 3px;font-size:19px;overflow-wrap:anywhere}.record-title p{margin:0;color:var(--muted);font-size:11px}.pill{display:inline-flex;align-items:center;justify-content:center;padding:6px 9px;border-radius:999px;font-size:9px;font-weight:900;white-space:nowrap;background:#f3f5f4;color:#60776d}.pill.ready{background:#edf8f1;color:var(--g)}.pill.blocked,.pill.rejected{background:#fff2f0;color:var(--danger)}.pill.approved{background:#edf8f1;color:var(--g)}.pill.submitted{background:#fff8e6;color:var(--warn)}
+.section{margin-top:12px;border-top:1px solid #edf3ef;padding-top:12px}.section-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.section-head h4{margin:0;font-size:12px}.section-head span{color:var(--muted);font-size:10px}.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:9px}.fact{border:1px solid var(--line);background:#fafdfb;border-radius:11px;padding:10px}.fact span,.fact b{display:block}.fact span{color:var(--muted);font-size:9px}.fact b{margin-top:4px;font-size:12px;overflow-wrap:anywhere}.costs{display:grid;gap:8px;margin-top:9px}.cost{display:grid;grid-template-columns:40px 1.3fr .65fr .65fr .7fr;gap:8px;align-items:center;border:1px solid #edf3ef;border-radius:11px;padding:9px;background:#fbfdfc;font-size:10px}.cost>div{min-width:0}.cost span,.cost strong{display:block}.cost span{color:var(--muted)}.cost strong{margin-top:2px;font-size:10px;overflow-wrap:anywhere}.amount{text-align:right}.amount strong{color:var(--g);font-size:11px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.summary .box{border:1px solid var(--line);background:var(--soft);border-radius:11px;padding:10px}.summary span,.summary b{display:block}.summary span{color:var(--muted);font-size:9px}.summary b{margin-top:4px;font-size:13px;overflow-wrap:anywhere}.assessment{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.assessment .box{border:1px solid var(--line);border-radius:11px;padding:10px;background:#fff}.assessment .box span{display:block;color:var(--muted);font-size:9px}.assessment .box b{display:block;margin-top:4px;font-size:13px;overflow-wrap:anywhere}.assessment .green{background:#f2faf5;border-color:#cfe7d8}.assessment .green b{color:var(--g)}.assessment .danger{background:#fff6f4;border-color:#f0cbc6}.assessment .danger b{color:var(--danger)}.reasons{margin-top:9px;padding:10px 11px;border:1px solid #f0cbc6;background:#fff6f4;border-radius:11px;color:var(--danger);font-size:10px;line-height:1.45}.reasons div+div{margin-top:3px}
+.actions-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.actions-row button,.actions-row a{border:1px solid var(--line);background:#fff;color:var(--g);padding:9px 11px;border-radius:10px;font-weight:850;font-size:10px;text-decoration:none}.actions-row .primary{background:var(--g);border-color:var(--g);color:#fff}.actions-row .danger{color:var(--danger);border-color:#efcbc7}.actions-row button:disabled{opacity:.45;cursor:not-allowed}.note{margin-top:10px;padding:10px 11px;border:1px dashed var(--line);background:#fafdfb;border-radius:11px;color:var(--muted);font-size:10px;line-height:1.45}
+.dialog-backdrop{position:fixed;inset:0;background:rgba(7,59,40,.32);z-index:60;display:grid;place-items:center;padding:14px}.dialog{width:min(560px,100%);max-height:92vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:17px;box-shadow:0 25px 70px rgba(0,0,0,.22)}.dialog h2{margin:0 0 6px;font-size:20px}.dialog p{margin:0;color:var(--muted);font-size:11px;line-height:1.5}.form-row{display:grid;gap:6px;margin-top:11px}.form-row label{font-size:10px;font-weight:850}.form-row input,.form-row textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:12px;background:#fff;color:var(--ink)}.form-row input:focus,.form-row textarea:focus{outline:0;border-color:var(--g);box-shadow:0 0 0 3px rgba(8,122,62,.1)}.form-help{margin-top:6px;color:var(--muted);font-size:9px;line-height:1.45}.dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.dialog-actions button{border:1px solid var(--line);background:#fff;color:var(--g);padding:9px 12px;border-radius:10px;font-weight:850}.dialog-actions .primary{background:var(--g);border-color:var(--g);color:#fff}
+.empty{margin-top:12px;padding:28px 14px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px;color:var(--muted);font-size:11px}.empty b{display:block;color:#43574e;font-size:13px;margin-bottom:4px}@media(max-width:850px){.facts{grid-template-columns:1fr 1fr}.summary{grid-template-columns:1fr 1fr}.assessment{grid-template-columns:1fr 1fr}.cost{grid-template-columns:34px 1.4fr .7fr .7fr .7fr}}@media(max-width:620px){.hero{flex-direction:column}.record-top{display:block}.record-top .pill{margin-top:9px}.facts,.summary,.assessment{grid-template-columns:1fr}.cost{grid-template-columns:1fr 1fr}.cost .desc{grid-column:1 / -1}.amount{text-align:left}.actions-row button,.actions-row a{flex:1 1 100%}.dialog-actions{flex-direction:column}.dialog-actions button{width:100%}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="admin-dashboard.html">
+    <img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR">
+    <span><b>ALBUKHR</b><small>ADMINISTRATION</small></span>
+  </a>
+  <div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div>
+</header>
+<main>
+  <nav class="back"><a href="admin-dashboard.html">← Admin Control Center</a></nav>
+  <section class="hero">
+    <div>
+      <small>CONTRIBUTOR INTERNAL FINANCIAL GOVERNANCE</small>
+      <h1>Internal Funding Assessment</h1>
+      <p>Review Contributor funding plans, approve the validated capital requirement, run the dedicated liquidity model, and approve the exact server recommendation. This workspace does not configure treasury wallets and does not activate projects.</p>
+    </div>
+    <strong id="securityState">Verifying security...</strong>
+  </section>
+  <div id="pageStatus" class="status" aria-live="polite"></div>
+
+  <div class="toolbar">
+    <div><h2>Assessment Queue</h2><p>Mainnet Contributor Internal Projects returned by the server-authoritative assessment queue.</p></div>
+    <button id="refreshButton" type="button">Refresh</button>
+  </div>
+
+  <section id="deniedPanel" class="empty hidden"><b>Access denied</b><span>Your administrator role does not include Internal Funding Assessment access.</span></section>
+  <section id="records" class="records"></section>
+  <section id="emptyState" class="empty hidden"><b>No Internal Funding plans are currently in the queue.</b><span>Projects without a submitted funding plan will remain outside the financial approval flow.</span></section>
+
+  <div class="note"><b>Security boundary:</b> Contributor-declared liquidity is contextual only. Funding approval may approve a capital requirement up to the validated server value. Liquidity approval is stricter: the administrator must approve exactly the system recommendation. Treasury configuration remains a separate lifecycle operation.</div>
+</main>
+
+<div id="reviewDialog" class="dialog-backdrop hidden">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="reviewTitle">
+    <h2 id="reviewTitle">Review Funding Assessment</h2>
+    <p id="reviewProjectText">Review the selected Contributor Internal funding plan.</p>
+    <div class="form-row">
+      <label for="approvedCapital">Approved capital requirement (Pi)</label>
+      <input id="approvedCapital" type="number" min="0.000000001" step="0.000000001" inputmode="decimal">
+      <div class="form-help">This is the capital requirement decision, not approved liquidity. The server will reject a value above the validated requirement.</div>
+    </div>
+    <div class="form-row">
+      <label for="reviewReason">Reason</label>
+      <textarea id="reviewReason" rows="4" maxlength="2000" placeholder="Optional for approval; required for rejection."></textarea>
+    </div>
+    <div class="dialog-actions"><button id="reviewCancel" type="button">Cancel</button><button id="reviewReject" class="danger" type="button">Reject</button><button id="reviewApprove" class="primary" type="button">Approve Funding</button></div>
+  </div>
+</div>
+
+<div id="liquidityDialog" class="dialog-backdrop hidden">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="liquidityTitle">
+    <h2 id="liquidityTitle">Approve Liquidity</h2>
+    <p id="liquidityProjectText">Approve the exact server liquidity recommendation.</p>
+    <div class="form-row">
+      <label>System recommendation</label>
+      <input id="liquidityRecommendation" type="text" readonly>
+      <div class="form-help">This value is display-only. It is not editable because the database requires exact equality with the system recommendation.</div>
+    </div>
+    <div class="form-row">
+      <label for="liquidityReason">Reason</label>
+      <textarea id="liquidityReason" rows="4" maxlength="2000" placeholder="Reason for liquidity approval"></textarea>
+    </div>
+    <div class="dialog-actions"><button id="liquidityCancel" type="button">Cancel</button><button id="liquidityApprove" class="primary" type="button">Approve Exact Recommendation</button></div>
+  </div>
+</div>
+
+<script>
+(function(window,document){
+"use strict";
+
+const RPC_QUEUE="get_internal_funding_assessment_admin_queue";
+const RPC_REVIEW="review_internal_funding_assessment";
+const RPC_EVALUATE="evaluate_internal_project_liquidity";
+const RPC_APPROVE_LIQUIDITY="approve_internal_project_liquidity";
+
+const $=id=>document.getElementById(id);
+let records=[];
+let admin=null;
+let mfa=null;
+let selected=null;
+let selectedAssessment=null;
+let selectedAction=null;
+
+function auth(){
+  if(!window.AlbukhrSupabaseAdminAuth)throw new Error("ALBUKHR Admin Auth Core is unavailable.");
+  return window.AlbukhrSupabaseAdminAuth;
+}
+
+function client(){
+  const core=window.ALBUKHR_SUPABASE;
+  if(!core||!core.client)throw new Error("ALBUKHR Supabase Core is unavailable.");
+  if(String(core.environment||"").toLowerCase()!=="mainnet"||String(core.network||"").toLowerCase()!=="mainnet")throw new Error("Internal Funding Assessment requires MAINNET.");
+  return core.client;
+}
+
+async function rpc(name,params){
+  const result=await client().schema("albukhr_security").rpc(name,params||{});
+  if(result.error)throw result.error;
+  return result.data;
+}
+
+function esc(value){
+  return String(value==null?"":value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]||c));
+}
+
+function fmt(value){
+  if(value===null||value===undefined||value==="")return "—";
+  const n=Number(value);
+  return Number.isFinite(n)?`${n.toFixed(3)} Pi`:"—";
+}
+
+function fmtNumber(value){
+  if(value===null||value===undefined||value==="")return "—";
+  const n=Number(value);
+  return Number.isFinite(n)?n.toFixed(3):"—";
+}
+
+function pct(value){
+  if(value===null||value===undefined||value==="")return "—";
+  const n=Number(value);
+  return Number.isFinite(n)?`${(n*100).toFixed(4).replace(/0+$/,'').replace(/\.$/,'')}%`:"—";
+}
+
+function label(value){
+  return String(value||"—").replace(/_/g," ").toUpperCase();
+}
+
+function dateLabel(value){
+  if(!value)return "—";
+  const d=new Date(value);
+  return Number.isNaN(d.getTime())?"—":d.toLocaleString();
+}
+
+function setStatus(message,error){
+  const el=$("pageStatus");
+  if(!el)return;
+  el.textContent=message||"";
+  el.className="status"+(error?" error":"");
+}
+
+function activeRoles(){
+  return Array.isArray(admin?.roles)?admin.roles:[];
+}
+
+function canReviewFunding(){
+  return activeRoles().some(r=>["super_admin","approval_admin","finance_admin","internal_admin"].includes(r));
+}
+
+function canApproveLiquidity(){
+  return activeRoles().some(r=>["super_admin","finance_admin","internal_admin"].includes(r));
+}
+
+function fundingPlan(project){
+  return project?.funding_plan||null;
+}
+
+function assessment(project){
+  return project?.assessment||null;
+}
+
+function reasonsHtml(reasons){
+  if(!Array.isArray(reasons)||!reasons.length)return "";
+  return '<div class="reasons">'+reasons.map(r=>`<div>${esc(String(r).replace(/_/g," "))}</div>`).join("")+'</div>';
+}
+
+function costRows(items){
+  const safe=Array.isArray(items)?items:[];
+  if(!safe.length)return '<div class="note">No itemized cost lines are available for this funding plan.</div>';
+  return '<div class="costs">'+safe.map((i,n)=>`<div class="cost"><div><span>Line</span><strong>${esc(i.line_number||n+1)}</strong></div><div class="desc"><span>Requirement</span><strong>${esc(i.category||"—")} · ${esc(i.description||"—")}</strong></div><div><span>Qty</span><strong>${esc(fmtNumber(i.quantity))} ${esc(i.unit||"")}</strong></div><div><span>Unit cost</span><strong>${fmt(i.unit_cost)}</strong></div><div class="amount"><span>Line total</span><strong>${fmt(i.line_total)}</strong></div></div>`).join("")+'</div>';
+}
+
+function renderRecord(project){
+  const plan=fundingPlan(project);
+  const a=assessment(project);
+  const status=String(plan?.status||"NO_PLAN").toLowerCase();
+  const readiness=String(a?.readiness_status||"not_ready").toLowerCase();
+  const liquidityStatus=String(a?.liquidity_assessment_status||"not_assessed").toLowerCase();
+  const hasPlan=!!plan;
+  const rec=project?.funding_items||[];
+  const card=document.createElement("article");
+  card.className="record";
+  card.dataset.projectId=project.project_id;
+  card.innerHTML=`
+    <div class="record-top">
+      <div class="record-title">
+        <small>CONTRIBUTOR INTERNAL · MAINNET</small>
+        <h3>${esc(project.project_name||"Unnamed Project")}</h3>
+        <p>${esc(project.project_code||"—")} · Contributor ${esc(project.contributor_id||"—")}</p>
+      </div>
+      <span class="pill ${status==='approved'?'approved':status==='submitted'?'submitted':status==='rejected'?'rejected':readiness==='ready_for_admin'?'ready':''}">${esc(label(hasPlan?plan.status:"no_plan"))}</span>
+    </div>
+
+    <div class="facts">
+      <div class="fact"><span>Business stage</span><b>${esc(plan?.business_stage||"—")}</b></div>
+      <div class="fact"><span>Funding mode</span><b>${esc(label(plan?.funding_mode))}</b></div>
+      <div class="fact"><span>Funding purpose</span><b>${esc(plan?.funding_purpose||"—")}</b></div>
+      <div class="fact"><span>Submitted</span><b>${esc(dateLabel(plan?.submitted_at))}</b></div>
+    </div>
+
+    <div class="summary">
+      <div class="box"><span>Itemized cost total</span><b>${fmt(plan?.requested_capital)}</b></div>
+      <div class="box"><span>Validated capital</span><b>${fmt(a?.validated_capital_requirement)}</b></div>
+      <div class="box"><span>Approved capital</span><b>${fmt(a?.approved_capital_requirement)}</b></div>
+      <div class="box"><span>Declared liquidity</span><b>${fmt(plan?.declared_existing_liquidity)}</b></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h4>Itemized Funding Requirements</h4><span>${esc(String(rec.length))} line${rec.length===1?"":"s"}</span></div>
+      ${costRows(rec)}
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h4>Server Assessment</h4><span>${esc(label(a?.engine_code||"CONTRIBUTOR_INTERNAL_V1"))}</span></div>
+      <div class="assessment">
+        <div class="box"><span>Readiness</span><b>${esc(label(readiness))}</b></div>
+        <div class="box"><span>Liquidity assessment</span><b>${esc(label(liquidityStatus))}</b></div>
+        <div class="box ${a?.system_recommended_liquidity!=null?'green':''}"><span>System recommendation</span><b>${fmt(a?.system_recommended_liquidity)}</b></div>
+        <div class="box"><span>Existing asset base</span><b>${fmt(plan?.existing_asset_base)}</b></div>
+        <div class="box"><span>Verified liquidity</span><b>${fmt(a?.existing_verified_liquidity)}</b></div>
+        <div class="box"><span>Projected obligations</span><b>${fmt(a?.projected_total_obligations)}</b></div>
+      </div>
+      ${reasonsHtml(a?.blocking_reasons)}
+    </div>
+
+    <div class="actions-row">
+      ${hasPlan&&a?.readiness_status==='ready_for_admin'&&canReviewFunding()?'<button type="button" data-action="review" class="primary">Review Funding</button>':""}
+      ${a?.id&&["ready_for_admin","approved"].includes(String(a.readiness_status||""))?'<button type="button" data-action="evaluate">Run Liquidity Assessment</button>':""}
+      ${a?.id&&a?.system_recommended_liquidity!=null&&a?.liquidity_assessment_status==='ready_for_admin'&&canApproveLiquidity()?'<button type="button" data-action="liquidity" class="primary">Approve Liquidity</button>':""}
+      ${(a?.liquidity_assessment_status==='approved'&&a?.approved_required_liquidity!=null)?'<a href="admin-internal-lifecycle.html">Open Internal Lifecycle</a>':""}
+    </div>
+
+    ${!hasPlan?'<div class="note">No funding plan has been submitted for this project. Nothing can be financially approved yet.</div>':a?.liquidity_assessment_status==='blocked'?'<div class="note">Liquidity assessment is blocked until the server-side prerequisite(s) shown above are resolved. This page does not create liquidity policy records.</div>':""}
+  `;
+
+  card.querySelector('[data-action="review"]')?.addEventListener("click",()=>openReview(project));
+  card.querySelector('[data-action="evaluate"]')?.addEventListener("click",()=>evaluateLiquidity(project,a?.id));
+  card.querySelector('[data-action="liquidity"]')?.addEventListener("click",()=>openLiquidity(project,a));
+  return card;
+}
+
+function renderQueue(rows){
+  records=Array.isArray(rows)?rows:[];
+  const host=$("records");
+  const empty=$("emptyState");
+  if(!host||!empty)return;
+  host.replaceChildren();
+  const usable=records.filter(p=>p?.funding_plan||p?.assessment);
+  empty.classList.toggle("hidden",usable.length!==0);
+  usable.forEach(p=>host.appendChild(renderRecord(p)));
+}
+
+async function loadQueue(){
+  const result=await rpc(RPC_QUEUE);
+  if(!result?.success)throw new Error(result?.message||"Internal funding assessment queue could not be loaded.");
+  renderQueue(result.records);
+  return result;
+}
+
+function openReview(project){
+  const a=assessment(project);
+  const plan=fundingPlan(project);
+  if(!a?.id)throw new Error("Funding assessment is not available for this project.");
+  selected=project;
+  selectedAssessment=a;
+  selectedAction=null;
+  $("reviewProjectText").textContent=`Review ${project.project_name||"Internal Project"} (${project.project_code||"—"}). Validated capital requirement: ${fmt(a.validated_capital_requirement)}.`;
+  $("approvedCapital").value=a.approved_capital_requirement!=null?a.approved_capital_requirement:(a.validated_capital_requirement!=null?a.validated_capital_requirement:(plan?.incremental_capital_requirement||""));
+  $("approvedCapital").max=a.validated_capital_requirement!=null?String(a.validated_capital_requirement):"";
+  $("reviewReason").value="";
+  $("reviewDialog").classList.remove("hidden");
+  $("approvedCapital").focus();
+}
+
+function closeReview(){
+  $("reviewDialog").classList.add("hidden");
+  selected=null;selectedAssessment=null;selectedAction=null;
+}
+
+async function submitFundingReview(decision){
+  if(!selected||!selectedAssessment)return;
+  const reason=String($("reviewReason").value||"").trim();
+  if(decision==="reject"&&!reason){setStatus("A reason is required for funding rejection.",true);return;}
+
+  let approvedCapital=null;
+  if(decision==="approve"){
+    approvedCapital=Number($("approvedCapital").value);
+    const validated=Number(selectedAssessment.validated_capital_requirement);
+    if(!Number.isFinite(approvedCapital)||approvedCapital<=0){setStatus("Approved capital requirement must be positive.",true);return;}
+    if(Number.isFinite(validated)&&approvedCapital>validated){setStatus("Approved capital requirement cannot exceed the validated server requirement.",true);return;}
+  }
+
+  const buttons=[$("reviewApprove"),$("reviewReject")];
+  buttons.forEach(b=>b.disabled=true);
+  setStatus(decision==="approve"?"Approving funding assessment on the server...":"Rejecting funding assessment on the server...");
+
+  try{
+    const result=await rpc(RPC_REVIEW,{
+      p_assessment_id:selectedAssessment.id,
+      p_decision:decision,
+      p_approved_capital_requirement:approvedCapital,
+      p_reason:reason||null
+    });
+    if(!result?.success)throw new Error(result?.message||"Server did not confirm the funding decision.");
+    closeReview();
+    setStatus(result.message||"Funding assessment decision recorded.");
+    await loadQueue();
+  }catch(error){
+    console.error("[ALBUKHR INTERNAL FUNDING REVIEW]",error);
+    setStatus(error?.message||"Funding assessment decision failed.",true);
+  }finally{
+    buttons.forEach(b=>b.disabled=false);
+  }
+}
+
+async function evaluateLiquidity(project,assessmentId){
+  if(!assessmentId)return;
+  const card=document.querySelector(`.record[data-project-id="${CSS.escape(String(project.project_id))}"]`);
+  const button=card?.querySelector('[data-action="evaluate"]');
+  if(button)button.disabled=true;
+  setStatus(`Running the server liquidity assessment for ${project.project_code||"project"}...`);
+  try{
+    const result=await rpc(RPC_EVALUATE,{p_assessment_id:assessmentId});
+    if(!result?.success)throw new Error(result?.message||"Server did not return a liquidity assessment result.");
+    setStatus(result.message||`Liquidity assessment completed for ${project.project_code||"project"}.`);
+    await loadQueue();
+  }catch(error){
+    console.error("[ALBUKHR INTERNAL LIQUIDITY ASSESSMENT]",error);
+    setStatus(error?.message||"Liquidity assessment failed.",true);
+  }finally{
+    if(button)button.disabled=false;
+  }
+}
+
+function openLiquidity(project,a){
+  if(!a?.id||a.system_recommended_liquidity==null)throw new Error("A server liquidity recommendation is required before approval.");
+  selected=project;
+  selectedAssessment=a;
+  $("liquidityProjectText").textContent=`Approve the exact server recommendation for ${project.project_name||"Internal Project"} (${project.project_code||"—"}).`;
+  $("liquidityRecommendation").value=fmt(a.system_recommended_liquidity);
+  $("liquidityReason").value="";
+  $("liquidityDialog").classList.remove("hidden");
+}
+
+function closeLiquidity(){
+  $("liquidityDialog").classList.add("hidden");
+  selected=null;selectedAssessment=null;
+}
+
+async function approveLiquidity(){
+  if(!selected||!selectedAssessment)return;
+  const amount=Number(selectedAssessment.system_recommended_liquidity);
+  if(!Number.isFinite(amount)||amount<=0){setStatus("The server recommendation is not a positive liquidity amount.",true);return;}
+  const reason=String($("liquidityReason").value||"").trim();
+  const button=$("liquidityApprove");
+  button.disabled=true;
+  setStatus("Submitting exact liquidity approval to the server...");
+  try{
+    const result=await rpc(RPC_APPROVE_LIQUIDITY,{
+      p_assessment_id:selectedAssessment.id,
+      p_approved_liquidity:amount,
+      p_reason:reason||null
+    });
+    if(!result?.success)throw new Error(result?.message||"Server did not confirm liquidity approval.");
+    closeLiquidity();
+    setStatus(result.message||"Liquidity approval recorded.");
+    await loadQueue();
+  }catch(error){
+    console.error("[ALBUKHR INTERNAL LIQUIDITY APPROVAL]",error);
+    setStatus(error?.message||"Liquidity approval failed.",true);
+  }finally{
+    button.disabled=false;
+  }
+}
+
+async function init(){
+  try{
+    const env=window.AlbukhrEnvironment;
+    if(!env?.isKnown?.()||!env.isMainnet?.())throw new Error("Internal Funding Assessment requires known MAINNET.");
+
+    const a=auth();
+    await a.init();
+    admin=await a.requireAdmin({redirect:false,preserveSessionOnContextError:true});
+    if(!admin){location.replace("admin-login.html");return;}
+
+    mfa=await a.ensureMfa();
+    if(admin.mfa_required&&!mfa.verified){location.replace("admin-mfa.html");return;}
+
+    if(!canReviewFunding()){
+      $("securityState").textContent="Authenticated";
+      $("deniedPanel").classList.remove("hidden");
+      setStatus("Your administrator role does not include Internal Funding Assessment access.",true);
+      return;
+    }
+
+    $("securityState").textContent=mfa.verified?"Authenticated • AAL2":"Authenticated";
+    await loadQueue();
+    setStatus("Internal Funding Assessment workspace ready.");
+  }catch(error){
+    console.error("[ALBUKHR INTERNAL FUNDING ASSESSMENT]",error);
+    setStatus(error?.message||"Unable to load Internal Funding Assessment workspace.",true);
+  }
+}
+
+$("refreshButton")?.addEventListener("click",async()=>{
+  const button=$("refreshButton");
+  button.disabled=true;
+  try{setStatus("Refreshing Internal Funding Assessment queue...");await loadQueue();setStatus("Assessment queue refreshed.");}
+  catch(error){setStatus(error?.message||"Assessment queue refresh failed.",true);}
+  finally{button.disabled=false;}
+});
+
+$("reviewCancel")?.addEventListener("click",closeReview);
+$("reviewApprove")?.addEventListener("click",()=>submitFundingReview("approve"));
+$("reviewReject")?.addEventListener("click",()=>submitFundingReview("reject"));
+$("reviewDialog")?.addEventListener("click",e=>{if(e.target===$("reviewDialog"))closeReview();});
+
+$("liquidityCancel")?.addEventListener("click",closeLiquidity);
+$("liquidityApprove")?.addEventListener("click",approveLiquidity);
+$("liquidityDialog")?.addEventListener("click",e=>{if(e.target===$("liquidityDialog"))closeLiquidity();});
+
+$("logoutButton")?.addEventListener("click",async()=>{
+  const b=$("logoutButton");
+  b.disabled=true;
+  try{await auth().signOut();}
+  finally{location.replace("admin-login.html");}
+});
+
+document.addEventListener("DOMContentLoaded",init,{once:true});
+})(window,document);
+</script>
+</body>
+</html>
