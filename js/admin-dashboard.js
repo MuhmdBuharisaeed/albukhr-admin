@@ -80,10 +80,10 @@ function render(a,m){
     $("testnetAdminLink");
 
   if(testnetLink){
-    testnetLink.hidden=!(
+    testnetLink.hidden=!(( 
       a.testnet_access===true&&
       (!a.mfa_required||m.verified)
-    );
+    ));
   }
 
   const defs=[
@@ -91,14 +91,18 @@ function render(a,m){
     [
       "Security & Access",
       "Administrator roles and security controls.",
-      ["super_admin"],
+      [
+        "super_admin"
+      ],
       "admin-security.html"
     ],
 
     [
       "Core Team",
       "Invite and manage the seven official ALBUKHR Core Team members.",
-      ["super_admin"],
+      [
+        "super_admin"
+      ],
       "admin-core-team.html"
     ],
 
@@ -116,7 +120,9 @@ function render(a,m){
     [
       "Contributor Invitations",
       "Create and securely issue Mainnet Contributor onboarding invitations.",
-      ["super_admin"],
+      [
+        "super_admin"
+      ],
       "admin-contributor-invitations.html"
     ],
 
@@ -160,6 +166,18 @@ function render(a,m){
         "approval_admin"
       ],
       "admin-contributor-projects.html"
+    ],
+
+    [
+      "Contributor Funding Assessment",
+      "Review itemized Contributor Internal funding plans, approve validated capital requirements, and route them to the server-controlled liquidity assessment.",
+      [
+        "super_admin",
+        "approval_admin",
+        "finance_admin",
+        "internal_admin"
+      ],
+      "admin-internal-funding-assessment.html"
     ],
 
     [
