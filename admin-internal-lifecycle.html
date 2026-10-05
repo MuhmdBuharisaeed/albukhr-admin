@@ -11,74 +11,2831 @@
 <script src="js/core/environment-core.js" defer></script>
 <script src="js/core/supabase-core.js" defer></script>
 <script src="js/core/supabase-admin-auth.js" defer></script>
+
 <style>
-.lifecycle-grid{display:grid;gap:14px;margin-top:18px}.lifecycle-card{background:#fff;border:1px solid #d7e8df;border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.05)}
-.lifecycle-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.lifecycle-heading small{color:#087a3e;font-size:10px;font-weight:900;letter-spacing:1px}.lifecycle-heading h2{margin:6px 0 4px;font-size:21px}.lifecycle-heading p{margin:0;color:#60776d;font-size:12px;line-height:1.5}
-.badge{display:inline-flex;align-items:center;justify-content:center;padding:6px 9px;border-radius:999px;font-size:10px;font-weight:900;white-space:nowrap;background:#f1f8f4;color:#087a3e}.badge.blocked{background:#fff2f0;color:#b3261e}.badge.ready{background:#edf8f1;color:#087a3e}.badge.neutral{background:#f3f5f4;color:#60776d}
-.life-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px}.life-stat{border:1px solid #edf3ef;border-radius:12px;padding:11px}.life-stat span{display:block;color:#60776d;font-size:10px}.life-stat b{display:block;margin-top:5px;font-size:13px;overflow-wrap:anywhere}
-.checks{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:14px}.check{border:1px solid #edf3ef;border-radius:12px;padding:10px;font-size:11px}.check b{display:block;margin-bottom:4px}.check span{color:#60776d}
-.actions-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.actions-row button{border:1px solid #d7e8df;background:#fff;color:#087a3e;padding:9px 11px;border-radius:10px;font-weight:850;font-size:11px}.actions-row button.primary{background:#087a3e;color:#fff;border-color:#087a3e}.actions-row button:disabled{opacity:.45;cursor:not-allowed}
-.terms{margin-top:14px;border-top:1px solid #edf3ef;padding-top:12px}.term-row{display:flex;justify-content:space-between;gap:10px;margin-top:7px;padding:10px;background:#f8fbf9;border-radius:10px;font-size:10px;align-items:center}.term-main{min-width:0}.term-main b{display:block;font-size:11px}.term-main span{display:block;color:#60776d;margin-top:3px;overflow-wrap:anywhere}.term-actions{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}.term-actions button{border:1px solid #d7e8df;background:#fff;color:#087a3e;padding:7px 9px;border-radius:8px;font-size:10px;font-weight:850}.term-actions button.primary{background:#087a3e;color:#fff;border-color:#087a3e}.term-actions button:disabled{opacity:.45;cursor:not-allowed}
-.dialog-backdrop{position:fixed;inset:0;background:rgba(7,59,40,.32);display:grid;place-items:center;padding:16px;z-index:50}.dialog{width:min(560px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;border:1px solid #d7e8df;padding:18px;box-shadow:0 25px 70px rgba(0,0,0,.22)}.dialog h2{margin:0 0 6px;font-size:20px}.dialog p{margin:0 0 14px;color:#60776d;font-size:12px;line-height:1.5}.form-row{display:grid;gap:6px;margin-top:11px}.form-row label{font-size:11px;font-weight:850}.form-row input,.form-row textarea,.form-row select{width:100%;border:1px solid #d7e8df;border-radius:10px;padding:10px;font:inherit;font-size:12px;color:#073b28;background:#fff}.form-help{font-size:10px;color:#60776d;line-height:1.45}.dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.dialog-actions button{border:1px solid #d7e8df;background:#fff;color:#087a3e;padding:9px 12px;border-radius:10px;font-weight:850}.dialog-actions .primary{background:#087a3e;color:#fff;border-color:#087a3e}
-.engine-note{margin-top:14px;padding:11px 12px;border:1px dashed #d7e8df;border-radius:12px;background:#fafdfb;font-size:11px;color:#60776d}.engine-note b{color:#073b28}
-@media(max-width:760px){.life-stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.checks{grid-template-columns:1fr}.lifecycle-top{flex-direction:column}.term-row{flex-direction:column;align-items:flex-start}.term-actions{justify-content:flex-start}}
+.lifecycle-grid{
+  display:grid;
+  gap:14px;
+  margin-top:18px
+}
+
+.lifecycle-card{
+  background:#fff;
+  border:1px solid #d7e8df;
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.05)
+}
+
+.lifecycle-top{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start
+}
+
+.lifecycle-heading small{
+  color:#087a3e;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1px
+}
+
+.lifecycle-heading h2{
+  margin:6px 0 4px;
+  font-size:21px
+}
+
+.lifecycle-heading p{
+  margin:0;
+  color:#60776d;
+  font-size:12px;
+  line-height:1.5
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 9px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:900;
+  white-space:nowrap;
+  background:#f1f8f4;
+  color:#087a3e
+}
+
+.badge.blocked{
+  background:#fff2f0;
+  color:#b3261e
+}
+
+.badge.ready{
+  background:#edf8f1;
+  color:#087a3e
+}
+
+.badge.neutral{
+  background:#f3f5f4;
+  color:#60776d
+}
+
+.life-stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:9px;
+  margin-top:14px
+}
+
+.life-stat{
+  border:1px solid #edf3ef;
+  border-radius:12px;
+  padding:11px
+}
+
+.life-stat span{
+  display:block;
+  color:#60776d;
+  font-size:10px
+}
+
+.life-stat b{
+  display:block;
+  margin-top:5px;
+  font-size:13px;
+  overflow-wrap:anywhere
+}
+
+.checks{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:9px;
+  margin-top:14px
+}
+
+.check{
+  border:1px solid #edf3ef;
+  border-radius:12px;
+  padding:10px;
+  font-size:11px
+}
+
+.check b{
+  display:block;
+  margin-bottom:4px
+}
+
+.check span{
+  color:#60776d
+}
+
+.actions-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:14px
+}
+
+.actions-row button{
+  border:1px solid #d7e8df;
+  background:#fff;
+  color:#087a3e;
+  padding:9px 11px;
+  border-radius:10px;
+  font-weight:850;
+  font-size:11px
+}
+
+.actions-row button.primary{
+  background:#087a3e;
+  color:#fff;
+  border-color:#087a3e
+}
+
+.actions-row button:disabled{
+  opacity:.45;
+  cursor:not-allowed
+}
+
+.terms{
+  margin-top:14px;
+  border-top:1px solid #edf3ef;
+  padding-top:12px
+}
+
+.term-row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:7px;
+  padding:10px;
+  background:#f8fbf9;
+  border-radius:10px;
+  font-size:10px;
+  align-items:center
+}
+
+.term-main{
+  min-width:0
+}
+
+.term-main b{
+  display:block;
+  font-size:11px
+}
+
+.term-main span{
+  display:block;
+  color:#60776d;
+  margin-top:3px;
+  overflow-wrap:anywhere
+}
+
+.term-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  justify-content:flex-end
+}
+
+.term-actions button{
+  border:1px solid #d7e8df;
+  background:#fff;
+  color:#087a3e;
+  padding:7px 9px;
+  border-radius:8px;
+  font-size:10px;
+  font-weight:850
+}
+
+.term-actions button.primary{
+  background:#087a3e;
+  color:#fff;
+  border-color:#087a3e
+}
+
+.term-actions button:disabled{
+  opacity:.45;
+  cursor:not-allowed
+}
+
+.dialog-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(7,59,40,.32);
+  display:grid;
+  place-items:center;
+  padding:16px;
+  z-index:50
+}
+
+.dialog{
+  width:min(560px,100%);
+  max-height:92vh;
+  overflow:auto;
+  background:#fff;
+  border-radius:18px;
+  border:1px solid #d7e8df;
+  padding:18px;
+  box-shadow:0 25px 70px rgba(0,0,0,.22)
+}
+
+.dialog h2{
+  margin:0 0 6px;
+  font-size:20px
+}
+
+.dialog p{
+  margin:0 0 14px;
+  color:#60776d;
+  font-size:12px;
+  line-height:1.5
+}
+
+.form-row{
+  display:grid;
+  gap:6px;
+  margin-top:11px
+}
+
+.form-row label{
+  font-size:11px;
+  font-weight:850
+}
+
+.form-row input,
+.form-row textarea,
+.form-row select{
+  width:100%;
+  border:1px solid #d7e8df;
+  border-radius:10px;
+  padding:10px;
+  font:inherit;
+  font-size:12px;
+  color:#073b28;
+  background:#fff
+}
+
+/*
+  Approved liquidity is server-controlled.
+  The value is displayed for confirmation only.
+*/
+.form-row input[readonly]{
+  background:#f5faf7;
+  color:#49665a;
+  cursor:not-allowed
+}
+
+.form-help{
+  font-size:10px;
+  color:#60776d;
+  line-height:1.45
+}
+
+.dialog-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:16px
+}
+
+.dialog-actions button{
+  border:1px solid #d7e8df;
+  background:#fff;
+  color:#087a3e;
+  padding:9px 12px;
+  border-radius:10px;
+  font-weight:850
+}
+
+.dialog-actions .primary{
+  background:#087a3e;
+  color:#fff;
+  border-color:#087a3e
+}
+
+.engine-note{
+  margin-top:14px;
+  padding:11px 12px;
+  border:1px dashed #d7e8df;
+  border-radius:12px;
+  background:#fafdfb;
+  font-size:11px;
+  color:#60776d
+}
+
+.engine-note b{
+  color:#073b28
+}
+
+@media(max-width:760px){
+  .life-stats{
+    grid-template-columns:repeat(2,1fr)
+  }
+}
+
+@media(max-width:560px){
+  .checks{
+    grid-template-columns:1fr
+  }
+
+  .lifecycle-top{
+    flex-direction:column
+  }
+
+  .term-row{
+    flex-direction:column;
+    align-items:flex-start
+  }
+
+  .term-actions{
+    justify-content:flex-start
+  }
+}
 </style>
 </head>
+
 <body>
-<header class="topbar"><a class="brand" href="admin-dashboard.html"><img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR"><span><b>ALBUKHR</b><small>ADMINISTRATION</small></span></a><div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div></header>
+
+<header class="topbar">
+  <a class="brand" href="admin-dashboard.html">
+    <img
+      src="images/file_00000000064c7246ae2d8ac819ddf9fc.png"
+      alt="ALBUKHR"
+    >
+    <span>
+      <b>ALBUKHR</b>
+      <small>ADMINISTRATION</small>
+    </span>
+  </a>
+
+  <div class="actions">
+    <span>MAINNET</span>
+    <button id="logoutButton" type="button">Sign out</button>
+  </div>
+</header>
+
 <main>
-<nav class="back"><a href="admin-dashboard.html">← Admin Control Center</a></nav>
-<section class="hero"><div><small>CONTRIBUTOR INTERNAL GOVERNANCE</small><h1>Internal Project Lifecycle</h1><p>Server-authoritative readiness, treasury, contract governance and activation controls for Contributor-owned Internal Projects.</p></div><strong id="securityState">Verifying security...</strong></section>
+
+<nav class="back">
+  <a href="admin-dashboard.html">← Admin Control Center</a>
+</nav>
+
+<section class="hero">
+  <div>
+    <small>CONTRIBUTOR INTERNAL GOVERNANCE</small>
+    <h1>Internal Project Lifecycle</h1>
+    <p>
+      Server-authoritative readiness, treasury, contract governance and
+      activation controls for Contributor-owned Internal Projects.
+    </p>
+  </div>
+
+  <strong id="securityState">Verifying security...</strong>
+</section>
+
 <div id="pageStatus" class="status" aria-live="polite"></div>
-<section class="grid"><article class="card"><header>Lifecycle <em>MAINNET ONLY</em></header><h2>APPROVED → READY → ACTIVE</h2><p>Contributor identity, project integrity, treasury and published V2 investment-contract readiness are checked before activation.</p></article><article class="card"><header>Authority <em id="authorizationState">CHECKING</em></header><h2 id="authorizationTitle">Server-authoritative access</h2><p id="authorizationText">Required role: super_admin, approval_admin or finance_admin with AAL2.</p></article></section>
-<section class="workspace"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2 style="margin:0">Internal Projects</h2><p style="margin:7px 0 0;color:#60776d;font-size:12px">Loading this page never changes project status.</p></div><button id="refreshButton" type="button" style="border:1px solid #d7e8df;background:#fff;color:#087a3e;padding:9px 11px;border-radius:10px;font-weight:850">Refresh</button></div><div id="records" class="lifecycle-grid"></div><div id="engineNote" class="engine-note">Internal investment runtime: <b id="engineState">Checking...</b>. Activation remains server-gated until the dedicated Internal investment engine is deployed and marked ready.</div></section>
-<section class="notice"><b>Security boundary</b><span>Internal Project status and contract changes use dedicated SECURITY DEFINER controls. The browser never writes public.projects or project_staking_term_versions directly.</span></section>
+
+<section class="grid">
+
+  <article class="card">
+    <header>
+      Lifecycle
+      <em>MAINNET ONLY</em>
+    </header>
+
+    <h2>APPROVED → READY → ACTIVE</h2>
+
+    <p>
+      Contributor identity, project integrity, treasury and published V2
+      investment-contract readiness are checked before activation.
+    </p>
+  </article>
+
+  <article class="card">
+    <header>
+      Authority
+      <em id="authorizationState">CHECKING</em>
+    </header>
+
+    <h2 id="authorizationTitle">
+      Server-authoritative access
+    </h2>
+
+    <p id="authorizationText">
+      Required role: super_admin, approval_admin or finance_admin with AAL2.
+    </p>
+  </article>
+
+</section>
+
+<section class="workspace">
+
+  <div
+    style="
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center
+    "
+  >
+
+    <div>
+      <h2 style="margin:0">
+        Internal Projects
+      </h2>
+
+      <p
+        style="
+          margin:7px 0 0;
+          color:#60776d;
+          font-size:12px
+        "
+      >
+        Loading this page never changes project status.
+      </p>
+    </div>
+
+    <button
+      id="refreshButton"
+      type="button"
+      style="
+        border:1px solid #d7e8df;
+        background:#fff;
+        color:#087a3e;
+        padding:9px 11px;
+        border-radius:10px;
+        font-weight:850
+      "
+    >
+      Refresh
+    </button>
+
+  </div>
+
+  <div id="records" class="lifecycle-grid"></div>
+
+  <div class="engine-note">
+    Internal investment runtime:
+    <b id="engineState">Checking...</b>.
+    Activation remains server-gated until the dedicated Internal investment
+    engine is deployed and marked ready.
+  </div>
+
+</section>
+
+<section class="notice">
+  <b>Security boundary</b>
+  <span>
+    Internal Project status and contract changes use dedicated
+    SECURITY DEFINER controls. The browser never writes public.projects
+    or project_staking_term_versions directly.
+  </span>
+</section>
+
 </main>
-<div id="treasuryDialog" class="dialog-backdrop" hidden><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="treasuryTitle"><h2 id="treasuryTitle">Configure Internal Treasury</h2><p id="treasuryProjectText">Set the dedicated Mainnet treasury wallet and required liquidity.</p><div class="form-row"><label for="treasuryWallet">Treasury wallet</label><input id="treasuryWallet" type="text" autocomplete="off" placeholder="Pi wallet address"></div><div class="form-row"><label for="requiredLiquidity">Required liquidity (π)</label><input id="requiredLiquidity" type="number" min="0" step="0.000000001" inputmode="decimal" placeholder="0 if no reserve is required"></div><div class="form-row"><label for="treasuryReason">Reason</label><textarea id="treasuryReason" rows="3" maxlength="1000" placeholder="Reason for treasury configuration"></textarea></div><div class="dialog-actions"><button id="treasuryCancel" type="button">Cancel</button><button id="treasurySave" class="primary" type="button">Save Treasury</button></div></div></div>
-<div id="termDialog" class="dialog-backdrop" hidden><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="termTitle"><h2 id="termTitle">Create Internal Contract Term</h2><p id="termProjectText">Create a V2 term for the selected Internal Project.</p><div class="form-row"><label for="termKey">Term key</label><input id="termKey" type="text" maxlength="80" autocomplete="off" placeholder="D30"></div><div class="form-row"><label for="termDuration">Duration</label><select id="termDuration"><option value="30">30 days</option><option value="60">60 days</option><option value="90">90 days</option><option value="180">180 days</option><option value="365">365 days</option><option value="430">430 days</option></select></div><div class="form-row"><label for="termMin">Minimum stake (π)</label><input id="termMin" type="number" min="0.000000001" step="0.000000001" inputmode="decimal" placeholder="10"></div><div class="form-row"><label for="termMax">Maximum stake (π, optional)</label><input id="termMax" type="number" min="0" step="0.000000001" inputmode="decimal" placeholder="Leave empty for no explicit maximum"></div><div class="form-row"><label for="termReward">Reward rate (%)</label><input id="termReward" type="number" min="0" max="100" step="0.0001" inputmode="decimal" placeholder="5"></div><div class="form-help">The platform's official ALBUKHR transaction fee is separate from this project term and is not entered here.</div><div class="dialog-actions"><button id="termCancel" type="button">Cancel</button><button id="termSave" class="primary" type="button">Create Term</button></div></div></div>
-<div id="publishDialog" class="dialog-backdrop" hidden><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="publishTitle"><h2 id="publishTitle">Publish Internal Contract Term</h2><p id="publishTermText">Publish an APPROVED V2 term after the disclosure and consent versions are confirmed.</p><div class="form-row"><label for="disclosureVersion">Disclosure version</label><input id="disclosureVersion" type="text" maxlength="100" autocomplete="off" placeholder="v1.0"></div><div class="form-row"><label for="consentVersion">Consent version</label><input id="consentVersion" type="text" maxlength="100" autocomplete="off" placeholder="v1.0"></div><div class="form-row"><label for="effectiveFrom">Effective from</label><input id="effectiveFrom" type="datetime-local"></div><div class="form-row"><label for="publishReason">Reason</label><textarea id="publishReason" rows="3" maxlength="1000" placeholder="Reason for publication"></textarea></div><div class="dialog-actions"><button id="publishCancel" type="button">Cancel</button><button id="publishSave" class="primary" type="button">Publish Term</button></div></div></div>
+
+<!-- =========================================================
+     TREASURY DIALOG
+========================================================= -->
+
+<div
+  id="treasuryDialog"
+  class="dialog-backdrop"
+  hidden
+>
+  <div
+    class="dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="treasuryTitle"
+  >
+
+    <h2 id="treasuryTitle">
+      Configure Internal Treasury
+    </h2>
+
+    <p id="treasuryProjectText">
+      Set the dedicated Mainnet treasury wallet.
+      Required liquidity is read-only here and must match the
+      server-approved funding assessment.
+    </p>
+
+    <div class="form-row">
+
+      <label for="treasuryWallet">
+        Treasury wallet
+      </label>
+
+      <input
+        id="treasuryWallet"
+        type="text"
+        autocomplete="off"
+        placeholder="Pi wallet address"
+      >
+
+    </div>
+
+    <div class="form-row">
+
+      <label for="requiredLiquidity">
+        Approved required liquidity (π)
+      </label>
+
+      <input
+        id="requiredLiquidity"
+        type="number"
+        min="0"
+        step="0.000000001"
+        inputmode="decimal"
+        readonly
+        aria-readonly="true"
+      >
+
+      <div class="form-help">
+        Server-controlled value from the approved Internal funding
+        assessment. This page cannot choose or change the liquidity amount.
+      </div>
+
+    </div>
+
+    <div class="form-row">
+
+      <label for="treasuryReason">
+        Reason
+      </label>
+
+      <textarea
+        id="treasuryReason"
+        rows="3"
+        maxlength="1000"
+        placeholder="Reason for treasury configuration"
+      ></textarea>
+
+    </div>
+
+    <div class="dialog-actions">
+
+      <button
+        id="treasuryCancel"
+        type="button"
+      >
+        Cancel
+      </button>
+
+      <button
+        id="treasurySave"
+        class="primary"
+        type="button"
+      >
+        Save Treasury
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- =========================================================
+     INTERNAL CONTRACT TERM DIALOG
+========================================================= -->
+
+<div
+  id="termDialog"
+  class="dialog-backdrop"
+  hidden
+>
+  <div
+    class="dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="termTitle"
+  >
+
+    <h2 id="termTitle">
+      Create Internal Contract Term
+    </h2>
+
+    <p id="termProjectText">
+      Create a V2 term for the selected Internal Project.
+    </p>
+
+    <div class="form-row">
+
+      <label for="termKey">
+        Term key
+      </label>
+
+      <input
+        id="termKey"
+        type="text"
+        maxlength="80"
+        autocomplete="off"
+        placeholder="D30"
+      >
+
+    </div>
+
+    <div class="form-row">
+
+      <label for="termDuration">
+        Duration
+      </label>
+
+      <select id="termDuration">
+        <option value="30">30 days</option>
+        <option value="60">60 days</option>
+        <option value="90">90 days</option>
+        <option value="180">180 days</option>
+        <option value="365">365 days</option>
+        <option value="430">430 days</option>
+      </select>
+
+    </div>
+
+    <div class="form-row">
+
+      <label for="termMin">
+        Minimum stake (π)
+      </label>
+
+      <input
+        id="termMin"
+        type="number"
+        min="0.000000001"
+        step="0.000000001"
+        inputmode="decimal"
+        placeholder="10"
+      >
+
+    </div>
+
+    <div class="form-row">
+
+      <label for="termMax">
+        Maximum stake (π, optional)
+      </label>
+
+      <input
+        id="termMax"
+        type="number"
+        min="0"
+        step="0.000000001"
+        inputmode="decimal"
+        placeholder="Leave empty for no explicit maximum"
+      >
+
+    </div>
+
+    <div class="form-row">
+
+      <label for="termReward">
+        Reward rate (%)
+      </label>
+
+      <input
+        id="termReward"
+        type="number"
+        min="0"
+        max="100"
+        step="0.0001"
+        inputmode="decimal"
+        placeholder="5"
+      >
+
+    </div>
+
+    <div class="form-help">
+      The platform's official ALBUKHR transaction fee is separate from
+      this project term and is not entered here.
+    </div>
+
+    <div class="dialog-actions">
+
+      <button
+        id="termCancel"
+        type="button"
+      >
+        Cancel
+      </button>
+
+      <button
+        id="termSave"
+        class="primary"
+        type="button"
+      >
+        Create Term
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- =========================================================
+     PUBLISH CONTRACT TERM DIALOG
+========================================================= -->
+
+<div
+  id="publishDialog"
+  class="dialog-backdrop"
+  hidden
+>
+  <div
+    class="dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="publishTitle"
+  >
+
+    <h2 id="publishTitle">
+      Publish Internal Contract Term
+    </h2>
+
+    <p id="publishTermText">
+      Publish an APPROVED V2 term after the disclosure and consent
+      versions are confirmed.
+    </p>
+
+    <div class="form-row">
+
+      <label for="disclosureVersion">
+        Disclosure version
+      </label>
+
+      <input
+        id="disclosureVersion"
+        type="text"
+        maxlength="100"
+        autocomplete="off"
+        placeholder="v1.0"
+      >
+
+    </div>
+
+    <div class="form-row">
+
+      <label for="consentVersion">
+        Consent version
+      </label>
+
+      <input
+        id="consentVersion"
+        type="text"
+        maxlength="100"
+        autocomplete="off"
+        placeholder="v1.0"
+      >
+
+    </div>
+
+    <div class="form-row">
+
+      <label for="effectiveFrom">
+        Effective from
+      </label>
+
+      <input
+        id="effectiveFrom"
+        type="datetime-local"
+      >
+
+    </div>
+
+    <div class="form-row">
+
+      <label for="publishReason">
+        Reason
+      </label>
+
+      <textarea
+        id="publishReason"
+        rows="3"
+        maxlength="1000"
+        placeholder="Reason for publication"
+      ></textarea>
+
+    </div>
+
+    <div class="dialog-actions">
+
+      <button
+        id="publishCancel"
+        type="button"
+      >
+        Cancel
+      </button>
+
+      <button
+        id="publishSave"
+        class="primary"
+        type="button"
+      >
+        Publish Term
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
 <script>
 (function(window,document){
+
 "use strict";
-const RPC_WORKSPACE="get_internal_project_lifecycle_workspace";
-const RPC_TREASURY="configure_internal_project_treasury";
-const RPC_CREATE_TERM="create_internal_contract_term_v2";
-const RPC_APPROVE_TERM="approve_internal_contract_term_v2";
-const RPC_PUBLISH_TERM="publish_internal_contract_term_v2";
-const RPC_ACTIVATE="activate_internal_project";
-const $=id=>document.getElementById(id);
-let records=[];let selected=null;let selectedTerm=null;
-function setStatus(m,e){const el=$("pageStatus");if(!el)return;el.textContent=m||"";el.className="status"+(e?" error":"")}
-function esc(v){const m={"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"};return String(v==null?"":v).replace(/[&<>"']/g,c=>m[c]||c)}
-function auth(){if(!window.AlbukhrSupabaseAdminAuth)throw Error("ALBUKHR Admin Auth Core is unavailable.");return window.AlbukhrSupabaseAdminAuth}
-function client(){const c=window.ALBUKHR_SUPABASE;if(!c||!c.client)throw Error("ALBUKHR Supabase Core is unavailable.");if(String(c.environment||"").toLowerCase()!=="mainnet"||String(c.network||"").toLowerCase()!=="mainnet")throw Error("Internal Project lifecycle workspace requires MAINNET.");return c.client}
-async function rpc(n,p){const r=await client().schema("albukhr_security").rpc(n,p||{});if(r.error)throw r.error;return r.data}
-function badge(v){const s=String(v||"").toLowerCase();const cls=s==="active"?"ready":s==="approved"?"neutral":"blocked";return '<span class="badge '+cls+'">'+esc(s.toUpperCase()||"UNKNOWN")+'</span>'}
-function ready(v){return '<span class="badge '+(v?"ready":"blocked")+'">'+(v?"READY":"BLOCKED")+'</span>'}
-function fmtReward(v){return v==null?"—":(Number(v)*100).toFixed(4).replace(/0+$/,'').replace(/\.$/,'')+"%"}
-function renderTerm(t){const status=String(t.term_status||"").toLowerCase();let action="";if(status==="draft")action='<button type="button" data-term-action="approve" data-term-id="'+esc(t.term_version_id)+'">Approve</button>';if(status==="approved")action='<button type="button" class="primary" data-term-action="publish" data-term-id="'+esc(t.term_version_id)+'">Publish</button>';return '<div class="term-row"><div class="term-main"><b>'+esc(t.term_key||"—")+' · V'+esc(t.version_number||"—")+' · '+esc(t.duration_days||"—")+' days</b><span>'+esc(fmtReward(t.reward_rate))+' reward · min '+esc(t.min_stake)+' π'+(t.max_stake!=null?' · max '+esc(t.max_stake)+' π':'')+' · '+esc(status.toUpperCase())+'</span></div><div class="term-actions">'+action+'</div></div>'}
-function render(data,engine){records=Array.isArray(data)?data:[];$("engineState").textContent=String(engine?.status||"not_ready").toUpperCase()+(engine?.engine_version?" · "+engine.engine_version:"");const host=$("records");if(!records.length){host.innerHTML='<div class="notice"><b>No Contributor Internal Projects found.</b><span>The lifecycle workspace returned an empty Internal Project set.</span></div>';return}host.innerHTML=records.map(p=>{const contrib=!!p.contributor_ready,logo=!!p.logo_ready,treasury=!!p.treasury_ready,terms=!!p.staking_terms_ready,info=!!p.project_info_ready,activation=!!p.activation_ready,canTreasury=p.status==="approved"||p.status==="active";const termsHtml=Array.isArray(p.terms)?p.terms.map(renderTerm).join(""):"";return '<article class="lifecycle-card" data-id="'+esc(p.project_id)+'"><div class="lifecycle-top"><div class="lifecycle-heading"><small>CONTRIBUTOR INTERNAL · MAINNET</small><h2>'+esc(p.name)+'</h2><p>'+esc(p.project_code)+' · '+esc(p.internal_number||p.slug||"—")+'</p></div>'+badge(p.status)+'</div><div class="life-stats"><div class="life-stat"><span>Project status</span><b>'+esc(String(p.status||"").toUpperCase())+'</b></div><div class="life-stat"><span>Contributor</span><b>'+esc(String(p.contributor_status||"NOT FOUND").toUpperCase())+'</b></div><div class="life-stat"><span>Treasury</span><b>'+esc(p.treasury_status?String(p.treasury_status).toUpperCase():"NOT CONFIGURED")+'</b></div><div class="life-stat"><span>Published terms</span><b>'+esc(String(p.published_term_count||0))+'</b></div></div><div class="checks"><div class="check"><b>Contributor '+ready(contrib)+'</b><span>Active Contributor + claimed entitlement + completed profile.</span></div><div class="check"><b>Project info '+ready(info)+'</b><span>Description is present and non-empty.</span></div><div class="check"><b>Logo '+ready(logo)+'</b><span>Official logo metadata satisfies project logo requirements.</span></div><div class="check"><b>Treasury '+ready(treasury)+'</b><span>Dedicated Internal treasury is configured and active.</span></div><div class="check"><b>Investment contract '+ready(terms)+'</b><span>At least one published V2 contract term is effective for the exact project code.</span></div><div class="check"><b>Investment engine '+ready(!!p.investment_engine_ready)+'</b><span>Dedicated Internal investment runtime must be deployed and server-marked ready.</span></div><div class="check"><b>Activation '+ready(activation)+'</b><span>Server-authoritative Internal activation gate.</span></div></div><div class="actions-row">'+(canTreasury?'<button type="button" data-action="treasury">Configure Treasury</button>':"")+(canTreasury?'<button type="button" data-action="term">Create Term</button>':"")+(p.status==="approved"?'<button type="button" class="primary" data-action="activate" '+(activation?"":"disabled")+'>Activate Internal Project</button>':"")+(p.status==="active"?'<button type="button" disabled>Already ACTIVE</button>':"")+'</div><div class="terms"><div><b>Contract state:</b> '+esc(String(p.published_term_count||0))+' published / '+esc(String(p.approved_term_count||0))+' approved</div>'+termsHtml+'<div class="term-row"><div class="term-main"><b>Investment eligibility</b><span>Server result: '+esc(activation?"READY":"BLOCKED")+'</span></div></div></div></article>'}).join("");host.querySelectorAll('[data-action="treasury"]').forEach(b=>b.addEventListener("click",()=>{selected=records.find(p=>p.project_id===b.closest(".lifecycle-card")?.dataset.id)||null;if(selected)openTreasury(selected)}));host.querySelectorAll('[data-action="term"]').forEach(b=>b.addEventListener("click",()=>{selected=records.find(p=>p.project_id===b.closest(".lifecycle-card")?.dataset.id)||null;if(selected)openTerm(selected)}));host.querySelectorAll('[data-action="activate"]').forEach(b=>b.addEventListener("click",()=>{const p=records.find(x=>x.project_id===b.closest(".lifecycle-card")?.dataset.id);if(p)activate(p,b)}));host.querySelectorAll('[data-term-action="approve"]').forEach(b=>b.addEventListener("click",()=>{const p=records.find(x=>x.project_id===b.closest(".lifecycle-card")?.dataset.id);const t=p?.terms?.find(x=>x.term_version_id===b.dataset.termId);if(t)approveTerm(t,b)}));host.querySelectorAll('[data-term-action="publish"]').forEach(b=>b.addEventListener("click",()=>{const p=records.find(x=>x.project_id===b.closest(".lifecycle-card")?.dataset.id);const t=p?.terms?.find(x=>x.term_version_id===b.dataset.termId);if(t)openPublish(t,p)}))}
-function openTreasury(p){$("treasuryProjectText").textContent="Configure the Mainnet treasury for "+p.name+" ("+p.project_code+").";$("treasuryWallet").value=p.treasury_wallet||"";$("requiredLiquidity").value=p.required_liquidity??"";$("treasuryReason").value="";$("treasuryDialog").hidden=false;$("treasuryWallet").focus()}
-function closeTreasury(){$("treasuryDialog").hidden=true;selected=null}
-async function saveTreasury(){if(!selected)return;const wallet=$("treasuryWallet").value.trim(),required=Number($("requiredLiquidity").value),reason=$("treasuryReason").value.trim();if(wallet.length<10)return setStatus("Treasury wallet is required.",true);if(!(required>=0))return setStatus("Required liquidity cannot be negative.",true);const b=$("treasurySave");b.disabled=true;setStatus("Submitting Internal treasury configuration to the server...");try{const r=await rpc(RPC_TREASURY,{p_project_id:selected.project_id,p_treasury_wallet:wallet,p_required_liquidity:required,p_reason:reason||null});if(!r?.success)throw Error(r?.message||"Server did not confirm treasury configuration.");const code=selected.project_code;closeTreasury();setStatus("Internal treasury configured for "+code+".");await load()}catch(e){console.error(e);setStatus(e?.message||"Internal treasury configuration failed.",true)}finally{b.disabled=false}}
-function openTerm(p){selected=p;$("termProjectText").textContent="Create a V2 Internal contract term for "+p.name+" ("+p.project_code+").";$("termKey").value="";$("termDuration").value="30";$("termMin").value="";$("termMax").value="";$("termReward").value="";$("termDialog").hidden=false;$("termKey").focus()}
-function closeTerm(){$("termDialog").hidden=true;selected=null}
-async function saveTerm(){if(!selected)return;const key=$("termKey").value.trim(),duration=Number($("termDuration").value),min=Number($("termMin").value),maxRaw=$("termMax").value.trim(),max=maxRaw===""?null:Number(maxRaw),reward=Number($("termReward").value);if(!key)return setStatus("Term key is required.",true);if(!(min>0))return setStatus("Minimum stake must be positive.",true);if(max!==null&&!(max>=min))return setStatus("Maximum stake cannot be below minimum stake.",true);if(!(reward>=0&&reward<=100))return setStatus("Reward rate must be between 0% and 100%.",true);const b=$("termSave");b.disabled=true;setStatus("Creating Internal contract term draft on the server...");try{const r=await rpc(RPC_CREATE_TERM,{p_project_id:selected.project_id,p_term_key:key,p_duration_days:duration,p_min_stake:min,p_max_stake:max,p_reward_rate:reward/100});if(!r?.success)throw Error(r?.message||"Server did not confirm term creation.");const code=selected.project_code;closeTerm();setStatus("Contract term draft created for "+code+".");await load()}catch(e){console.error(e);setStatus(e?.message||"Internal contract term creation failed.",true)}finally{b.disabled=false}}
-async function approveTerm(t,b){const reason=prompt("Approval reason (optional):","");if(reason===null)return;b.disabled=true;setStatus("Approving Internal contract term on the server...");try{const r=await rpc(RPC_APPROVE_TERM,{p_term_version_id:t.term_version_id,p_reason:reason.trim()||null});if(!r?.success)throw Error(r?.message||"Server did not confirm term approval.");setStatus(t.term_key+" V"+t.version_number+" is now APPROVED.");await load()}catch(e){console.error(e);setStatus(e?.message||"Internal contract approval failed.",true);b.disabled=false}}
-function openPublish(t,p){selectedTerm=t;selected=p;$("publishTermText").textContent="Publish "+t.term_key+" V"+t.version_number+" for "+p.name+" ("+p.project_code+").";$("disclosureVersion").value="";$("consentVersion").value="";const d=new Date(Date.now()+60000);d.setSeconds(0,0);$("effectiveFrom").value=d.toISOString().slice(0,16);$("publishReason").value="";$("publishDialog").hidden=false;$("disclosureVersion").focus()}
-function closePublish(){$("publishDialog").hidden=true;selected=null;selectedTerm=null}
-async function savePublish(){if(!selectedTerm)return;const disclosure=$("disclosureVersion").value.trim(),consent=$("consentVersion").value.trim(),effective=$("effectiveFrom").value,reason=$("publishReason").value.trim();if(!disclosure)return setStatus("Disclosure version is required.",true);if(!consent)return setStatus("Consent version is required.",true);if(!effective)return setStatus("Effective time is required.",true);const when=new Date(effective);if(Number.isNaN(when.getTime()))return setStatus("Effective time is invalid.",true);const b=$("publishSave");b.disabled=true;setStatus("Publishing Internal contract term on the server...");try{const r=await rpc(RPC_PUBLISH_TERM,{p_term_version_id:selectedTerm.term_version_id,p_disclosure_version:disclosure,p_consent_version:consent,p_effective_from:when.toISOString(),p_reason:reason||null});if(!r?.success)throw Error(r?.message||"Server did not confirm term publication.");setStatus(selectedTerm.term_key+" V"+selectedTerm.version_number+" is now PUBLISHED.");closePublish();await load()}catch(e){console.error(e);setStatus(e?.message||"Internal contract publication failed.",true);b.disabled=false}}
-async function activate(p,b){if(!p.activation_ready)return setStatus("Activation is blocked by the server-side readiness gate.",true);if(!confirm("Activate "+p.name+" ("+p.project_code+") as ACTIVE on Mainnet?"))return;const reason=prompt("Activation reason (optional):","Internal Project readiness requirements verified.");if(reason===null)return;b.disabled=true;setStatus("Submitting Internal Project activation to the server...");try{const r=await rpc(RPC_ACTIVATE,{p_project_id:p.project_id,p_reason:reason.trim()||null});if(!r?.success)throw Error(r?.message||"Server did not confirm activation.");setStatus(p.project_code+" is now ACTIVE.");await load()}catch(e){console.error(e);setStatus(e?.message||"Internal Project activation failed.",true);b.disabled=false}}
-async function load(){const r=await rpc(RPC_WORKSPACE);if(!r?.authorized)throw Error(r?.message||"Internal Project lifecycle authorization denied.");render(r.records,r.investment_engine)}
-async function init(){try{const e=window.AlbukhrEnvironment;if(!e?.isKnown?.()||!e.isMainnet?.())throw Error("Internal Project lifecycle workspace requires known MAINNET.");const a=auth();await a.init();const admin=await a.requireAdmin({redirect:false,preserveSessionOnContextError:true});if(!admin){location.replace("admin-login.html");return}const m=await a.ensureMfa();if(admin.mfa_required&&!m.verified){location.replace("admin-mfa.html");return}const roles=Array.isArray(admin.roles)?admin.roles:[];const ok=roles.some(r=>["super_admin","approval_admin","finance_admin"].includes(r));if(!ok){$("authorizationState").textContent="DENIED";$("securityState").textContent="Authenticated";setStatus("Your administrator role does not include Internal Project lifecycle access.",true);return}$("authorizationState").textContent="AUTHORIZED";$("securityState").textContent="Authenticated • AAL2";$("authorizationTitle").textContent="Internal lifecycle access granted";$("authorizationText").textContent="Accepted roles: super_admin / approval_admin / finance_admin";await load();setStatus("Internal Project lifecycle workspace ready.")}catch(e){console.error(e);setStatus(e?.message||"Unable to load Internal Project lifecycle workspace.",true)}}
-$("refreshButton")?.addEventListener("click",async()=>{try{$("refreshButton").disabled=true;setStatus("Refreshing Internal lifecycle workspace...");await load();setStatus("Internal lifecycle workspace refreshed.")}catch(e){setStatus(e?.message||"Refresh failed.",true)}finally{$("refreshButton").disabled=false}});
-$("treasuryCancel")?.addEventListener("click",closeTreasury);$("treasurySave")?.addEventListener("click",saveTreasury);
-$("termCancel")?.addEventListener("click",closeTerm);$("termSave")?.addEventListener("click",saveTerm);
-$("publishCancel")?.addEventListener("click",closePublish);$("publishSave")?.addEventListener("click",savePublish);
-$("treasuryDialog")?.addEventListener("click",e=>{if(e.target===$("treasuryDialog"))closeTreasury()});$("termDialog")?.addEventListener("click",e=>{if(e.target===$("termDialog"))closeTerm()});$("publishDialog")?.addEventListener("click",e=>{if(e.target===$("publishDialog"))closePublish()});
-$("logoutButton")?.addEventListener("click",async()=>{$("logoutButton").disabled=true;try{await auth().signOut()}finally{location.replace("admin-login.html")} });
-document.addEventListener("DOMContentLoaded",init);
+
+/* =========================================================
+   RPC CONTRACT
+========================================================= */
+
+const RPC_WORKSPACE =
+  "get_internal_project_lifecycle_workspace";
+
+const RPC_TREASURY =
+  "configure_internal_project_treasury";
+
+const RPC_CREATE_TERM =
+  "create_internal_contract_term_v2";
+
+const RPC_APPROVE_TERM =
+  "approve_internal_contract_term_v2";
+
+const RPC_PUBLISH_TERM =
+  "publish_internal_contract_term_v2";
+
+const RPC_ACTIVATE =
+  "activate_internal_project";
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+const $ = id => document.getElementById(id);
+
+let records = [];
+let selected = null;
+let selectedTerm = null;
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function setStatus(message,error){
+
+  const el = $("pageStatus");
+
+  if(!el) return;
+
+  el.textContent = message || "";
+
+  el.className =
+    "status" +
+    (error ? " error" : "");
+
+}
+
+
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
+
+function esc(value){
+
+  const map = {
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    "\"":"&quot;",
+    "'":"&#39;"
+  };
+
+  return String(
+    value == null ? "" : value
+  ).replace(
+    /[&<>"']/g,
+    char => map[char] || char
+  );
+
+}
+
+
+/* =========================================================
+   ADMIN AUTH CORE
+========================================================= */
+
+function auth(){
+
+  if(!window.AlbukhrSupabaseAdminAuth){
+
+    throw Error(
+      "ALBUKHR Admin Auth Core is unavailable."
+    );
+
+  }
+
+  return window.AlbukhrSupabaseAdminAuth;
+
+}
+
+
+/* =========================================================
+   SUPABASE CORE
+========================================================= */
+
+function client(){
+
+  const c =
+    window.ALBUKHR_SUPABASE;
+
+  if(!c || !c.client){
+
+    throw Error(
+      "ALBUKHR Supabase Core is unavailable."
+    );
+
+  }
+
+  if(
+    String(c.environment || "").toLowerCase() !== "mainnet" ||
+    String(c.network || "").toLowerCase() !== "mainnet"
+  ){
+
+    throw Error(
+      "Internal Project lifecycle workspace requires MAINNET."
+    );
+
+  }
+
+  return c.client;
+
+}
+
+
+/* =========================================================
+   RPC WRAPPER
+========================================================= */
+
+async function rpc(name,params){
+
+  const result =
+    await client()
+      .schema("albukhr_security")
+      .rpc(name,params || {});
+
+  if(result.error){
+
+    throw result.error;
+
+  }
+
+  return result.data;
+
+}
+
+
+/* =========================================================
+   STATUS BADGE
+========================================================= */
+
+function badge(value){
+
+  const status =
+    String(value || "")
+      .toLowerCase();
+
+  const cls =
+    status === "active"
+      ? "ready"
+      : status === "approved"
+        ? "neutral"
+        : "blocked";
+
+  return `
+    <span class="badge ${cls}">
+      ${esc(status.toUpperCase() || "UNKNOWN")}
+    </span>
+  `;
+
+}
+
+
+/* =========================================================
+   READY BADGE
+========================================================= */
+
+function ready(value){
+
+  return `
+    <span class="badge ${value ? "ready" : "blocked"}">
+      ${value ? "READY" : "BLOCKED"}
+    </span>
+  `;
+
+}
+
+
+/* =========================================================
+   REWARD FORMAT
+========================================================= */
+
+function fmtReward(value){
+
+  if(value == null){
+
+    return "—";
+
+  }
+
+  return (
+    Number(value) * 100
+  )
+    .toFixed(4)
+    .replace(/0+$/,"")
+    .replace(/\.$/,"") +
+    "%";
+
+}
+
+
+/* =========================================================
+   RENDER CONTRACT TERM
+========================================================= */
+
+function renderTerm(term){
+
+  const status =
+    String(term.term_status || "")
+      .toLowerCase();
+
+  let action = "";
+
+  if(status === "draft"){
+
+    action = `
+      <button
+        type="button"
+        data-term-action="approve"
+        data-term-id="${esc(term.term_version_id)}"
+      >
+        Approve
+      </button>
+    `;
+
+  }
+
+  if(status === "approved"){
+
+    action = `
+      <button
+        type="button"
+        class="primary"
+        data-term-action="publish"
+        data-term-id="${esc(term.term_version_id)}"
+      >
+        Publish
+      </button>
+    `;
+
+  }
+
+  return `
+    <div class="term-row">
+
+      <div class="term-main">
+
+        <b>
+          ${esc(term.term_key || "—")}
+          · V${esc(term.version_number || "—")}
+          · ${esc(term.duration_days || "—")} days
+        </b>
+
+        <span>
+          ${esc(fmtReward(term.reward_rate))}
+          reward · min ${esc(term.min_stake)} π
+          ${
+            term.max_stake != null
+              ? " · max " + esc(term.max_stake) + " π"
+              : ""
+          }
+          · ${esc(status.toUpperCase())}
+        </span>
+
+      </div>
+
+      <div class="term-actions">
+        ${action}
+      </div>
+
+    </div>
+  `;
+
+}
+
+
+/* =========================================================
+   RENDER WORKSPACE
+========================================================= */
+
+function render(data,engine){
+
+  records =
+    Array.isArray(data)
+      ? data
+      : [];
+
+  $("engineState").textContent =
+    String(
+      engine?.status || "not_ready"
+    ).toUpperCase() +
+    (
+      engine?.engine_version
+        ? " · " + engine.engine_version
+        : ""
+    );
+
+  const host =
+    $("records");
+
+  if(!records.length){
+
+    host.innerHTML = `
+      <div class="notice">
+        <b>
+          No Contributor Internal Projects found.
+        </b>
+
+        <span>
+          The lifecycle workspace returned an empty
+          Internal Project set.
+        </span>
+      </div>
+    `;
+
+    return;
+
+  }
+
+  host.innerHTML =
+    records.map(project => {
+
+      const contributor =
+        !!project.contributor_ready;
+
+      const logo =
+        !!project.logo_ready;
+
+      const treasury =
+        !!project.treasury_ready;
+
+      const terms =
+        !!project.staking_terms_ready;
+
+      const info =
+        !!project.project_info_ready;
+
+      const activation =
+        !!project.activation_ready;
+
+      const canTreasury =
+        project.status === "approved" ||
+        project.status === "active";
+
+      const termsHtml =
+        Array.isArray(project.terms)
+          ? project.terms
+              .map(renderTerm)
+              .join("")
+          : "";
+
+      return `
+        <article
+          class="lifecycle-card"
+          data-id="${esc(project.project_id)}"
+        >
+
+          <div class="lifecycle-top">
+
+            <div class="lifecycle-heading">
+
+              <small>
+                CONTRIBUTOR INTERNAL · MAINNET
+              </small>
+
+              <h2>
+                ${esc(project.name)}
+              </h2>
+
+              <p>
+                ${esc(project.project_code)}
+                ·
+                ${esc(
+                  project.internal_number ||
+                  project.slug ||
+                  "—"
+                )}
+              </p>
+
+            </div>
+
+            ${badge(project.status)}
+
+          </div>
+
+
+          <div class="life-stats">
+
+            <div class="life-stat">
+              <span>Project status</span>
+              <b>
+                ${esc(
+                  String(
+                    project.status || ""
+                  ).toUpperCase()
+                )}
+              </b>
+            </div>
+
+            <div class="life-stat">
+              <span>Contributor</span>
+              <b>
+                ${esc(
+                  String(
+                    project.contributor_status ||
+                    "NOT FOUND"
+                  ).toUpperCase()
+                )}
+              </b>
+            </div>
+
+            <div class="life-stat">
+              <span>Treasury</span>
+              <b>
+                ${esc(
+                  project.treasury_status
+                    ? String(
+                        project.treasury_status
+                      ).toUpperCase()
+                    : "NOT CONFIGURED"
+                )}
+              </b>
+            </div>
+
+            <div class="life-stat">
+              <span>Published terms</span>
+              <b>
+                ${esc(
+                  String(
+                    project.published_term_count || 0
+                  )
+                )}
+              </b>
+            </div>
+
+          </div>
+
+
+          <div class="checks">
+
+            <div class="check">
+              <b>
+                Contributor ${ready(contributor)}
+              </b>
+              <span>
+                Active Contributor + claimed entitlement +
+                completed profile.
+              </span>
+            </div>
+
+            <div class="check">
+              <b>
+                Project info ${ready(info)}
+              </b>
+              <span>
+                Description is present and non-empty.
+              </span>
+            </div>
+
+            <div class="check">
+              <b>
+                Logo ${ready(logo)}
+              </b>
+              <span>
+                Official logo metadata satisfies project
+                logo requirements.
+              </span>
+            </div>
+
+            <div class="check">
+              <b>
+                Treasury ${ready(treasury)}
+              </b>
+              <span>
+                Dedicated Internal treasury is configured
+                and active.
+              </span>
+            </div>
+
+            <div class="check">
+              <b>
+                Investment contract ${ready(terms)}
+              </b>
+              <span>
+                At least one published V2 contract term is
+                effective for the exact project code.
+              </span>
+            </div>
+
+            <div class="check">
+              <b>
+                Investment engine
+                ${ready(!!project.investment_engine_ready)}
+              </b>
+              <span>
+                Dedicated Internal investment runtime must
+                be deployed and server-marked ready.
+              </span>
+            </div>
+
+            <div class="check">
+              <b>
+                Activation ${ready(activation)}
+              </b>
+              <span>
+                Server-authoritative Internal activation gate.
+              </span>
+            </div>
+
+          </div>
+
+
+          <div class="actions-row">
+
+            ${
+              canTreasury
+                ? `
+                  <button
+                    type="button"
+                    data-action="treasury"
+                  >
+                    Configure Treasury
+                  </button>
+                `
+                : ""
+            }
+
+            ${
+              canTreasury
+                ? `
+                  <button
+                    type="button"
+                    data-action="term"
+                  >
+                    Create Term
+                  </button>
+                `
+                : ""
+            }
+
+            ${
+              project.status === "approved"
+                ? `
+                  <button
+                    type="button"
+                    class="primary"
+                    data-action="activate"
+                    ${activation ? "" : "disabled"}
+                  >
+                    Activate Internal Project
+                  </button>
+                `
+                : ""
+            }
+
+            ${
+              project.status === "active"
+                ? `
+                  <button
+                    type="button"
+                    disabled
+                  >
+                    Already ACTIVE
+                  </button>
+                `
+                : ""
+            }
+
+          </div>
+
+
+          <div class="terms">
+
+            <div>
+              <b>Contract state:</b>
+              ${esc(
+                String(
+                  project.published_term_count || 0
+                )
+              )}
+              published /
+              ${esc(
+                String(
+                  project.approved_term_count || 0
+                )
+              )}
+              approved
+            </div>
+
+            ${termsHtml}
+
+            <div class="term-row">
+
+              <div class="term-main">
+
+                <b>
+                  Investment eligibility
+                </b>
+
+                <span>
+                  Server result:
+                  ${esc(
+                    activation
+                      ? "READY"
+                      : "BLOCKED"
+                  )}
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </article>
+      `;
+
+    }).join("");
+
+
+  /* =======================================================
+     TREASURY ACTIONS
+  ======================================================= */
+
+  host
+    .querySelectorAll(
+      '[data-action="treasury"]'
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          selected =
+            records.find(
+              project =>
+                project.project_id ===
+                button.closest(
+                  ".lifecycle-card"
+                )?.dataset.id
+            ) || null;
+
+          if(selected){
+
+            openTreasury(selected);
+
+          }
+
+        }
+      );
+
+    });
+
+
+  /* =======================================================
+     TERM ACTIONS
+  ======================================================= */
+
+  host
+    .querySelectorAll(
+      '[data-action="term"]'
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          selected =
+            records.find(
+              project =>
+                project.project_id ===
+                button.closest(
+                  ".lifecycle-card"
+                )?.dataset.id
+            ) || null;
+
+          if(selected){
+
+            openTerm(selected);
+
+          }
+
+        }
+      );
+
+    });
+
+
+  /* =======================================================
+     ACTIVATION ACTION
+  ======================================================= */
+
+  host
+    .querySelectorAll(
+      '[data-action="activate"]'
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const project =
+            records.find(
+              item =>
+                item.project_id ===
+                button.closest(
+                  ".lifecycle-card"
+                )?.dataset.id
+            );
+
+          if(project){
+
+            activate(
+              project,
+              button
+            );
+
+          }
+
+        }
+      );
+
+    });
+
+
+  /* =======================================================
+     APPROVE TERM
+  ======================================================= */
+
+  host
+    .querySelectorAll(
+      '[data-term-action="approve"]'
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const project =
+            records.find(
+              item =>
+                item.project_id ===
+                button.closest(
+                  ".lifecycle-card"
+                )?.dataset.id
+            );
+
+          const term =
+            project?.terms?.find(
+              item =>
+                item.term_version_id ===
+                button.dataset.termId
+            );
+
+          if(term){
+
+            approveTerm(
+              term,
+              button
+            );
+
+          }
+
+        }
+      );
+
+    });
+
+
+  /* =======================================================
+     PUBLISH TERM
+  ======================================================= */
+
+  host
+    .querySelectorAll(
+      '[data-term-action="publish"]'
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const project =
+            records.find(
+              item =>
+                item.project_id ===
+                button.closest(
+                  ".lifecycle-card"
+                )?.dataset.id
+            );
+
+          const term =
+            project?.terms?.find(
+              item =>
+                item.term_version_id ===
+                button.dataset.termId
+            );
+
+          if(term){
+
+            openPublish(
+              term,
+              project
+            );
+
+          }
+
+        }
+      );
+
+    });
+
+}
+
+
+/* =========================================================
+   TREASURY OPEN
+   IMPORTANT:
+   Required liquidity is server-controlled.
+========================================================= */
+
+function openTreasury(project){
+
+  $("treasuryProjectText").textContent =
+    "Configure the Mainnet treasury for " +
+    project.name +
+    " (" +
+    project.project_code +
+    "). Required liquidity is server-controlled.";
+
+  $("treasuryWallet").value =
+    project.treasury_wallet || "";
+
+  /*
+    Display only the value returned by the server workspace.
+    The field itself is readonly, while the server remains
+    authoritative during configure_internal_project_treasury.
+  */
+  $("requiredLiquidity").value =
+    project.required_liquidity ?? "";
+
+  $("treasuryReason").value = "";
+
+  $("treasuryDialog").hidden = false;
+
+  $("treasuryWallet").focus();
+
+}
+
+
+/* =========================================================
+   TREASURY CLOSE
+========================================================= */
+
+function closeTreasury(){
+
+  $("treasuryDialog").hidden = true;
+
+  selected = null;
+
+}
+
+
+/* =========================================================
+   TREASURY SAVE
+   IMPORTANT:
+   Keep server-side exact-match enforcement.
+========================================================= */
+
+async function saveTreasury(){
+
+  if(!selected){
+
+    return;
+
+  }
+
+  const wallet =
+    $("treasuryWallet")
+      .value
+      .trim();
+
+  const required =
+    Number(
+      $("requiredLiquidity").value
+    );
+
+  const reason =
+    $("treasuryReason")
+      .value
+      .trim();
+
+
+  if(wallet.length < 10){
+
+    return setStatus(
+      "Treasury wallet is required.",
+      true
+    );
+
+  }
+
+
+  if(!(required >= 0)){
+
+    return setStatus(
+      "Required liquidity cannot be negative.",
+      true
+    );
+
+  }
+
+
+  const button =
+    $("treasurySave");
+
+  button.disabled = true;
+
+  setStatus(
+    "Submitting Internal treasury configuration to the server..."
+  );
+
+
+  try{
+
+    /*
+      DO NOT replace this RPC with a direct table write.
+
+      The server validates:
+      - project
+      - Mainnet
+      - Internal project type
+      - approved funding assessment
+      - exact approved liquidity
+      - treasury binding
+    */
+
+    const result =
+      await rpc(
+        RPC_TREASURY,
+        {
+          p_project_id:
+            selected.project_id,
+
+          p_treasury_wallet:
+            wallet,
+
+          p_required_liquidity:
+            required,
+
+          p_reason:
+            reason || null
+        }
+      );
+
+
+    if(!result?.success){
+
+      throw Error(
+        result?.message ||
+        "Server did not confirm treasury configuration."
+      );
+
+    }
+
+
+    const code =
+      selected.project_code;
+
+    closeTreasury();
+
+    setStatus(
+      "Internal treasury configured for " +
+      code +
+      "."
+    );
+
+    await load();
+
+  }catch(error){
+
+    console.error(
+      "[ALBUKHR INTERNAL TREASURY]",
+      error
+    );
+
+    setStatus(
+      error?.message ||
+      "Internal treasury configuration failed.",
+      true
+    );
+
+  }finally{
+
+    button.disabled = false;
+
+  }
+
+}
+
+
+/* =========================================================
+   TERM OPEN
+========================================================= */
+
+function openTerm(project){
+
+  selected = project;
+
+  $("termProjectText").textContent =
+    "Create a V2 Internal contract term for " +
+    project.name +
+    " (" +
+    project.project_code +
+    ").";
+
+  $("termKey").value = "";
+
+  $("termDuration").value = "30";
+
+  $("termMin").value = "";
+
+  $("termMax").value = "";
+
+  $("termReward").value = "";
+
+  $("termDialog").hidden = false;
+
+  $("termKey").focus();
+
+}
+
+
+/* =========================================================
+   TERM CLOSE
+========================================================= */
+
+function closeTerm(){
+
+  $("termDialog").hidden = true;
+
+  selected = null;
+
+}
+
+
+/* =========================================================
+   TERM SAVE
+========================================================= */
+
+async function saveTerm(){
+
+  if(!selected){
+
+    return;
+
+  }
+
+  const key =
+    $("termKey")
+      .value
+      .trim();
+
+  const duration =
+    Number(
+      $("termDuration").value
+    );
+
+  const min =
+    Number(
+      $("termMin").value
+    );
+
+  const maxRaw =
+    $("termMax")
+      .value
+      .trim();
+
+  const max =
+    maxRaw === ""
+      ? null
+      : Number(maxRaw);
+
+  const reward =
+    Number(
+      $("termReward").value
+    );
+
+
+  if(!key){
+
+    return setStatus(
+      "Term key is required.",
+      true
+    );
+
+  }
+
+
+  if(!(min > 0)){
+
+    return setStatus(
+      "Minimum stake must be positive.",
+      true
+    );
+
+  }
+
+
+  if(
+    max !== null &&
+    !(max >= min)
+  ){
+
+    return setStatus(
+      "Maximum stake cannot be below minimum stake.",
+      true
+    );
+
+  }
+
+
+  if(
+    !(reward >= 0 && reward <= 100)
+  ){
+
+    return setStatus(
+      "Reward rate must be between 0% and 100%.",
+      true
+    );
+
+  }
+
+
+  const button =
+    $("termSave");
+
+  button.disabled = true;
+
+  setStatus(
+    "Creating Internal contract term draft on the server..."
+  );
+
+
+  try{
+
+    const result =
+      await rpc(
+        RPC_CREATE_TERM,
+        {
+          p_project_id:
+            selected.project_id,
+
+          p_term_key:
+            key,
+
+          p_duration_days:
+            duration,
+
+          p_min_stake:
+            min,
+
+          p_max_stake:
+            max,
+
+          p_reward_rate:
+            reward / 100
+        }
+      );
+
+
+    if(!result?.success){
+
+      throw Error(
+        result?.message ||
+        "Server did not confirm term creation."
+      );
+
+    }
+
+
+    const code =
+      selected.project_code;
+
+    closeTerm();
+
+    setStatus(
+      "Contract term draft created for " +
+      code +
+      "."
+    );
+
+    await load();
+
+  }catch(error){
+
+    console.error(
+      "[ALBUKHR INTERNAL CONTRACT TERM]",
+      error
+    );
+
+    setStatus(
+      error?.message ||
+      "Internal contract term creation failed.",
+      true
+    );
+
+  }finally{
+
+    button.disabled = false;
+
+  }
+
+}
+
+
+/* =========================================================
+   APPROVE TERM
+========================================================= */
+
+async function approveTerm(term,button){
+
+  const reason =
+    prompt(
+      "Approval reason (optional):",
+      ""
+    );
+
+  if(reason === null){
+
+    return;
+
+  }
+
+  button.disabled = true;
+
+  setStatus(
+    "Approving Internal contract term on the server..."
+  );
+
+
+  try{
+
+    const result =
+      await rpc(
+        RPC_APPROVE_TERM,
+        {
+          p_term_version_id:
+            term.term_version_id,
+
+          p_reason:
+            reason.trim() || null
+        }
+      );
+
+
+    if(!result?.success){
+
+      throw Error(
+        result?.message ||
+        "Server did not confirm term approval."
+      );
+
+    }
+
+
+    setStatus(
+      term.term_key +
+      " V" +
+      term.version_number +
+      " is now APPROVED."
+    );
+
+    await load();
+
+  }catch(error){
+
+    console.error(
+      "[ALBUKHR INTERNAL CONTRACT APPROVAL]",
+      error
+    );
+
+    setStatus(
+      error?.message ||
+      "Internal contract approval failed.",
+      true
+    );
+
+    button.disabled = false;
+
+  }
+
+}
+
+
+/* =========================================================
+   PUBLISH TERM OPEN
+========================================================= */
+
+function openPublish(term,project){
+
+  selectedTerm = term;
+
+  selected = project;
+
+  $("publishTermText").textContent =
+    "Publish " +
+    term.term_key +
+    " V" +
+    term.version_number +
+    " for " +
+    project.name +
+    " (" +
+    project.project_code +
+    ").";
+
+  $("disclosureVersion").value = "";
+
+  $("consentVersion").value = "";
+
+  const effective =
+    new Date(
+      Date.now() + 60000
+    );
+
+  effective.setSeconds(
+    0,
+    0
+  );
+
+  $("effectiveFrom").value =
+    effective
+      .toISOString()
+      .slice(0,16);
+
+  $("publishReason").value = "";
+
+  $("publishDialog").hidden = false;
+
+  $("disclosureVersion").focus();
+
+}
+
+
+/* =========================================================
+   PUBLISH CLOSE
+========================================================= */
+
+function closePublish(){
+
+  $("publishDialog").hidden = true;
+
+  selected = null;
+
+  selectedTerm = null;
+
+}
+
+
+/* =========================================================
+   PUBLISH TERM
+========================================================= */
+
+async function savePublish(){
+
+  if(!selectedTerm){
+
+    return;
+
+  }
+
+  const disclosure =
+    $("disclosureVersion")
+      .value
+      .trim();
+
+  const consent =
+    $("consentVersion")
+      .value
+      .trim();
+
+  const effective =
+    $("effectiveFrom")
+      .value;
+
+  const reason =
+    $("publishReason")
+      .value
+      .trim();
+
+
+  if(!disclosure){
+
+    return setStatus(
+      "Disclosure version is required.",
+      true
+    );
+
+  }
+
+
+  if(!consent){
+
+    return setStatus(
+      "Consent version is required.",
+      true
+    );
+
+  }
+
+
+  if(!effective){
+
+    return setStatus(
+      "Effective time is required.",
+      true
+    );
+
+  }
+
+
+  const when =
+    new Date(effective);
+
+  if(Number.isNaN(when.getTime())){
+
+    return setStatus(
+      "Effective time is invalid.",
+      true
+    );
+
+  }
+
+
+  const button =
+    $("publishSave");
+
+  button.disabled = true;
+
+  setStatus(
+    "Publishing Internal contract term on the server..."
+  );
+
+
+  try{
+
+    const result =
+      await rpc(
+        RPC_PUBLISH_TERM,
+        {
+          p_term_version_id:
+            selectedTerm.term_version_id,
+
+          p_disclosure_version:
+            disclosure,
+
+          p_consent_version:
+            consent,
+
+          p_effective_from:
+            when.toISOString(),
+
+          p_reason:
+            reason || null
+        }
+      );
+
+
+    if(!result?.success){
+
+      throw Error(
+        result?.message ||
+        "Server did not confirm term publication."
+      );
+
+    }
+
+
+    setStatus(
+      selectedTerm.term_key +
+      " V" +
+      selectedTerm.version_number +
+      " is now PUBLISHED."
+    );
+
+    closePublish();
+
+    await load();
+
+  }catch(error){
+
+    console.error(
+      "[ALBUKHR INTERNAL CONTRACT PUBLICATION]",
+      error
+    );
+
+    setStatus(
+      error?.message ||
+      "Internal contract publication failed.",
+      true
+    );
+
+    button.disabled = false;
+
+  }
+
+}
+
+
+/* =========================================================
+   PROJECT ACTIVATION
+========================================================= */
+
+async function activate(project,button){
+
+  if(!project.activation_ready){
+
+    return setStatus(
+      "Activation is blocked by the server-side readiness gate.",
+      true
+    );
+
+  }
+
+
+  if(
+    !confirm(
+      "Activate " +
+      project.name +
+      " (" +
+      project.project_code +
+      ") as ACTIVE on Mainnet?"
+    )
+  ){
+
+    return;
+
+  }
+
+
+  const reason =
+    prompt(
+      "Activation reason (optional):",
+      "Internal Project readiness requirements verified."
+    );
+
+
+  if(reason === null){
+
+    return;
+
+  }
+
+
+  button.disabled = true;
+
+  setStatus(
+    "Submitting Internal Project activation to the server..."
+  );
+
+
+  try{
+
+    const result =
+      await rpc(
+        RPC_ACTIVATE,
+        {
+          p_project_id:
+            project.project_id,
+
+          p_reason:
+            reason.trim() || null
+        }
+      );
+
+
+    if(!result?.success){
+
+      throw Error(
+        result?.message ||
+        "Server did not confirm activation."
+      );
+
+    }
+
+
+    setStatus(
+      project.project_code +
+      " is now ACTIVE."
+    );
+
+    await load();
+
+  }catch(error){
+
+    console.error(
+      "[ALBUKHR INTERNAL PROJECT ACTIVATION]",
+      error
+    );
+
+    setStatus(
+      error?.message ||
+      "Internal Project activation failed.",
+      true
+    );
+
+    button.disabled = false;
+
+  }
+
+}
+
+
+/* =========================================================
+   LOAD WORKSPACE
+========================================================= */
+
+async function load(){
+
+  const result =
+    await rpc(
+      RPC_WORKSPACE
+    );
+
+
+  if(!result?.authorized){
+
+    throw Error(
+      result?.message ||
+      "Internal Project lifecycle authorization denied."
+    );
+
+  }
+
+
+  render(
+    result.records,
+    result.investment_engine
+  );
+
+}
+
+
+/* =========================================================
+   INITIALIZATION
+========================================================= */
+
+async function init(){
+
+  try{
+
+    const environment =
+      window.AlbukhrEnvironment;
+
+
+    if(
+      !environment?.isKnown?.() ||
+      !environment.isMainnet?.()
+    ){
+
+      throw Error(
+        "Internal Project lifecycle workspace requires known MAINNET."
+      );
+
+    }
+
+
+    const adminAuth =
+      auth();
+
+
+    await adminAuth.init();
+
+
+    const admin =
+      await adminAuth.requireAdmin({
+        redirect:false,
+        preserveSessionOnContextError:true
+      });
+
+
+    if(!admin){
+
+      location.replace(
+        "admin-login.html"
+      );
+
+      return;
+
+    }
+
+
+    const mfa =
+      await adminAuth.ensureMfa();
+
+
+    if(
+      admin.mfa_required &&
+      !mfa.verified
+    ){
+
+      location.replace(
+        "admin-mfa.html"
+      );
+
+      return;
+
+    }
+
+
+    const roles =
+      Array.isArray(admin.roles)
+        ? admin.roles
+        : [];
+
+
+    /*
+      Keep the role boundary aligned with the live
+      Internal lifecycle RPCs.
+    */
+    const authorized =
+      roles.some(
+        role =>
+          [
+            "super_admin",
+            "approval_admin",
+            "finance_admin"
+          ].includes(role)
+      );
+
+
+    if(!authorized){
+
+      $("authorizationState")
+        .textContent =
+        "DENIED";
+
+      $("securityState")
+        .textContent =
+        "Authenticated";
+
+      setStatus(
+        "Your administrator role does not include Internal Project lifecycle access.",
+        true
+      );
+
+      return;
+
+    }
+
+
+    $("authorizationState")
+      .textContent =
+      "AUTHORIZED";
+
+    $("securityState")
+      .textContent =
+      "Authenticated • AAL2";
+
+    $("authorizationTitle")
+      .textContent =
+      "Internal lifecycle access granted";
+
+    $("authorizationText")
+      .textContent =
+      "Accepted roles: super_admin / approval_admin / finance_admin";
+
+
+    await load();
+
+
+    setStatus(
+      "Internal Project lifecycle workspace ready."
+    );
+
+
+  }catch(error){
+
+    console.error(
+      "[ALBUKHR INTERNAL LIFECYCLE]",
+      error
+    );
+
+    setStatus(
+      error?.message ||
+      "Unable to load Internal Project lifecycle workspace.",
+      true
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   REFRESH
+========================================================= */
+
+$("refreshButton")
+  ?.addEventListener(
+    "click",
+    async () => {
+
+      try{
+
+        $("refreshButton").disabled = true;
+
+        setStatus(
+          "Refreshing Internal lifecycle workspace..."
+        );
+
+        await load();
+
+        setStatus(
+          "Internal lifecycle workspace refreshed."
+        );
+
+      }catch(error){
+
+        setStatus(
+          error?.message ||
+          "Refresh failed.",
+          true
+        );
+
+      }finally{
+
+        $("refreshButton").disabled = false;
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   DIALOG EVENTS
+========================================================= */
+
+$("treasuryCancel")
+  ?.addEventListener(
+    "click",
+    closeTreasury
+  );
+
+$("treasurySave")
+  ?.addEventListener(
+    "click",
+    saveTreasury
+  );
+
+$("termCancel")
+  ?.addEventListener(
+    "click",
+    closeTerm
+  );
+
+$("termSave")
+  ?.addEventListener(
+    "click",
+    saveTerm
+  );
+
+$("publishCancel")
+  ?.addEventListener(
+    "click",
+    closePublish
+  );
+
+$("publishSave")
+  ?.addEventListener(
+    "click",
+    savePublish
+  );
+
+
+/* =========================================================
+   BACKDROP CLOSE
+========================================================= */
+
+$("treasuryDialog")
+  ?.addEventListener(
+    "click",
+    event => {
+
+      if(
+        event.target ===
+        $("treasuryDialog")
+      ){
+
+        closeTreasury();
+
+      }
+
+    }
+  );
+
+
+$("termDialog")
+  ?.addEventListener(
+    "click",
+    event => {
+
+      if(
+        event.target ===
+        $("termDialog")
+      ){
+
+        closeTerm();
+
+      }
+
+    }
+  );
+
+
+$("publishDialog")
+  ?.addEventListener(
+    "click",
+    event => {
+
+      if(
+        event.target ===
+        $("publishDialog")
+      ){
+
+        closePublish();
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   SIGN OUT
+========================================================= */
+
+$("logoutButton")
+  ?.addEventListener(
+    "click",
+    async () => {
+
+      $("logoutButton").disabled = true;
+
+      try{
+
+        await auth().signOut();
+
+      }finally{
+
+        location.replace(
+          "admin-login.html"
+        );
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   START
+========================================================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  init
+);
+
 })(window,document);
 </script>
+
 </body>
-</html>
+  </html>
