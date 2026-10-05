@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087a3e">
+<meta name="robots" content="noindex,nofollow">
+<title>ALBUKHR — External Risk Assessment</title>
+<link rel="stylesheet" href="css/admin-module.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/core/environment-core.js" defer></script>
+<script src="js/core/supabase-core.js" defer></script>
+<script src="js/core/supabase-admin-auth.js" defer></script>
+<style>
+:root{--g:#087a3e;--ink:#073b28;--muted:#60776d;--line:#dce9e2;--soft:#f4f9f6;--danger:#b3261e;--warn:#8b6500}
+*{box-sizing:border-box}body{margin:0;background:#f5f8f6;color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+main{width:min(1180px,calc(100% - 24px));margin:auto;padding:12px 0 28px}.back{margin:8px 0 12px}.back a{color:var(--g);font-size:12px;font-weight:850;text-decoration:none}
+.topbar{position:sticky;top:0;z-index:30}.brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:inherit}.brand img{width:36px;height:36px;border-radius:10px;object-fit:cover}.brand span,.brand b,.brand small{display:block}.brand small{font-size:8px;letter-spacing:1px;opacity:.75}.actions{display:flex;align-items:center;gap:8px}.actions button{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;padding:8px 10px;border-radius:9px;font-weight:800}
+.hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;padding:18px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.05)}.hero small{color:var(--g);font-size:9px;font-weight:900;letter-spacing:1px}.hero h1{margin:6px 0 5px;font-size:24px}.hero p{margin:0;max-width:850px;color:var(--muted);font-size:12px;line-height:1.55}.hero strong{white-space:nowrap;font-size:10px;color:var(--g);background:var(--soft);padding:7px 9px;border-radius:999px}
+.status{margin-top:10px;padding:10px 12px;background:#edf8f1;border:1px solid #cfe7d8;color:var(--g);border-radius:11px;font-size:11px}.status.error{background:#fff4f2;border-color:#f0cbc6;color:var(--danger)}
+.toolbar{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:14px}.toolbar h2{margin:0;font-size:18px}.toolbar p{margin:4px 0 0;color:var(--muted);font-size:11px}.toolbar button,.actions-row button,.actions-row a{border:1px solid var(--line);background:#fff;color:var(--g);padding:9px 11px;border-radius:10px;font-weight:850;font-size:10px;text-decoration:none}.toolbar button.primary,.actions-row button.primary{background:var(--g);border-color:var(--g);color:#fff}.toolbar button:disabled,.actions-row button:disabled{opacity:.45;cursor:not-allowed}
+.queue{display:grid;gap:10px;margin-top:12px}.queue-card,.workspace-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 8px 22px rgba(0,0,0,.03)}.queue-top,.section-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.queue-title small{color:var(--g);font-size:9px;font-weight:900;letter-spacing:1px}.queue-title h3{margin:4px 0 2px;font-size:16px}.queue-title p{margin:0;color:var(--muted);font-size:10px}.pill{display:inline-flex;align-items:center;justify-content:center;padding:6px 9px;border-radius:999px;background:#f3f5f4;color:var(--muted);font-size:9px;font-weight:900}.pill.ready{background:#edf8f1;color:var(--g)}.pill.warn{background:#fff8e6;color:var(--warn)}.pill.danger{background:#fff2f0;color:var(--danger)}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}.fact{border:1px solid #edf3ef;background:#fafdfb;border-radius:10px;padding:9px}.fact span,.fact b{display:block}.fact span{color:var(--muted);font-size:9px}.fact b{margin-top:4px;font-size:11px;overflow-wrap:anywhere}
+.workspace{display:grid;gap:12px;margin-top:14px}.section{margin-top:12px;border-top:1px solid #edf3ef;padding-top:12px}.section-head h3,.section-head h4{margin:0;font-size:13px}.section-head span{color:var(--muted);font-size:9px}.profile-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.profile-box{padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--soft)}.profile-box span{display:block;color:var(--muted);font-size:9px}.profile-box b{display:block;margin-top:4px;font-size:12px}
+.factors{display:grid;gap:10px;margin-top:10px}.factor{border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff}.factor-top{display:flex;justify-content:space-between;gap:10px}.factor-title strong{font-size:11px}.factor-title small{display:block;margin-top:3px;color:var(--muted);font-size:9px}.factor-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.factor-form label{font-size:9px;font-weight:800}.factor-form select,.factor-form textarea,.factor-form input{width:100%;margin-top:5px;border:1px solid var(--line);border-radius:9px;padding:8px;font:inherit;font-size:10px;color:var(--ink);background:#fff}.factor-form textarea{min-height:58px;resize:vertical}.full{grid-column:1/-1}.blocker{margin-top:8px;padding:8px 9px;border-radius:9px;background:#fff6f4;border:1px solid #f0cbc6;color:var(--danger);font-size:9px}
+.empty{padding:22px 14px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:14px;color:var(--muted);font-size:11px}.empty b{display:block;color:#43574e;font-size:13px;margin-bottom:4px}.hidden{display:none!important}
+.notes{margin-top:10px;padding:10px 11px;border:1px dashed var(--line);background:#fafdfb;border-radius:11px;color:var(--muted);font-size:9px;line-height:1.5}
+.events{display:grid;gap:8px;margin-top:10px}.event{border:1px solid #edf3ef;border-radius:10px;background:#fafdfb;padding:9px;font-size:9px}.event strong{display:block;font-size:10px}.event span{display:block;color:var(--muted);margin-top:3px}.event p{margin:5px 0 0}
+@media(max-width:820px){.facts,.profile-grid{grid-template-columns:1fr 1fr}}@media(max-width:620px){.hero{flex-direction:column}.queue-top,.section-head{display:block}.facts,.profile-grid,.factor-form{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="admin-dashboard.html">
+    <img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR">
+    <span><b>ALBUKHR</b><small>ADMINISTRATION</small></span>
+  </a>
+  <div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div>
+</header>
+<main>
+  <nav class="back"><a href="admin-dashboard.html">← Admin Control Center</a></nav>
+  <section class="hero">
+    <div>
+      <small>EXTERNAL PROJECT GOVERNANCE</small>
+      <h1>Risk Assessment Workspace</h1>
+      <p>Review project-specific risk dimensions, supporting evidence and mitigations after due diligence. This workspace records risk readiness only; it does not approve funding, authorize staking, configure liquidity or activate the project.</p>
+    </div>
+    <strong id="securityState">VERIFYING</strong>
+  </section>
+  <div id="pageStatus" class="status" aria-live="polite"></div>
+
+  <section id="queueView">
+    <div class="toolbar">
+      <div><h2>External Applications</h2><p>Risk assessment can begin only after a completed READY due-diligence case exists.</p></div>
+      <button id="refreshQueue" type="button">Refresh</button>
+    </div>
+    <div id="queue" class="queue"></div>
+  </section>
+
+  <section id="workspaceView" class="workspace hidden">
+    <div class="workspace-card">
+      <div class="section-head">
+        <div><h3 id="workspaceTitle">External Project</h3><span id="workspaceStatus" class="pill">—</span></div>
+        <button id="backToQueue" type="button">Back to applications</button>
+      </div>
+      <div id="applicationFacts" class="facts"></div>
+
+      <div class="section">
+        <div class="section-head"><h4>Risk Assessment Profile</h4><span id="profileStatusText">No profile</span></div>
+        <div id="profileGrid" class="profile-grid"></div>
+        <div id="profileActions" class="actions-row"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h4>Risk Dimensions</h4><span>Server-authoritative state</span></div>
+        <div id="factors" class="factors"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h4>Risk Events</h4><span>Durable monitoring records</span></div>
+        <div id="events" class="events"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h4>Completion</h4><span>Risk readiness only</span></div>
+        <div class="actions-row">
+          <button id="completeButton" class="primary" type="button" disabled>Complete Risk Assessment</button>
+        </div>
+        <div class="notes"><b>Important:</b> A READY risk assessment is one gate in the External activation framework. It does not make the project ACTIVE and does not approve terms, funding, liquidity, custody or public investment access.</div>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const state={admin:null,applicationId:null,workspace:null};
+function setStatus(m,error=false){const e=$("pageStatus");e.textContent=m||"";e.classList.toggle("error",!!error)}
+function client(){const core=window.ALBUKHR_SUPABASE;if(!core||!core.client)throw new Error("ALBUKHR Supabase Core is unavailable.");return core.client}
+async function rpc(name,params={}){const {data,error}=await client().schema("albukhr_security").rpc(name,params);if(error)throw error;return data}
+function esc(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#039;")}
+function fmtDate(v){if(!v)return "—";const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleString()}
+function norm(v){return String(v||"pending").trim().toLowerCase()}
+function pill(v){const s=norm(v);if(["ready","assessed","verified","completed"].includes(s))return "pill ready";if(["blocked","failed","critical","rejected"].includes(s))return "pill danger";if(["pending","in_progress","mitigation_required","escalated","partially_verified"].includes(s))return "pill warn";return "pill"}
+function readId(){return new URLSearchParams(location.search).get("application_id")}
+async function loadQueue(){setStatus("Loading External applications...");const data=await rpc("get_external_project_applications",{p_status:null});const records=Array.isArray(data?.records)?data.records:[];const wrap=$("queue");wrap.replaceChildren();if(!records.length){wrap.innerHTML='<div class="empty"><b>No External applications</b>No Mainnet External applications are currently available.</div>';setStatus("External application queue loaded.");return}records.forEach(app=>{const card=document.createElement("article");card.className="queue-card";const s=norm(app.status);card.innerHTML='<div class="queue-top"><div class="queue-title"><small>'+esc(app.application_code)+'</small><h3>'+esc(app.project_name||app.business_name||"External Project")+'</h3><p>'+esc(app.business_name||"")+'</p></div><span class="'+pill(s)+'">'+esc(s.replaceAll("_"," ").toUpperCase())+'</span></div><div class="facts"><div class="fact"><span>Project Code</span><b>'+esc(app.project_code)+'</b></div><div class="fact"><span>Funding</span><b>'+esc(app.funding_required==null?"—":Number(app.funding_required).toLocaleString()+" "+String(app.funding_asset||"PI").toUpperCase())+'</b></div><div class="fact"><span>Industry</span><b>'+esc(app.industry||"—")+'</b></div><div class="fact"><span>Converted Project</span><b>'+esc(app.converted_project_id||"Not converted")+'</b></div></div><div class="actions-row"><a class="primary" href="admin-external-risk-assessment.html?application_id='+encodeURIComponent(app.id)+'">Open Risk Assessment</a></div>';wrap.appendChild(card)});setStatus("External application queue loaded.")}
+function renderWorkspace(w){state.workspace=w;const app=w?.application||{};const p=w?.profile||null;const factors=Array.isArray(w?.factors)?w.factors:[];const events=Array.isArray(w?.events)?w.events:[];$("workspaceTitle").textContent=app.project_name||app.business_name||"External Project";const st=norm(app.status);$("workspaceStatus").className=pill(st);$("workspaceStatus").textContent=st.replaceAll("_"," ").toUpperCase();const facts=[["Application Code",app.application_code],["Project Code",app.project_code],["Business",app.business_name],["Country",app.country],["Industry",app.industry],["Investment Model",app.investment_model],["Funding",app.funding_required==null?"—":Number(app.funding_required).toLocaleString()+" "+String(app.funding_asset||"PI").toUpperCase()],["Converted Project",app.converted_project_id||"Not converted"]];$("applicationFacts").innerHTML=facts.map(x=>'<div class="fact"><span>'+esc(x[0])+'</span><b>'+esc(x[1]??"—")+'</b></div>').join("");const pg=$("profileGrid");pg.replaceChildren();$("profileStatusText").textContent=p?norm(p.status).replaceAll("_"," ").toUpperCase():"NO PROFILE";if(p){[["Version",p.version_number],["Methodology",(p.methodology_code||"")+" v"+(p.methodology_version||"")],["Assessment",p.assessment_state],["Risk Band",p.risk_band||"Not assigned"],["Assigned To",p.assigned_to||"—"],["Started",fmtDate(p.started_at)],["Completed",fmtDate(p.completed_at)],["Status",p.status]].forEach(x=>{const d=document.createElement("div");d.className="profile-box";d.innerHTML='<span>'+esc(x[0])+'</span><b>'+esc(x[1])+'</b>';pg.appendChild(d)})}else{pg.innerHTML='<div class="profile-box"><span>Status</span><b>Start a profile after due diligence is READY.</b></div>'}const acts=$("profileActions");acts.replaceChildren();if(!p){const b=document.createElement("button");b.className="primary";b.textContent="Start Risk Assessment";b.onclick=()=>startRisk().catch(e=>setStatus(e.message,true));const n=document.createElement("span");n.textContent="Starting requires a completed READY due-diligence case; the server will enforce that gate.";n.style.cssText="font-size:10px;color:var(--muted);padding:8px 0";acts.append(b,n)}else if(p.status!=="ready"){const b=document.createElement("button");b.textContent="Reload Workspace";b.onclick=()=>loadWorkspace(state.applicationId);acts.appendChild(b)}renderFactors(factors,p);renderEvents(events);$("completeButton").disabled=!(p&&["draft","in_progress"].includes(p.status))}
+function renderFactors(factors,p){const wrap=$("factors");wrap.replaceChildren();if(!factors.length){wrap.innerHTML='<div class="empty"><b>No risk dimensions</b>Start a risk profile to generate the controlled checklist.</div>';return}factors.forEach(f=>{const row=document.createElement("article");row.className="factor";const id="factor-"+f.id;row.innerHTML='<div class="factor-top"><div class="factor-title"><strong>'+esc(f.title||f.dimension_code)+'</strong><small>'+esc(f.dimension_code||"")+' • '+(f.required?"Required":"Optional")+'</small></div><span class="'+pill(f.assessment_state)+'">'+esc(norm(f.assessment_state).replaceAll("_"," ").toUpperCase())+'</span></div><div class="factor-form"><label>Assessment State<select id="'+id+'-state">'+['not_assessed','assessed','mitigation_required','restricted','escalated','blocked','not_applicable'].map(v=>'<option value="'+v+'"'+(v===f.assessment_state?' selected':'')+'>'+v.replaceAll("_"," ").toUpperCase()+'</option>').join("")+'</select></label><label>Evidence Level<select id="'+id+'-level">'+['','verified_system','documentary','project_declaration','forecast_assumption'].map(v=>'<option value="'+v+'"'+((v||null)===(f.evidence_level||null)?' selected':'')+'>'+(v?v.replaceAll("_"," ").toUpperCase():"NOT SET")+'</option>').join("")+'</select></label><label class="full">Evidence Reference<textarea id="'+id+'-ref" placeholder="Evidence source/reference">'+esc(f.evidence_reference&&typeof f.evidence_reference==='object'?JSON.stringify(f.evidence_reference):f.evidence_reference||"")+'</textarea></label><label>Mitigation Status<select id="'+id+'-mit">'+['','not_required','open','in_progress','completed','rejected'].map(v=>'<option value="'+v+'"'+((v||null)===(f.mitigation_status||null)?' selected':'')+'>'+(v?v.replaceAll("_"," ").toUpperCase():"NOT SET")+'</option>').join("")+'</select></label><label>Hard Blocking<select id="'+id+'-block"><option value="false"'+(!f.hard_blocking?' selected':'')+'>NO</option><option value="true"'+(f.hard_blocking?' selected':'')+'>YES</option></select></label><label class="full">Assessment Notes<textarea id="'+id+'-notes" placeholder="Reviewer assessment">'+esc(f.assessment_notes||"")+'</textarea></label><label class="full">Mitigation Notes<textarea id="'+id+'-mitnotes" placeholder="Required mitigation or resolution">'+esc(f.mitigation_notes||"")+'</textarea></label><div class="actions-row full"><button type="button" class="primary" data-save-factor="'+esc(f.id)+'">Save Dimension</button></div></div>'+((f.hard_blocking)?'<div class="blocker">This dimension is currently a hard blocker.</div>':"");row.querySelector("[data-save-factor]").addEventListener("click",()=>saveFactor(f));wrap.appendChild(row)})}
+async function saveFactor(f){const b="factor-"+f.id;let ref={};const raw=$(b+"-ref").value.trim();if(raw){try{ref=JSON.parse(raw)}catch{ref={reference:raw}}}await rpc("review_external_project_risk_factor",{p_profile_id:state.workspace.profile.id,p_dimension_code:f.dimension_code,p_assessment_state:$(b+"-state").value,p_evidence_level:$(b+"-level").value||null,p_evidence_reference:ref,p_assessment_notes:$(b+"-notes").value.trim()||null,p_mitigation_status:$(b+"-mit").value||null,p_mitigation_notes:$(b+"-mitnotes").value.trim()||null,p_hard_blocking:$(b+"-block").value==="true"});setStatus("Risk dimension saved.");await loadWorkspace(state.applicationId)}
+function renderEvents(events){const wrap=$("events");wrap.replaceChildren();if(!events.length){wrap.innerHTML='<div class="empty"><b>No risk events recorded</b>This is a monitoring record area and does not replace the assessment dimensions.</div>';return}events.forEach(e=>{const d=document.createElement("div");d.className="event";d.innerHTML='<strong>'+esc(e.event_type||"Risk Event")+'</strong><span>'+esc(norm(e.severity||"medium").toUpperCase())+' • '+esc(fmtDate(e.detected_at))+' • '+esc(norm(e.resolution_status||"open").replaceAll("_"," ").toUpperCase())+'</span>'+(e.source?'<p>Source: '+esc(e.source)+'</p>':"")+(e.action_taken?'<p>Action: '+esc(e.action_taken)+'</p>':"")+(e.notes?'<p>'+esc(e.notes)+'</p>':"");wrap.appendChild(d)})}
+async function loadWorkspace(id){if(!id)return;state.applicationId=id;$("queueView").classList.add("hidden");$("workspaceView").classList.remove("hidden");setStatus("Loading risk workspace...");const data=await rpc("get_external_project_risk_admin_workspace",{p_application_id:id});if(!data?.success)throw new Error(data?.message||"Risk workspace could not be loaded.");renderWorkspace(data);setStatus("Risk workspace loaded.")}
+async function startRisk(){const result=await rpc("start_external_project_risk_assessment",{p_application_id:state.applicationId});if(!result?.success)throw new Error(result?.message||"Risk assessment could not be started.");setStatus("Risk assessment started.");await loadWorkspace(state.applicationId)}
+async function completeRisk(){if(!state.workspace?.profile?.id)return;const band=prompt("Optional qualitative risk band (leave blank to keep unassigned): low, moderate, high, critical",state.workspace.profile.risk_band||"");if(band!==null&&band.trim()&&!['low','moderate','high','critical'].includes(band.trim().toLowerCase())){setStatus("Invalid risk band. Use low, moderate, high, critical or leave blank.",true);return}const confirmed=confirm("Complete this External Project risk assessment? This records risk readiness only and does not activate the project.");if(!confirmed)return;const result=await rpc("complete_external_project_risk_assessment",{p_profile_id:state.workspace.profile.id,p_summary:null,p_risk_band:band===null?null:(band.trim()||null)});if(!result?.success)throw new Error(result?.message||"Risk assessment could not be completed.");setStatus(result.activation_gate_ready?"Risk assessment completed and marked READY.":"Risk assessment completed and remains BLOCKED.");await loadWorkspace(state.applicationId)}
+function bind(){
+$("refreshQueue").addEventListener("click",()=>loadQueue().catch(e=>setStatus(e.message,true)));
+$("backToQueue").addEventListener("click",()=>{history.replaceState(null,"","admin-external-risk-assessment.html");$("workspaceView").classList.add("hidden");$("queueView").classList.remove("hidden");loadQueue().catch(e=>setStatus(e.message,true))});
+$("completeButton").addEventListener("click",()=>completeRisk().catch(e=>setStatus(e.message,true)));
+$("logoutButton").addEventListener("click",async()=>{await window.AlbukhrSupabaseAdminAuth.signOut();location.href="admin-login.html"});
+}
+async function init(){try{if(!window.ALBukhrEnvironment?.isMainnet?.())throw new Error("External Risk Assessment is available only on ALBUKHR MAINNET.");const auth=window.AlbukhrSupabaseAdminAuth;if(!auth)throw new Error("ALBUKHR Admin Auth Core is unavailable.");const admin=await auth.requireAdmin({redirect:true});if(!admin)return;if(!admin.roles.includes("super_admin")&&!admin.roles.includes("external_admin")){throw new Error("External administration role required.")}state.admin=admin;$("securityState").textContent="AAL2 VERIFIED";bind();const id=readId();if(id)await loadWorkspace(id);else await loadQueue()}catch(e){console.error("[ALBUKHR EXTERNAL RISK]",e);$("securityState").textContent="ACCESS ERROR";setStatus(e.message||"Unable to load External Risk Assessment.",true)}}
+document.readyState==="loading"?document.addEventListener("DOMContentLoaded",init,{once:true}):init();
+})();
+</script>
+</body>
+</html>
