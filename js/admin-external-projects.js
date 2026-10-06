@@ -250,26 +250,47 @@ function setup(){
 }
 
 /*
- * External Projects must use the exact same administrator
- * authorization boundary as the working Admin Control Center.
+ * External Projects intentionally uses the same Admin security
+ * boundary as the working Admin Control Center.
  *
- * The previous page added a second client-side MAINNET gate here.
- * That extra gate could fail before Admin Auth was reached.
- * MAINNET enforcement remains authoritative in:
- *   1) Admin Supabase Core
- *   2) Admin Auth getEnvironment/getSupabaseCore
- *   3) the protected albukhr_security RPCs
+ * IMPORTANT:
+ * - This page does NOT perform a second client-side environment gate.
+ * - MAINNET validation remains inside the shared Admin Supabase Core
+ *   and Admin Auth layers, and again inside the protected RPCs.
+ * - This wait only prevents a race between deferred script loading
+ *   and page initialization; it does not grant authorization.
  */
+async function waitForSecurityDependencies(timeoutMs=5000){
+  const started=Date.now();
+
+  while(Date.now()-started<timeoutMs){
+    const auth=window.AlbukhrSupabaseAdminAuth;
+    const core=window.ALBUKHR_SUPABASE;
+    const environment=window.ALBukhrEnvironment;
+
+    if(
+      auth&&
+      typeof auth.init==="function"&&
+      typeof auth.requireAdmin==="function"&&
+      typeof auth.ensureMfa==="function"&&
+      core&&
+      core.client&&
+      environment
+    ){
+      return;
+    }
+
+    await new Promise(resolve=>setTimeout(resolve,50));
+  }
+
+  throw new Error(
+    "ALBUKHR Admin security dependencies did not finish loading."
+  );
+}
+
 async function init(){
   try{
-    if(
-      !A()||
-      !window.AlbukhrEnvironment?.isMainnet()
-    ){
-      throw new Error(
-        "Admin Control Center is unavailable."
-      );
-    }
+    await waitForSecurityDependencies();
 
     await A().init();
 
