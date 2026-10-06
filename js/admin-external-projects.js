@@ -248,23 +248,98 @@ function setup(){
     try{if(A())await A().signOut();}finally{location.replace("admin-login.html");}
   });
 }
+async function waitForAdminSecurityDependencies(timeoutMs=5000){
+  const started=Date.now();
+
+  while(Date.now()-started<timeoutMs){
+    const environment=window.AlbukhrEnvironment;
+    const auth=A();
+    const core=window.ALBUKHR_SUPABASE;
+
+    if(
+      environment&&
+      typeof environment.isMainnet==="function"&&
+      auth&&
+      core&&
+      core.client
+    ){
+      return;
+    }
+
+    await new Promise(resolve=>setTimeout(resolve,50));
+  }
+
+  throw new Error(
+    "ALBUKHR Admin security dependencies are unavailable."
+  );
+}
+
 async function init(){
   try{
-    if(!window.AlbukhrEnvironment?.isMainnet?.())throw new Error("Admin External Project workspace is available only on MAINNET.");
-    if(!A()||!C())throw new Error("ALBUKHR Admin security dependencies are unavailable.");
+    /*
+     * Use the same Admin security initialization boundary as the
+     * Admin Control Center:
+     * dependencies -> MAINNET -> Admin Auth -> server context ->
+     * MFA/AAL2 -> secured External RPCs.
+     *
+     * This does not authorize the client. Server-side authorization
+     * remains authoritative.
+     */
+    await waitForAdminSecurityDependencies();
+
+    if(!window.AlbukhrEnvironment.isMainnet()){
+      throw new Error(
+        "Admin External Project workspace is available only on MAINNET."
+      );
+    }
+
     await A().init();
-    const admin=await A().requireAdmin({redirect:false,preserveSessionOnContextError:true});
-    if(!admin){location.replace("admin-login.html");return;}
+
+    const admin=await A().requireAdmin({
+      redirect:false,
+      preserveSessionOnContextError:true
+    });
+
+    if(!admin){
+      location.replace("admin-login.html");
+      return;
+    }
+
     const mfa=await A().ensureMfa();
-    if(admin.mfa_required&&!mfa.verified){location.replace("admin-mfa.html");return;}
+
+    if(admin.mfa_required&&!mfa.verified){
+      location.replace("admin-mfa.html");
+      return;
+    }
+
+    if(
+      admin.is_admin!==true||
+      String(admin.status||"").toLowerCase()!=="active"
+    ){
+      throw new Error(
+        "Active administrator authorization was not returned."
+      );
+    }
+
     $("securityState").textContent="AAL2 verified";
     status("Administrator security verification completed.");
+
     setup();
     await loadQueue();
+
   }catch(e){
-    console.error(e);
+    console.error(
+      "[ALBUKHR ADMIN EXTERNAL PROJECTS]",
+      e
+    );
+
     $("securityState").textContent="Security check failed";
-    status(e?.message||"External Project administrator authorization failed.",true);
+
+    status(
+      e?.message||
+      "External Project administrator authorization failed.",
+      true
+    );
   }
 }
 
