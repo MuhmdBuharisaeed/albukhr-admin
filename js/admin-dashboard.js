@@ -212,14 +212,14 @@ function render(a,m){
     ],
 
     [
-      "External Projects",
-      "External project scope administration.",
-      [
-        "super_admin",
-        "external_admin"
-      ],
-      "admin-module.html?module=external"
-    ]
+  "External Projects",
+  "External project scope administration.",
+  [
+    "super_admin",
+    "external_admin"
+  ],
+  "admin-external-projects.html"
+]
   ];
 
   $("modules").innerHTML=
