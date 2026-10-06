@@ -248,48 +248,26 @@ function setup(){
     try{if(A())await A().signOut();}finally{location.replace("admin-login.html");}
   });
 }
-async function waitForAdminSecurityDependencies(timeoutMs=5000){
-  const started=Date.now();
 
-  while(Date.now()-started<timeoutMs){
-    const environment=window.AlbukhrEnvironment;
-    const auth=A();
-    const core=window.ALBUKHR_SUPABASE;
-
-    if(
-      environment&&
-      typeof environment.isMainnet==="function"&&
-      auth&&
-      core&&
-      core.client
-    ){
-      return;
-    }
-
-    await new Promise(resolve=>setTimeout(resolve,50));
-  }
-
-  throw new Error(
-    "ALBUKHR Admin security dependencies are unavailable."
-  );
-}
-
+/*
+ * External Projects must use the exact same administrator
+ * authorization boundary as the working Admin Control Center.
+ *
+ * The previous page added a second client-side MAINNET gate here.
+ * That extra gate could fail before Admin Auth was reached.
+ * MAINNET enforcement remains authoritative in:
+ *   1) Admin Supabase Core
+ *   2) Admin Auth getEnvironment/getSupabaseCore
+ *   3) the protected albukhr_security RPCs
+ */
 async function init(){
   try{
-    /*
-     * Use the same Admin security initialization boundary as the
-     * Admin Control Center:
-     * dependencies -> MAINNET -> Admin Auth -> server context ->
-     * MFA/AAL2 -> secured External RPCs.
-     *
-     * This does not authorize the client. Server-side authorization
-     * remains authoritative.
-     */
-    await waitForAdminSecurityDependencies();
-
-    if(!window.AlbukhrEnvironment.isMainnet()){
+    if(
+      !A()||
+      !window.AlbukhrEnvironment?.isMainnet()
+    ){
       throw new Error(
-        "Admin External Project workspace is available only on MAINNET."
+        "Admin Control Center is unavailable."
       );
     }
 
@@ -312,15 +290,6 @@ async function init(){
       return;
     }
 
-    if(
-      admin.is_admin!==true||
-      String(admin.status||"").toLowerCase()!=="active"
-    ){
-      throw new Error(
-        "Active administrator authorization was not returned."
-      );
-    }
-
     $("securityState").textContent="AAL2 verified";
     status("Administrator security verification completed.");
 
@@ -335,8 +304,10 @@ async function init(){
 
     $("securityState").textContent="Security check failed";
 
+    const message=String(e?.message||e||"");
+
     status(
-      e?.message||
+      message||
       "External Project administrator authorization failed.",
       true
     );
