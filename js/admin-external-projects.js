@@ -14,6 +14,14 @@ let loadingDetail = false;
 function esc(value){
   return String(value == null ? "" : value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
+function safeLogoUrl(value){
+  try{
+    const url = new URL(String(value || ""), window.location.href);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+  }catch(_){
+    return "";
+  }
+}
 function label(value){
   return String(value || "").replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 }
@@ -68,6 +76,26 @@ function renderQueue(){
       <div class="queue-actions"><button class="queue-action" type="button" data-open="${esc(id)}">Review</button></div>
     </article>`;
   }).join("");
+
+  /* Logo rendering is display-only and uses logo_url returned by the
+     AAL2-protected, Mainnet-filtered Admin queue RPC. */
+  host.querySelectorAll(".queue-item").forEach(item=>{
+    const record=filtered.find(r=>String(r.id||"")===item.dataset.id);
+    const url=safeLogoUrl(record?.logo_url);
+    if(!url)return;
+
+    const image=document.createElement("img");
+    image.className="queue-logo";
+    image.src=url;
+    image.alt=String(record.project_name||"External Project")+" logo";
+    image.loading="lazy";
+    image.decoding="async";
+    image.referrerPolicy="no-referrer";
+    image.addEventListener("error",()=>image.remove(),{once:true});
+
+    const meta=item.querySelector(".queue-meta");
+    if(meta)meta.before(image);
+  });
 }
 function renderField(labelText,value){
   return `<div class="field"><span>${esc(labelText)}</span><strong>${esc(value??"—")}</strong></div>`;
@@ -144,6 +172,40 @@ function renderDetail(data){
         ${(statusValue!=="submitted"&&statusValue!=="under_review"&&statusValue!=="approved"&&statusValue!=="converted")?'<div class="notice">No administrative lifecycle action is available in the current state.</div>':''}
       </div>
     </section>`;
+
+  /* Detail RPC returns the application row, including logo metadata. */
+  const imageUrl=safeLogoUrl(a.logo_url);
+  const applicationSection=host.querySelector(".detail-section");
+  if(applicationSection){
+    const panel=document.createElement("div");
+    panel.className="external-project-logo-preview";
+
+    if(imageUrl){
+      const img=document.createElement("img");
+      img.src=imageUrl;
+      img.alt=String(a.project_name||"External Project")+" logo";
+      img.loading="lazy";
+      img.decoding="async";
+      img.referrerPolicy="no-referrer";
+      img.addEventListener("error",()=>panel.remove(),{once:true});
+
+      const copy=document.createElement("div");
+      copy.className="external-project-logo-copy";
+      const title=document.createElement("strong");
+      title.textContent="Project Logo";
+      const note=document.createElement("p");
+      note.textContent="Registered identity logo for this External Project.";
+      copy.append(title,note);
+      panel.append(img,copy);
+    }else{
+      panel.classList.add("missing");
+      panel.textContent="No project logo is registered for this application.";
+    }
+
+    const grid=applicationSection.querySelector(".detail-grid");
+    if(grid)grid.before(panel);
+    else applicationSection.appendChild(panel);
+  }
 
   host.querySelectorAll("[data-action]").forEach(btn=>{
     btn.addEventListener("click",()=>performAction(btn.dataset.action, a.id, btn));
