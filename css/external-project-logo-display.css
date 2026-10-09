@@ -1,5 +1,4 @@
-/* External Project logo display — Admin External Project review only. */
-
+/* External Project logo display — Admin review page only. */
 .queue-logo {
   display: block;
   width: 64px;
@@ -12,7 +11,6 @@
   border-radius: 12px;
   background: #fff;
 }
-
 .external-project-logo-preview {
   display: flex;
   align-items: center;
@@ -23,7 +21,6 @@
   border-radius: 14px;
   background: var(--s, #f1f8f4);
 }
-
 .external-project-logo-preview img {
   display: block;
   flex: 0 0 120px;
@@ -36,24 +33,61 @@
   border-radius: 12px;
   background: #fff;
 }
-
 .external-project-logo-copy {
   min-width: 0;
 }
-
 .external-project-logo-copy p {
   margin: 6px 0 0;
   color: var(--m, #60776d);
 }
-
 .external-project-logo-preview.missing {
   color: var(--m, #60776d);
 }
-
 @media (max-width: 600px) {
   .external-project-logo-preview img {
     flex-basis: 90px;
     width: 90px;
     height: 90px;
   }
+}
+
+
+/* Secure private-document access — Admin External Project detail only. */
+.document-access {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  margin-top: 8px;
+}
+.document-access-button {
+  border: 1px solid var(--l, #d7e8df);
+  border-radius: 9px;
+  padding: 8px 10px;
+  background: #fff;
+  color: var(--g, #087a3e);
+  font-size: 11px;
+  font-weight: 850;
+}
+.document-access-button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+.document-access-result {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--m, #60776d);
+  overflow-wrap: anywhere;
+}
+.document-access-link {
+  display: inline-block;
+  color: var(--g, #087a3e);
+  font-weight: 900;
+  text-decoration: underline;
+}
+.document-access-result small {
+  color: var(--m, #60776d);
+  font-size: 10px;
 }
