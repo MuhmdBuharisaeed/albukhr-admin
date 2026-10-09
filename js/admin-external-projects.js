@@ -22,6 +22,33 @@ function safeLogoUrl(value){
     return "";
   }
 }
+function safeDocumentUrl(value){
+  try{
+    const url = new URL(String(value || ""));
+    return url.protocol === "https:" ? url.href : "";
+  }catch(_){
+    return "";
+  }
+}
+function privateDocumentPath(doc, application){
+  const appId=String(application?.id||"").trim().toLowerCase();
+  const network=String(application?.network||"").trim().toLowerCase();
+  const bucket=String(doc?.storage_bucket||"").trim();
+  const path=String(doc?.storage_path||"").trim();
+  const validUuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  if(!validUuid.test(appId)||network!=="mainnet"||bucket!=="external-project-documents")return "";
+  const expected=new RegExp("^mainnet/"+appId+"/[0-9a-f]{32}/[^/]+\\.(?:pdf|png|jpe?g|webp)$","i");
+  return expected.test(path)?path:"";
+}
+function safeSignedDocumentUrl(value){
+  try{
+    const url=new URL(String(value||""));
+    return url.protocol==="https:"?url.href:"";
+  }catch(_){
+    return "";
+  }
+}
 function label(value){
   return String(value || "").replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 }
@@ -104,6 +131,61 @@ function renderList(items, emptyText, mapper){
   if(!Array.isArray(items)||!items.length)return `<div class="detail-empty">${esc(emptyText)}</div>`;
   return `<div class="detail-list">${items.map(mapper).join("")}</div>`;
 }
+async function prepareSecureDocumentLink(button, doc, application){
+  const access=button.closest(".document-access");
+  const result=access?.querySelector(".document-access-result");
+  const path=privateDocumentPath(doc,application);
+
+  if(!path||String(application?.network||"").toLowerCase()!=="mainnet"){
+    if(result)result.textContent="Secure document access is unavailable for this application.";
+    return;
+  }
+
+  const client=C();
+  if(!client||!client.storage||typeof client.storage.from!=="function"){
+    if(result)result.textContent="Secure storage client is unavailable. Refresh the Admin page and retry.";
+    return;
+  }
+
+  const previousText=button.textContent;
+  button.disabled=true;
+  button.textContent="Preparing secure link…";
+  if(result)result.textContent="Checking reviewer permission and preparing a short-lived link…";
+
+  try{
+    const response=await client.storage
+      .from("external-project-documents")
+      .createSignedUrl(path,120);
+
+    if(response?.error)throw response.error;
+
+    const href=safeSignedDocumentUrl(response?.data?.signedUrl);
+    if(!href)throw new Error("Secure storage returned an invalid link.");
+
+    if(result){
+      result.textContent="";
+      const link=document.createElement("a");
+      link.href=href;
+      link.target="_blank";
+      link.rel="noopener noreferrer";
+      link.referrerPolicy="no-referrer";
+      link.className="document-access-link";
+      link.textContent="Open document (link expires in 2 minutes)";
+
+      const note=document.createElement("small");
+      note.textContent="This link is temporary. Generate a new one if it expires.";
+      result.append(link,note);
+    }
+
+    button.textContent="Generate new secure link";
+  }catch(error){
+    console.error("[ALBUKHR ADMIN EXTERNAL PROJECTS] Secure document link failed:",error);
+    if(result)result.textContent="Unable to prepare the secure link. Confirm reviewer access and AAL2 verification, then retry.";
+    button.textContent=previousText;
+  }finally{
+    button.disabled=false;
+  }
+}
 function renderDetail(data){
   const host=$("detail");
   if(!host)return;
@@ -120,7 +202,21 @@ function renderDetail(data){
   const statusValue=String(a.status||"").toLowerCase();
   $("detailSummary").textContent=`${label(statusValue)} • ${a.network||"MAINNET"}`;
   const teamHtml=renderList(team,"No team members registered.",member=>`<div class="detail-row"><strong>${esc(member.full_name)}</strong><span>${esc(member.role)}${member.title?" • "+esc(member.title):""}</span>${member.email?`<p>${esc(member.email)}</p>`:""}${member.is_primary_contact?`<p>Primary contact</p>`:""}</div>`);
-  const docsHtml=renderList(docs,"No supporting documents registered.",doc=>`<div class="detail-row"><strong>${esc(doc.document_name||doc.document_type||"Document")}</strong><span>${esc(label(doc.document_type))}</span><p>Verification: ${esc(label(doc.verification_status))}</p>${doc.document_url?`<p><a href="${esc(doc.document_url)}" target="_blank" rel="noopener noreferrer">Open</a></p>`:"<p>Private storage object</p>"}</div>`);
+  const docsHtml=renderList(docs,"No supporting documents registered.",doc=>{
+    const path=privateDocumentPath(doc,a);
+    const externalUrl=safeDocumentUrl(doc.document_url);
+    let accessMarkup="";
+
+    if(path){
+      accessMarkup=`<div class="document-access"><button class="document-access-button" type="button" data-open-document="${esc(doc.id)}">Prepare secure link</button><div class="document-access-result" aria-live="polite"></div></div>`;
+    }else if(externalUrl){
+      accessMarkup=`<p><a href="${esc(externalUrl)}" target="_blank" rel="noopener noreferrer">Open document</a></p>`;
+    }else{
+      accessMarkup="<p>Private storage object — secure access metadata unavailable.</p>";
+    }
+
+    return `<div class="detail-row"><strong>${esc(doc.document_name||doc.document_type||"Document")}</strong><span>${esc(label(doc.document_type))}</span><p>Verification: ${esc(label(doc.verification_status))}</p>${accessMarkup}</div>`;
+  });
   const reviewsHtml=renderList(reviews,"No review records yet.",review=>`<div class="review"><b>${esc(label(review.decision||review.review_type||"Review"))}</b><small>${esc(fmtDate(review.created_at))}</small>${review.comments?`<p>${esc(review.comments)}</p>`:""}</div>`);
 
   host.innerHTML=`
@@ -206,6 +302,13 @@ function renderDetail(data){
     if(grid)grid.before(panel);
     else applicationSection.appendChild(panel);
   }
+
+  host.querySelectorAll("[data-open-document]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const doc=docs.find(item=>String(item.id||"")===String(btn.dataset.openDocument||""));
+      if(doc)void prepareSecureDocumentLink(btn,doc,a);
+    });
+  });
 
   host.querySelectorAll("[data-action]").forEach(btn=>{
     btn.addEventListener("click",()=>performAction(btn.dataset.action, a.id, btn));
