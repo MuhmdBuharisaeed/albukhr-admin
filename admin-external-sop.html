@@ -24,26 +24,252 @@ Approval date / Ranar amincewa | 10 October 2026
 Important note | This SOP describes observed admin UI actions and the intended governance sequence. It does not certify backend enforcement or legal/regulatory authorization.</span></div></div></section><div class="no-results" id="noResults">No matching section found. Try another search phrase.</div></div></div>
 <div class="doc-footer">ALBUKHR Investment Limited · Controlled copy · For authorized External Projects Admin use only</div>
 </main>
+
 <script>
-(function(){'use strict';
-const $=id=>document.getElementById(id);const status=(m,e=false)=>{const el=$('pageStatus');if(el){el.textContent=m||'';el.classList.toggle('error',!!e)}};
-const showError=m=>{const p=$('accessError');p.textContent=m||'Access denied.';p.style.display='block';$('protectedContent').classList.add('hidden');status('External Project SOP access denied.',true)};
-function roleAllowed(a){const roles=Array.isArray(a?.roles)?a.roles:[];return roles.includes('super_admin')||roles.includes('external_admin')}
-async function init(){
- try{
-  if(!window.ALBukhrEnvironment?.isMainnet?.())throw new Error('This SOP is available only on ALBUKHR Mainnet Admin.');
-  const A=window.AlbukhrSupabaseAdminAuth;if(!A)throw new Error('ALBUKHR Admin Auth Core is unavailable.');
-  await A.init();const admin=await A.requireAdmin({redirect:false,preserveSessionOnContextError:true});
-  if(!admin){location.replace('admin-login.html');return}
-  const mfa=await A.ensureMfa();if(admin.mfa_required&&!mfa.verified){location.replace('admin-mfa.html');return}
-  if(!roleAllowed(admin)){showError('This page is restricted to administrators with External Projects access.');setTimeout(()=>location.replace('admin-dashboard.html'),1600);return}
-  $('protectedContent').classList.remove('hidden');$('approvalBoundary').style.display='block';status('Access verified · '+(mfa.verified?'AAL2 verified':'MFA not required by the admin configuration'));
- }catch(e){console.error('[ALBUKHR EXTERNAL PROJECT SOP]',e);showError(String(e?.message||e));}
-}
-$('logoutButton').addEventListener('click',async()=>{try{await window.AlbukhrSupabaseAdminAuth?.signOut()}finally{location.replace('admin-login.html')}});
-$('printButton').addEventListener('click',()=>window.print());
-$('sopSearch').addEventListener('input',e=>{const q=String(e.target.value||'').trim().toLocaleLowerCase();let visible=0;document.querySelectorAll('.sop-section').forEach(sec=>{const yes=!q||sec.textContent.toLocaleLowerCase().includes(q);sec.classList.toggle('hidden',!yes);const nav=$('tocNav').querySelector('a[href="#'+sec.id+'"]');if(nav)nav.classList.toggle('hidden',!yes);if(yes)visible++});$('noResults').style.display=visible?'none':'block';$('resultCount').textContent=visible+' matching section'+(visible===1?'':'s')});
-init();
+(function () {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+
+  const status = (message, isError = false) => {
+    const element = $("pageStatus");
+
+    if (element) {
+      element.textContent = message || "";
+      element.classList.toggle("error", Boolean(isError));
+    }
+  };
+
+  const showError = (message) => {
+    const panel = $("accessError");
+    const protectedContent = $("protectedContent");
+
+    if (panel) {
+      panel.textContent = message || "Access denied.";
+      panel.style.display = "block";
+    }
+
+    if (protectedContent) {
+      protectedContent.classList.add("hidden");
+    }
+
+    status("External Project SOP access denied.", true);
+  };
+
+  function roleAllowed(admin) {
+    const roles = Array.isArray(admin?.roles)
+      ? admin.roles
+      : [];
+
+    return (
+      roles.includes("super_admin") ||
+      roles.includes("external_admin")
+    );
+  }
+
+  /*
+   * Deferred scripts may not have executed when this
+   * inline script starts. Wait for the required modules.
+   * This does not bypass or replace any security check.
+   */
+  async function waitForSecurityDependencies(timeoutMs = 10000) {
+    const startedAt = Date.now();
+
+    while (Date.now() - startedAt < timeoutMs) {
+      const environment = window.ALBukhrEnvironment;
+      const auth = window.AlbukhrSupabaseAdminAuth;
+
+      if (
+        environment &&
+        typeof environment.isKnown === "function" &&
+        typeof environment.isMainnet === "function" &&
+        auth &&
+        typeof auth.init === "function" &&
+        typeof auth.requireAdmin === "function" &&
+        typeof auth.ensureMfa === "function"
+      ) {
+        return { environment, auth };
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+
+    throw new Error(
+      "ALBUKHR security modules did not finish loading. " +
+      "Please refresh the page. If the problem persists, " +
+      "check the Admin Core script paths and browser console."
+    );
+  }
+
+  async function init() {
+    const protectedContent = $("protectedContent");
+
+    // Keep the SOP hidden until every security check passes.
+    if (protectedContent) {
+      protectedContent.classList.add("hidden");
+    }
+
+    status("Verifying administrator access…");
+
+    try {
+      const { environment, auth } =
+        await waitForSecurityDependencies();
+
+      // 1. Validate the approved Admin host and Mainnet.
+      if (
+        !environment.isKnown() ||
+        !environment.isMainnet()
+      ) {
+        throw new Error(
+          "This SOP is available only on ALBUKHR Mainnet Admin."
+        );
+      }
+
+      // 2. Initialize the existing Admin Auth module.
+      await auth.init();
+
+      // 3. Verify the authenticated administrator.
+      const admin = await auth.requireAdmin({
+        redirect: false,
+        preserveSessionOnContextError: true
+      });
+
+      if (!admin) {
+        window.location.replace("admin-login.html");
+        return;
+      }
+
+      // 4. Enforce MFA when required by the existing policy.
+      const mfa = await auth.ensureMfa();
+
+      if (
+        admin.mfa_required &&
+        !mfa?.verified
+      ) {
+        window.location.replace("admin-mfa.html");
+        return;
+      }
+
+      // 5. Only authorized External Projects administrators.
+      if (!roleAllowed(admin)) {
+        showError(
+          "This page is restricted to administrators " +
+          "with External Projects access."
+        );
+
+        window.setTimeout(() => {
+          window.location.replace("admin-dashboard.html");
+        }, 1600);
+
+        return;
+      }
+
+      // 6. Reveal SOP content only after all checks pass.
+      if (protectedContent) {
+        protectedContent.classList.remove("hidden");
+      }
+
+      const approvalBoundary = $("approvalBoundary");
+
+      if (approvalBoundary) {
+        approvalBoundary.style.display = "block";
+      }
+
+      status(
+        "Access verified · " +
+        (mfa?.verified
+          ? "AAL2 verified"
+          : "MFA not required by the admin configuration")
+      );
+
+    } catch (error) {
+      console.error(
+        "[ALBUKHR EXTERNAL PROJECT SOP]",
+        error
+      );
+
+      showError(
+        String(
+          error?.message ||
+          "Unable to verify access to the External Project SOP."
+        )
+      );
+    }
+  }
+
+  // Sign out using the existing Admin Auth module.
+  const logoutButton = $("logoutButton");
+
+  if (logoutButton) {
+    logoutButton.addEventListener("click", async () => {
+      try {
+        await window.AlbukhrSupabaseAdminAuth?.signOut();
+      } catch (error) {
+        console.error(
+          "[ALBUKHR SOP SIGN OUT]",
+          error
+        );
+      } finally {
+        window.location.replace("admin-login.html");
+      }
+    });
+  }
+
+  // Preserve Print / Save PDF.
+  const printButton = $("printButton");
+
+  if (printButton) {
+    printButton.addEventListener("click", () => {
+      window.print();
+    });
+  }
+
+  // Preserve SOP search and section navigation.
+  const searchInput = $("sopSearch");
+  const tocNav = $("tocNav");
+  const noResults = $("noResults");
+  const resultCount = $("resultCount");
+
+  if (searchInput && tocNav && noResults && resultCount) {
+    searchInput.addEventListener("input", (event) => {
+      const query = String(event.target.value || "")
+        .trim()
+        .toLocaleLowerCase();
+
+      let visibleCount = 0;
+
+      document.querySelectorAll(".sop-section").forEach((section) => {
+        const matches =
+          !query ||
+          section.textContent.toLocaleLowerCase().includes(query);
+
+        section.classList.toggle("hidden", !matches);
+
+        const navLink = tocNav.querySelector(
+          'a[href="#' + section.id + '"]'
+        );
+
+        if (navLink) {
+          navLink.classList.toggle("hidden", !matches);
+        }
+
+        if (matches) {
+          visibleCount++;
+        }
+      });
+
+      noResults.style.display =
+        visibleCount ? "none" : "block";
+
+      resultCount.textContent =
+        visibleCount +
+        (query ? " matching section" : " section") +
+        (visibleCount === 1 ? "" : "s");
+    });
+  }
+
+  init();
 })();
 </script>
+
 </body></html>
