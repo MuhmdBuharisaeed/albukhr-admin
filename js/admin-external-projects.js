@@ -464,8 +464,23 @@ async function init(){
       preserveSessionOnContextError:true
     });
 
-    if(!admin){
+        if(!admin){
       location.replace("admin-login.html");
+      return;
+    }
+
+    // External Projects access is limited to authorized roles.
+    const roles=Array.isArray(admin.roles)?admin.roles:[];
+
+    if(
+      !roles.includes("super_admin") &&
+      !roles.includes("external_admin")
+    ){
+      status(
+        "External Projects access is restricted to authorized administrators.",
+        true
+      );
+      location.replace("admin-dashboard.html");
       return;
     }
 
@@ -476,8 +491,17 @@ async function init(){
       return;
     }
 
-    $("securityState").textContent="AAL2 verified";
+        $("securityState").textContent =
+      mfa.verified ? "AAL2 verified" : "Security verified";
+
+    const sopLink=$("externalSopLink");
+    if(sopLink){
+      sopLink.hidden=false;
+    }
+
     status("Administrator security verification completed.");
+
+
 
     setup();
     await loadQueue();
