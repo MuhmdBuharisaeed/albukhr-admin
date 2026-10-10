@@ -1,0 +1,261 @@
+ALBUKHR
+
+EXTERNAL PROJECT ADMINISTRATION SOP
+
+ENGLISH + HAUSA | APPROVED SOP v1.0
+
+Approved by ALBUKHR Team for External Projects Admin SOP use only — controlled internal procedure
+
+DOCUMENT CONTROL / BAYANAN TAKARDA
+
+1. PURPOSE AND SCOPE / MANUFA DA IYAKA
+
+EN: This SOP standardizes how authorized ALBUKHR administrators receive, review, assess, document, escalate and decide External Project applications. Submission does not guarantee approval, funding, listing, activation or continued participation.
+
+HA: Wannan SOP yana daidaita yadda Admin mai izini zai karɓi, bincika, tantance, rubuta sakamako, tura matsala ga masu iko, sannan ya yanke hukunci kan External Project. Gabatar da application ba ya tabbatar da amincewa, samun jari, listing, activation ko ci gaba da shiga tsarin.
+
+2. GOVERNING PRINCIPLES / MUHIMMAN ƘA’IDOJI
+
+EN: Truthfulness and completeness; evidence-based decisions; verified ownership and authority; clear risk and conflict disclosure; appropriate custody and fund segregation where required; strict Mainnet/Testnet separation; auditability; and separation of application approval from operational activation.
+
+HA: Gaskiya da cikar bayanai; yanke hukunci bisa shaida; tabbatar da mallaka da ikon gabatar da project; bayyana haɗari da rikice-rikicen moriya; tsara custody da ware kuɗi inda ya dace; raba Mainnet da Testnet; kiyaye tarihin audit; da bambance amincewar application da kunna project a aiki.
+
+3. ROLES AND SEGREGATION / MATSAYI DA RABON IKO
+
+EN: Only authorized administrators may use the relevant workspace. The inspected application-review code requires an authenticated admin and an MFA/AAL2 step when the admin configuration requires it. Due-diligence, risk and funding pages show role checks in their frontend, but their server-side RPC authorization must be independently confirmed before this SOP can claim equivalent enforcement.
+
+HA: Admin mai izini ne kawai zai yi amfani da shafin da ya dace. Code na application review yana buƙatar authenticated admin, tare da MFA/AAL2 idan tsarin admin ya wajabta. Shafukan due diligence, risk da funding suna nuna role checks a frontend, amma dole ne a tabbatar da RPC/server-side authorization daban kafin SOP ta ce suna da kariya iri ɗaya.
+
+EN: Where practical, separate application review, due diligence, risk assessment, funding decision and final activation authorization. An administrator must not approve their own conflict without disclosure and escalation under the applicable governance rules.
+
+HA: Inda zai yiwu, a raba aikin application review, due diligence, risk assessment, funding decision da final activation authorization. Admin bai kamata ya yanke hukunci kan rikicin moriyarsa ba tare da bayyana shi da tura shi ga mai izini bisa ƙa’idojin governance ba.
+
+4. HIGH-LEVEL LIFECYCLE / JERIN MANYAN MATAKAI
+
+EN: Authenticated application → initial administrative review → decision (revision / reject / approve) → conversion to a draft project registry record where authorized → ownership verification and due diligence → risk assessment → funding structure assessment → custody/escrow controls where required → terms review → disclosure review → funding and technical readiness → server-authoritative final activation gate → ACTIVE only when all applicable gates pass.
+
+HA: Application mai ingantaccen shiga → binciken farko na Admin → hukunci (gyara / ƙin amincewa / amincewa) → conversion zuwa draft project registry idan an ba da izini → tabbatar da mallaka da due diligence → risk assessment → funding structure assessment → custody/escrow inda ya dace → duba terms → duba disclosure → funding da technical readiness → final activation gate na server → ACTIVE ne kawai idan duk sharuddan da suka dace sun cika.
+
+EN: Observed admin pages include: admin-external-projects.html; admin-external-due-diligence.html; admin-external-risk-assesment.html (note the current filename spelling); and admin-external-funding.html. Terms, custody, disclosure and final activation workspaces were not confirmed as dedicated pages in the inspected admin repository.
+
+HA: Shafukan Admin da aka gani sun haɗa da: admin-external-projects.html; admin-external-due-diligence.html; admin-external-risk-assesment.html (a lura da rubutun sunan fayil na yanzu); da admin-external-funding.html. Ba a tabbatar da shafuka na musamman na terms, custody, disclosure da final activation a repository ɗin Admin da aka bincika ba.
+
+5. INITIAL APPLICATION REVIEW / BINCIKEN APPLICATION NA FARKO
+
+EN: Open the application from the External Projects queue. Compare project and business names, application/project codes, network, declared funding, industry, owner identity, contact details, project purpose, team records, logo and submitted documents. Treat declarations as declarations until corroborated by suitable evidence.
+
+HA: Buɗe application daga jerin External Projects. Kwatanta sunan project da kasuwanci, application/project codes, network, adadin funding da aka bayyana, industry, bayanan mai project, hanyoyin tuntuɓa, manufar project, team, logo da takardun da aka gabatar. Kada a ɗauki bayanin applicant a matsayin tabbatacce sai an samu shaidar da ta dace.
+
+EN: Available review actions observed in the code are Start Review, Request Revision, Reject, Approve and Convert to a draft External Project registry record. Revision instructions and rejection reasons are required by the frontend; approval reason is optional in the UI. The server response must confirm success before the action is considered complete.
+
+HA: Ayyukan review da aka gani a code sun haɗa da Start Review, Request Revision, Reject, Approve da Convert zuwa draft External Project registry record. Frontend yana buƙatar umarnin gyara da dalilin ƙin amincewa; dalilin amincewa na zaɓi ne a UI. Sai server ya tabbatar da nasara kafin a ɗauki aikin a matsayin an kammala.
+
+6. DECISION RULES / ƘA’IDODIN HUKUNCI
+
+EN: Request Revision when material information or evidence is missing, inconsistent, unclear or not fit for review. State exactly what is missing, acceptable evidence formats if known, and the response required. Reject only with a clear, factual reason and only through the authorized workflow. Approve the application only when the applicable review criteria are satisfied; approval is not activation.
+
+HA: A nemi gyara idan muhimman bayanai ko shaidu sun ɓace, sun saɓa, ba su bayyana ba ko ba su isa a yi review ba. A bayyana abin da ya ɓace, nau’in shaidar da ake buƙata idan an sani, da abin da ake son applicant ya yi. A ƙi application ne kawai da hujja bayyananniya ta gaskiya kuma ta hanyar da aka ba da izini. A amince idan sharuddan review da suka dace sun cika; amincewa ba activation ba ce.
+
+EN: Do not use a direct database status update, browser manipulation or an alternate network to bypass a review decision.
+
+HA: Kada a yi direct database status update, browser manipulation ko amfani da wani network domin tsallake hukuncin review.
+
+7. DUE DILIGENCE / TANTANCE SAHIHI DA KASUWANCI
+
+EN: Start a due-diligence case only through the designated workspace and when the application is eligible for that stage. Review owner identity, authority to act, business registration where applicable, business identity, physical/operating location, operating status, legal/regulatory dependencies, related-party conflicts and operational evidence.
+
+HA: A fara due-diligence case ta workspace da aka ware kuma sai application ta cancanci wannan mataki. A bincika ainihin mai project, ikon wakilta, rajistar kasuwanci inda ya dace, asalin kasuwancin, wurin kasuwanci/aiki, matsayin aiki, abubuwan dogaro da doka/ƙa’ida, rikice-rikicen moriya da shaidar gudanar da aiki.
+
+EN: For each check, choose a state that matches the evidence. Use verified_system only for system-verifiable evidence; documentary for authentic documents examined; project_declaration for applicant statements; and forecast_assumption for projections or assumptions. Record the evidence reference and concise notes. Never mark a check verified merely because a file was uploaded.
+
+HA: Ga kowane check, zaɓi state da ya dace da shaidar. Yi amfani da verified_system idan tsarin zai iya tabbatar da hujjar; documentary idan an bincika takarda ingantacciya; project_declaration idan bayanin applicant ne; forecast_assumption idan hasashe ko projection ne. Rubuta reference na shaida da taƙaitaccen bayani. Kada a sa verified saboda kawai an loda fayil.
+
+EN: Register evidence against the relevant check where possible. If evidence is missing, conflicting, unverifiable or suspicious, record the limitation and keep the case blocked or escalate according to authority. Complete the case only after reviewing every required check; completion does not activate the project.
+
+HA: A danganta shaidar da check ɗin da ya dace idan zai yiwu. Idan shaida ta ɓace, ta saɓa, ba a iya tabbatar da ita ko tana da alamun zargi, a rubuta wannan kuma a bar case a blocked ko a tura shi ga mai iko. A kammala case bayan an duba duk required checks; kammalawa ba ya kunna project.
+
+8. RISK ASSESSMENT / TANTANCE HAƊARI
+
+EN: Begin only after due diligence is READY as required by the workspace. Review business model, execution, financial/economic, liquidity, operational, ownership/governance, fraud/market integrity and legal/regulatory risks. Evaluate each dimension using evidence, not intuition alone.
+
+HA: A fara ne kawai bayan due diligence ya zama READY kamar yadda workspace ya tanada. A duba haɗarin tsarin kasuwanci, aiwatarwa, kuɗi/tattalin arziki, liquidity, gudanar da aiki, mallaka/governance, zamba/ingancin kasuwa da doka/ƙa’ida. A tantance kowane ɓangare bisa shaida, ba zato kawai ba.
+
+EN: Record assessment state, evidence level/reference, mitigation status and mitigation notes. Use hard-blocking flags only for justified blockers under the approved methodology. A risk band such as low, moderate, high or critical is a classification, not a guarantee of safety or returns. Complete the assessment only after required dimensions and blocking conditions have been reviewed.
+
+HA: Rubuta assessment state, evidence level/reference, mitigation status da bayanin mitigation. Yi amfani da hard-blocking flag ne kawai idan akwai dalili bisa methodology da aka amince da ita. Risk band kamar low, moderate, high ko critical rarrabuwa ce, ba tabbacin tsaro ko riba ba. A kammala assessment bayan an duba required dimensions da duk blockers.
+
+9. FUNDING STRUCTURE ASSESSMENT / TANTANCE TSARIN JARI
+
+EN: Open the funding workspace for the application. Review the funding plan and itemized categories, verify arithmetic and supporting evidence, and compare the requested amount with the server-calculated capital requirement. Distinguish capital requirement, required liquidity and verified liquidity; they are not interchangeable.
+
+HA: Buɗe funding workspace na application. Duba funding plan da jerin kashe-kashe, tabbatar da lissafi da shaidun tallafi, sannan kwatanta adadin da aka nema da capital requirement da server ya lissafa. A bambance capital requirement, required liquidity da verified liquidity; ba abu ɗaya ba ne.
+
+EN: Run the server assessment before recording a decision. Choose Approve, Request Revision or Reject and record a reason. Do not increase or reduce the approved amount without an evidence-based rationale. Funding approval does not prove that funds are held by ALBUKHR, does not establish escrow/custody and does not authorize staking or activation.
+
+HA: A gudanar da server assessment kafin rubuta hukunci. Zaɓi Approve, Request Revision ko Reject tare da dalili. Kada a ƙara ko rage adadin da aka amince da shi ba tare da hujja ba. Amincewar funding ba ta tabbatar da cewa ALBUKHR na riƙe kuɗin ba, ba ta kafa escrow/custody, kuma ba ta ba da izinin staking ko activation.
+
+10. CUSTODY, TERMS AND DISCLOSURE / KULAWA DA KUƊI, SHARUƊƊA DA BAYYANAWA
+
+EN: Where the project model or applicable rules require custody, escrow, segregation, controlled release or reconciliation, do not mark the gate ready until the designated authorized process has verified the arrangement. Do not claim ALBUKHR custody or verified liquidity without evidence.
+
+HA: Inda tsarin project ko ƙa’idoji suka buƙaci custody, escrow, ware kuɗi, sakin kuɗi bisa matakai ko reconciliation, kada a sa gate a READY sai tsarin da aka ware kuma mai izini ya tabbatar da tsarin. Kada a ce ALBUKHR na riƙe kuɗi ko an tabbatar da liquidity ba tare da shaida ba.
+
+EN: Terms must define the applicable investment/staking model, asset, target, limits, duration, funding window, reward/return model, principal treatment, exit/withdrawal, fees and conditions where applicable. Disclosure must separate verified facts from project declarations, forecasts and assumptions, and show material risks and conflicts. Dedicated admin pages for these gates were not confirmed in the inspected repository; follow the currently approved workflow and escalate rather than improvising a status change.
+
+HA: Terms su bayyana tsarin investment/staking da ya dace, asset, target, iyakoki, duration, lokacin funding, reward/return model, yadda ake kula da babban jari, fita/withdrawal, kuɗaɗen caji da sharudda inda ya dace. Disclosure ya bambance tabbatattun bayanai da bayanan applicant, hasashe da assumptions, sannan ya nuna muhimman haɗari da rikice-rikicen moriya. Ba a tabbatar da shafukan Admin na musamman na waɗannan matakai a repository da aka bincika ba; a bi workflow da aka amince da shi kuma a escalate maimakon ƙirƙirar status change.
+
+11. FINAL ACTIVATION / KUNNA PROJECT A AIKI
+
+EN: External activation must be a server-authoritative decision. Before activation, verify applicable gates for identity/registry, approval, due diligence, risk, funding, custody where required, terms, disclosure, funding readiness and technical readiness. The final action must record actor, role, project, network, previous/new status, reason, timestamp and relevant readiness snapshot/version where supported.
+
+HA: Activation na External dole ya zama hukuncin da server ke iko da shi. Kafin activation, tabbatar da gates da suka dace na identity/registry, approval, due diligence, risk, funding, custody inda ya dace, terms, disclosure, funding readiness da technical readiness. Aikin ƙarshe ya kamata ya adana actor, role, project, network, tsohon/sabon status, dalili, lokaci da readiness snapshot/version inda tsarin ya tallafa.
+
+EN: Never activate through a frontend-only toggle or direct status UPDATE. If any mandatory gate is blocked, missing, stale or inconsistent, stop and escalate. Approval, conversion, visibility and ACTIVE are separate concepts.
+
+HA: Kada a yi activation ta frontend toggle kaɗai ko direct status UPDATE. Idan wani mandatory gate yana blocked, ya ɓace, ya tsufa ko ya saɓa, a tsaya a escalate. Approval, conversion, visibility da ACTIVE abubuwa ne dabam.
+
+12. AUDIT TRAIL AND NETWORK ISOLATION / TARIHIN AUDIT DA RABON NETWORK
+
+EN: Record decisions, evidence references, revision requests, rejections, mitigations, conflicts, escalations and material changes in the authorized record system. Do not store secrets or unnecessary sensitive identity data in free-text notes. Use the correct network and never use Testnet evidence or financial state to validate Mainnet.
+
+HA: A rubuta hukunci, references na shaida, buƙatun gyara, ƙin amincewa, mitigation, conflicts, escalations da manyan canje-canje a tsarin records da aka ba da izini. Kada a saka sirri ko bayanan identity masu tsanani da ba su da bukata a notes. A yi amfani da network da ya dace; kada a yi amfani da shaidar Testnet ko bayanan kuɗinsa wajen tabbatar da Mainnet.
+
+13. ESCALATION MATRIX / LOKACIN TURA MATSALA
+
+EN: Escalate immediately for suspected fraud or impersonation, altered/fabricated documents, ownership disputes, undisclosed conflicts, unexplained funding discrepancies, custody uncertainty, legal/regulatory concerns, security errors, cross-network data, unexpected status transitions or any request to bypass a gate. Preserve the evidence and do not promise an outcome.
+
+HA: A tura matsala nan take idan akwai zargin zamba ko kwaikwayon identity, takardun bogi/da aka canza, rikicin mallaka, rikice-rikicen moriya da ba a bayyana ba, bambancin funding da ba a yi bayani ba, rashin tabbas kan custody, matsalar doka/ƙa’ida, security error, gaurayawar network, canjin status da ba a zata ba ko buƙatar tsallake gate. A adana shaida kuma kada a yi alkawarin sakamako.
+
+14. ADMIN MESSAGE LIBRARY / KUNDIN SAƘONNIN ADMIN
+
+MSG-01 — Receipt / Karɓar application: EN: We have received your External Project application. It will be reviewed under the applicable ALBUKHR governance requirements. Receipt does not constitute approval, funding commitment or activation.
+HA: Mun karɓi application ɗin External Project ɗinku. Za a duba shi bisa ƙa’idojin governance na ALBUKHR da suka dace. Karɓa ba yana nufin an amince ba, an yi alƙawarin funding ba, ko an kunna project ba.
+
+MSG-02 — Request for evidence / Neman shaida: EN: Please provide the following evidence to continue the review: [list]. For each item, ensure that the document is authentic, current where applicable, readable and authorized for submission. The application will remain under review until the evidence is assessed.
+HA: Don Allah ku bayar da waɗannan shaidu domin a ci gaba da review: [jerin abubuwa]. Ku tabbatar kowace takarda ingantacciya ce, tana aiki idan hakan ya dace, ana iya karantawa kuma kuna da izinin gabatar da ita. Application zai ci gaba da kasancewa a review har sai an tantance shaidun.
+
+MSG-03 — Revision required / Ana buƙatar gyara: EN: Revision is required for the following items: [items]. Please update the application and explain the changes made. This request is not an approval or rejection; progression depends on reassessment.
+HA: Ana buƙatar gyara waɗannan abubuwa: [jerin abubuwa]. Ku sabunta application kuma ku bayyana canje-canjen da kuka yi. Wannan buƙata ba amincewa ba ce kuma ba ƙin amincewa ba ce; ci gaba zai dogara da sake tantancewa.
+
+MSG-04 — Evidence inconsistency / Saɓanin shaida: EN: The information supplied for [item] appears inconsistent with [reference]. Please clarify the discrepancy and provide supporting evidence. No conclusion will be recorded until the discrepancy is assessed.
+HA: Bayanin da aka bayar kan [abu] yana nuna saɓani da [reference]. Ku bayyana bambancin kuma ku kawo shaidar tallafi. Ba za a rubuta hukunci na ƙarshe ba sai an tantance saɓanin.
+
+MSG-05 — Review started / An fara review: EN: Administrative review has started. We may request additional information or evidence. Please keep the application details accurate and notify ALBUKHR of any material change.
+HA: An fara administrative review. Za mu iya neman ƙarin bayani ko shaida. Ku tabbatar bayanan application suna daidai kuma ku sanar da ALBUKHR duk wani babban canji.
+
+MSG-06 — Application approved / An amince da application: EN: Your application has passed the current administrative decision stage. This does not mean the project is ACTIVE, eligible to accept investment/staking, guaranteed funding or guaranteed returns. Further readiness and authorization gates may apply.
+HA: Application ɗinku ya wuce matakin hukuncin administrative na yanzu. Wannan ba yana nufin project ya zama ACTIVE ba, ya cancanci karɓar investment/staking ba, an tabbatar da funding ba ko an tabbatar da riba ba. Har yanzu akwai wasu readiness da authorization gates da za su iya aiki.
+
+MSG-07 — Rejection / Ƙin amincewa: EN: The application is not approved at this stage for the following recorded reasons: [specific reasons]. This decision is based on the information and evidence reviewed under the applicable process. Any resubmission or appeal, if permitted, must follow the published procedure.
+HA: Ba a amince da application a wannan mataki ba saboda waɗannan dalilan da aka rubuta: [takamaiman dalilai]. Hukuncin ya dogara da bayanai da shaidun da aka duba bisa tsarin da ya dace. Duk wani sabon submission ko appeal, idan an yarda da shi, dole ya bi tsarin da aka bayyana.
+
+MSG-08 — Due diligence outcome / Sakamakon due diligence: EN: The due-diligence stage is recorded as [READY/BLOCKED/REVISION REQUIRED]. Outstanding items: [items]. This result is limited to due diligence and does not approve funding or activate the project.
+HA: An rubuta sakamakon due diligence a matsayin [READY/BLOCKED/ANA BUƘATAR GYARA]. Abubuwan da suka rage: [jerin abubuwa]. Wannan sakamako ya shafi due diligence ne kawai; ba ya amincewa da funding ko kunna project.
+
+MSG-09 — Risk mitigation / Rage haɗari: EN: The assessment identified the following risk(s) requiring clarification or mitigation: [risks]. Please provide the mitigation plan, responsible person, evidence and expected completion date. The risk gate remains unresolved until reassessed by an authorized reviewer.
+HA: Assessment ya gano waɗannan haɗurra da ke buƙatar bayani ko mitigation: [haɗurra]. Ku bayar da shirin rage haɗari, wanda zai aiwatar, shaidar da za a bayar da ranar kammalawa da ake tsammani. Risk gate zai ci gaba da kasancewa unresolved har sai mai izini ya sake tantance shi.
+
+MSG-10 — Funding revision / Gyaran funding: EN: The funding plan requires revision because: [reasons]. Please provide an itemized, reconciled plan and evidence supporting material costs and assumptions. A revised plan is subject to a new assessment and is not automatically accepted.
+HA: Funding plan yana buƙatar gyara saboda: [dalilai]. Ku bayar da cikakken jerin kashe-kashe da ya daidaita, tare da shaidun da ke tallafa wa muhimman kuɗaɗe da assumptions. Za a sake tantance sabon plan; ba za a karɓe shi kai tsaye ba.
+
+MSG-11 — Escalation / Miƙawa ga mai iko: EN: This matter has been referred for additional governance/security review because [reason]. No approval, rejection or activation outcome is promised while the review is pending. Please preserve relevant records and avoid changing the disputed information.
+HA: An miƙa wannan batu domin ƙarin governance/security review saboda [dalili]. Ba a yi alkawarin amincewa, ƙin amincewa ko activation ba yayin da review ke gudana. Ku adana records masu alaƙa kuma kada ku canza bayanan da ake takaddama a kansu.
+
+MSG-12 — Stage completed, activation pending / An kammala mataki amma activation na jira: EN: The [stage] has been recorded as complete. The project remains inactive until every applicable custody, terms, disclosure, funding, technical and final authorization gate has passed. Please do not represent this stage completion as permission to accept public investment/staking.
+HA: An rubuta cewa an kammala matakin [suna]. Project zai ci gaba da kasancewa inactive har sai duk custody, terms, disclosure, funding, technical da final authorization gates da suka dace sun cika. Kada a gabatar da kammala wannan mataki a matsayin izinin karɓar investment/staking daga jama’a.
+
+15. ADMIN CHECKLISTS / JERIN TABBATARWA
+
+EN — Before saving a review: Confirm correct application ID and network; check required fields and documents; record evidence references; use accurate states; enter a factual reason for every decision; verify the server confirms the action; refresh and confirm persisted state.
+
+HA — Kafin adana review: Tabbatar da application ID da network; duba required fields da takardu; rubuta evidence references; yi amfani da states da suka dace; rubuta dalili na gaskiya ga kowane hukunci; tabbatar server ya amince da aikin; sabunta shafi ka tabbatar bayanan sun zauna.
+
+EN — Before completing due diligence/risk/funding: Check all required items; resolve or explicitly record blockers; ensure mitigation evidence is adequate; do not treat optional fields as verified facts; confirm the workspace result after reload; escalate if UI and server state disagree.
+
+HA — Kafin kammala due diligence/risk/funding: Duba duk required items; warware blockers ko rubuta su a sarari; tabbatar mitigation evidence ta isa; kada a ɗauki optional fields a matsayin tabbatattun bayanai; tabbatar da sakamakon workspace bayan reload; escalate idan UI da server state sun saɓa.
+
+EN — Before activation: Verify all applicable gates and the server-authoritative decision path. Never use direct status updates or frontend-only actions. Ensure the activation record and readiness snapshot are traceable.
+
+HA — Kafin activation: Tabbatar da duk gates da suka dace da hanyar hukuncin server. Kada a yi direct status update ko frontend-only action. Tabbatar ana iya bin tarihin activation da readiness snapshot.
+
+16. KNOWN IMPLEMENTATION VERIFICATION ITEMS / ABUBUWAN DA AKE BUƘATAR TABBATARWA
+
+EN: 1) Risk page filename and links: the current inspected Admin repository uses admin-external-risk-assesment.html (with the existing spelling “assesment”) in the risk workspace and the application links checked in this review. A repository search did not find the alternate admin-external-risk-assessment.html spelling. This is a snapshot of the default branch inspected on 10 October 2026; confirm the deployed path before any future rename or release.
+
+HA: 1) Sunan fayil na Risk da links: repository na Admin da aka duba yana amfani da admin-external-risk-assesment.html (rubutun “assesment” na yanzu) a shafin Risk da links na application da aka bincika. Binciken repository bai gano madadin rubutun admin-external-risk-assessment.html ba. Wannan sakamakon ya shafi default branch da aka duba a ranar 10 Oktoba 2026; a tabbatar da deployed path kafin a sauya suna ko fitar da sabon release.
+
+EN: 2) MFA/AAL2: the application-review page calls ensureMfa when required by admin settings; the inspected Due Diligence and Risk pages show AAL2 VERIFIED but do not show the same explicit ensureMfa call. Confirm protected RPC enforcement and deployed security controls before claiming identical assurance.
+
+HA: 2) MFA/AAL2: shafin application review yana kiran ensureMfa idan settings na admin sun buƙata; shafukan Due Diligence da Risk da aka duba suna nuna AAL2 VERIFIED amma ba a ga kiran ensureMfa iri ɗaya ba. A tabbatar da kariyar RPC da security controls na production kafin a ce matakan assurance iri ɗaya ne.
+
+EN: 3) Terms, custody, disclosure and final activation: dedicated admin pages were not confirmed in the inspected repository. The governance sequence is required by the policy, but the exact current operational path and backend gate must be verified.
+
+HA: 3) Terms, custody, disclosure da final activation: ba a tabbatar da shafukan Admin na musamman a repository da aka duba ba. Policy na buƙatar wannan jerin matakai, amma dole a tabbatar da ainihin hanyar aiki da backend gate na yanzu.
+
+EN: 4) Production assurance: this SOP is approved for internal External Projects Admin use by the ALBUKHR Team. This approval does not certify backend enforcement; it does not mean a live penetration test or full database/RPC audit has been completed, and it is not a legal opinion. The outstanding control-verification items above remain open until the designated Governance/Security owner confirms them.
+
+HA: 4) Tabbacin production: ALBUKHR Team ta amince da wannan SOP don amfani na cikin gida ga Admin na External Projects. Wannan amincewa ba ta tabbatar da backend enforcement ba, ba ta kammala live penetration test ko cikakken database/RPC audit ba, kuma ba shawarar lauya ba ce. Abubuwan tabbatar da controls da aka lissafta a sama za su kasance a buɗe har sai mai alhakin Governance/Security ya tabbatar da su.
+
+17. REFERENCES / MANAZARTA
+
+EN: Admin repository: https://github.com/MuhmdBuharisaeed/albukhr-admin
+
+EN: External Project Policy v1.0: https://github.com/MuhmdBuharisaeed/albukhr-app/blob/main/docs/ALBUKHR_EXTERNAL_PROJECT_POLICY_V1.md
+
+EN: Project Risk Framework v1.0: https://github.com/MuhmdBuharisaeed/albukhr-app/blob/main/docs/ALBUKHR_PROJECT_RISK_FRAMEWORK_V1.md
+
+EN: Capital & Funding Model v1.0: https://github.com/MuhmdBuharisaeed/albukhr-app/blob/main/docs/ALBUKHR_CAPITAL_AND_FUNDING_MODEL_V1.md
+
+EN: Project Market Activation Standard v1.0: https://github.com/MuhmdBuharisaeed/albukhr-app/blob/main/docs/ALBUKHR_PROJECT_MARKET_ACTIVATION_STANDARD_V1.md
+
+18. REPOSITORY VALIDATION SNAPSHOT (10 OCTOBER 2026) / 18. TAKAITACCEN BINCIKEN REPOSITORY (10 OKTOBA 2026)
+
+EN: Validated against the current default-branch files inspected in MuhmdBuharisaeed/albukhr-admin: admin-external-projects.html, js/admin-external-projects.js, admin-external-due-diligence.html, admin-external-risk-assesment.html, and admin-external-funding.html. This is a read-only source review, not a live production test.
+
+HA: An kwatanta SOP da fayilolin default branch da aka duba a MuhmdBuharisaeed/albukhr-admin: admin-external-projects.html, js/admin-external-projects.js, admin-external-due-diligence.html, admin-external-risk-assesment.html da admin-external-funding.html. Binciken source ne na karatu kawai; ba gwajin live production ba ne.
+
+EN: Application review: the UI exposes Start Review for submitted applications; Approve, Request Revision and Reject for under_review applications; and Convert to Project for approved applications. Converted records are described by the UI as External Project drafts, with activation remaining a separate server-side gate.
+
+HA: Application review: UI yana nuna Start Review ga submitted; Approve, Request Revision da Reject ga under_review; sannan Convert to Project ga approved. UI ya bayyana converted record a matsayin draft na External Project, kuma activation yana nan a matsayin gate na server dabam.
+
+EN: Due diligence: the inspected page starts a case only when the application is under_review; it records check states and evidence references and explicitly states that completion does not activate the project. Risk assessment: the page states that a completed READY due-diligence case is a prerequisite; risk completion is readiness only.
+
+HA: Due diligence: shafin da aka duba yana fara case ne idan application tana under_review; yana rubuta states na checks da references na shaida, kuma ya bayyana cewa kammalawa ba ta kunna project. Risk assessment: shafin ya ce dole due diligence ya kammala da READY kafin a fara; kammala risk readiness ne kawai.
+
+EN: Funding: the inspected page runs a server assessment before recording a funding decision. Its own boundary note says that approved capital requirement is not verified liquidity, custody/escrow approval, staking-term approval or activation.
+
+HA: Funding: shafin da aka duba yana gudanar da server assessment kafin rubuta hukuncin funding. Bayanin iyaka a shafin ya ce amincewar capital requirement ba tabbatar da liquidity ba ce, ba amincewar custody/escrow ba ce, ba amincewar staking terms ba ce, kuma ba activation ba ce.
+
+EN: AAL2/MFA wording: Application Review explicitly calls ensureMfa() and redirects to the MFA page when required by the admin configuration. The inspected Due Diligence, Risk and Funding page code calls requireAdmin() and displays “AAL2 VERIFIED” but does not show the same explicit ensureMfa() call. This observation alone does not prove a server-side bypass; server/RPC enforcement and deployed configuration remain to be verified by the security owner. Administrators must follow the actual enforced MFA challenge and must not treat a UI badge alone as proof.
+
+HA: Bayanin AAL2/MFA: Application Review yana kiran ensureMfa() a sarari kuma yana tura admin zuwa shafin MFA idan settings sun wajabta. Code na Due Diligence, Risk da Funding da aka duba yana kiran requireAdmin() kuma yana nuna “AAL2 VERIFIED”, amma ba a ga ensureMfa() iri ɗaya ba. Wannan lura kaɗai ba ta tabbatar da cewa akwai bypass a server ba; mai security dole ne ya tabbatar da server/RPC enforcement da deployed configuration. Admin ya bi ainihin MFA challenge da tsarin ke tilastawa, kuma kada ya ɗauki badge a UI shi kaɗai a matsayin hujja.
+
+EN: Outstanding implementation verification: confirm the authoritative operational path and backend gates for custody/escrow where applicable, terms, disclosure, funding readiness, technical readiness and final activation; and confirm server-side AAL2 enforcement for every relevant RPC. These are technical implementation checks and must not be reported as complete until the responsible owner verifies them. The ALBUKHR Team has approved this document as an internal SOP limited to External Projects Admin use.
+
+HA: Abubuwan tabbatar da implementation da suka rage: tabbatar da ainihin hanyar aiki da backend gates na custody/escrow inda ya dace, terms, disclosure, funding readiness, technical readiness da final activation; sannan a tabbatar da server-side AAL2 enforcement ga kowane RPC da ya dace. Waɗannan checks ne na technical implementation; kada a ce an kammala su sai mai alhaki ya tabbatar. ALBUKHR Team ta amince da wannan takarda a matsayin SOP na cikin gida, wanda ya takaita ga Admin na External Projects.
+
+Validation outcome / Sakamakon bincike
+
+EN: The documented separation between application approval, conversion, due-diligence readiness, risk readiness, funding decision and activation is consistent with the inspected UI. ALBUKHR Team approval is recorded for internal SOP use only. The custody/terms/disclosure/activation paths and consistent MFA/AAL2 enforcement remain implementation-verification items; this SOP must not be read as proof that those controls have already been deployed or tested.
+
+HA: Bambancin application approval, conversion, due-diligence readiness, risk readiness, funding decision da activation ya dace da UI da aka duba. An rubuta amincewar ALBUKHR Team don amfani da SOP a cikin gida kawai. Hanyoyin custody/terms/disclosure/activation da daidaitaccen MFA/AAL2 enforcement har yanzu abubuwan tabbatar da implementation ne; wannan SOP ba hujja ba ce cewa an riga an fitar da ko an gwada waɗannan controls.
+
+
+TABLE 1
+
+Document title | ALBUKHR External Project Administration Standard Operating Procedure (SOP)
+
+Sunan Hausa | Tsarin Aiki na Ma’aikatan Gudanar da External Projects na ALBUKHR
+
+Version / Siga | Approved SOP v1.0 — approved for External Projects Admin use only
+
+Owner / Mai alhaki | ALBUKHR Investment Limited / ALBUKHR Ecosystem Governance
+
+Scope / Iyakar aiki | Administrative handling of External Project applications on Mainnet, subject to verified roles, server-side permissions and applicable legal/regulatory review.
+
+Status / Matsayi | APPROVED SOP — controlled internal procedure; External Projects Admin only
+
+Approval authority | ALBUKHR Team approval for SOP use only; does not grant additional software, database or admin permissions.
+Funder Sign / Sa hannun Funder | BUHARI SAIDU
+Approval date / Ranar amincewa | 10 October 2026
+Important note | This SOP describes observed admin UI actions and the intended governance sequence. It does not certify backend enforcement or legal/regulatory authorization.
