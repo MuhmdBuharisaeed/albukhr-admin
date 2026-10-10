@@ -1,0 +1,44 @@
+diff --git a/admin-external-projects.html b/admin-external-projects.html
+--- a/admin-external-projects.html
++++ b/admin-external-projects.html
+@@ -11,5 +11,6 @@
+ <script src="js/core/supabase-admin-auth.js" defer></script>
+ <script src="js/admin-external-projects.js?v=20261009-2" defer></script>
+ <link rel="stylesheet" href="css/external-project-logo-display.css?v=20261009-2">
++<style>.sop-entry-button{display:inline-flex;align-items:center;justify-content:center;margin-top:12px;padding:10px 13px;border:1px solid #087a3e;border-radius:10px;background:#087a3e;color:#fff;text-decoration:none;font-size:12px;font-weight:850;box-shadow:0 4px 12px rgba(8,122,62,.12)}.sop-entry-button:hover{filter:brightness(.96)}.sop-entry-button:focus-visible{outline:3px solid rgba(8,122,62,.25);outline-offset:3px}.sop-entry-button[hidden]{display:none!important}</style>
+ </head>
+ <body>
+@@ -33,7 +33,8 @@
+       <small>EXTERNAL PROJECTS</small>
+       <h1>Application Review</h1>
+       <p>Review submitted External Project applications before approval and conversion into the ALBUKHR project registry.</p>
++      <a id="externalSopButton" class="sop-entry-button" href="admin-external-sop.html" hidden>External Project SOP &amp; Policies</a>
+     </div>
+     <strong id="securityState">Verifying...</strong>
+   </section>
+ 
+diff --git a/js/admin-external-projects.js b/js/admin-external-projects.js
+--- a/js/admin-external-projects.js
++++ b/js/admin-external-projects.js
+@@ -474,9 +474,21 @@
+     if(admin.mfa_required&&!mfa.verified){
+       location.replace("admin-mfa.html");
+       return;
+     }
++
++    /* SOP entry is limited to the same global roles that authorize
++       External Projects in Admin Control Center. Keep it hidden until
++       authentication, required MFA/AAL2 and the role check have passed. */
++    const externalSopButton=$("externalSopButton");
++    const canAccessExternalSop=Array.isArray(admin.roles)&&(
++      admin.roles.includes("super_admin")||
++      admin.roles.includes("external_admin")
++    );
++    if(externalSopButton){
++      externalSopButton.hidden=!canAccessExternalSop;
++    }
+ 
+     $("securityState").textContent="AAL2 verified";
+     status("Administrator security verification completed.");
+ 
+     setup();
