@@ -12,422 +12,111 @@ function label(v){
 
 function status(t,e){
   const el=$("pageStatus");
-
-  if(!el){
-    return;
-  }
-
+  if(!el)return;
   el.textContent=t||"";
   el.className="status"+(e?" error":"");
 }
 
 function render(a,m){
-  $("adminEmail").textContent=
-    a.email||
-    a.email_snapshot||
-    "Authenticated administrator";
+  $("adminEmail").textContent=a.email||a.email_snapshot||"Authenticated administrator";
+  $("adminId").textContent=a.user_id||"Authenticated session";
+  $("adminStatus").textContent=label(a.status);
+  $("mfaStatus").textContent=m.verified?"AAL2 verified":"Not verified";
 
-  $("adminId").textContent=
-    a.user_id||
-    "Authenticated session";
+  const roles=Array.isArray(a.roles)?a.roles:[];
+  $("roleCount").textContent=roles.length;
+  $("roles").innerHTML=roles.map(r=>'<span class="role">'+label(r)+"</span>").join("")||"<span>No roles returned.</span>";
 
-  $("adminStatus").textContent=
-    label(a.status);
+  $("coreCount").textContent=Array.isArray(a.core_projects)?a.core_projects.length:0;
+  $("scopedCount").textContent=Array.isArray(a.scoped_projects)?a.scoped_projects.length:0;
+  $("testnetAccess").textContent=a.testnet_access?"Granted":"No";
+  $("securityState").textContent=m.verified?"Authenticated • AAL2":"Authenticated";
 
-  $("mfaStatus").textContent=
-    m.verified
-      ?"AAL2 verified"
-      :"Not verified";
-
-  const roles=
-    Array.isArray(a.roles)
-      ?a.roles
-      :[];
-
-  $("roleCount").textContent=
-    roles.length;
-
-  $("roles").innerHTML=
-    roles.map(
-      r=>
-        '<span class="role">'+
-        label(r)+
-        "</span>"
-    ).join("")||
-    "<span>No roles returned.</span>";
-
-  $("coreCount").textContent=
-    Array.isArray(a.core_projects)
-      ?a.core_projects.length
-      :0;
-
-  $("scopedCount").textContent=
-    Array.isArray(a.scoped_projects)
-      ?a.scoped_projects.length
-      :0;
-
-  $("testnetAccess").textContent=
-    a.testnet_access
-      ?"Granted"
-      :"No";
-
-  $("securityState").textContent=
-    m.verified
-      ?"Authenticated • AAL2"
-      :"Authenticated";
-
-  const testnetLink=
-    $("testnetAdminLink");
-
+  const testnetLink=$("testnetAdminLink");
   if(testnetLink){
-    testnetLink.hidden=!(( 
-      a.testnet_access===true&&
-      (!a.mfa_required||m.verified)
-    ));
+    testnetLink.hidden=!(a.testnet_access===true&&(!a.mfa_required||m.verified));
   }
 
   const defs=[
-
-    [
-      "Security & Access",
-      "Administrator roles and security controls.",
-      [
-        "super_admin"
-      ],
-      "admin-security.html"
-    ],
-
-    [
-      "Core Team",
-      "Invite and manage the seven official ALBUKHR Core Team members.",
-      [
-        "super_admin"
-      ],
-      "admin-core-team.html"
-    ],
-
-    [
-      "Project Registry",
-      "Core project registry administration.",
-      [
-        "super_admin",
-        "registry_admin",
-        "core_admin"
-      ],
-      "admin-project-registry.html"
-    ],
-
-    [
-      "Contributor Invitations",
-      "Create and securely issue Mainnet Contributor onboarding invitations.",
-      [
-        "super_admin"
-      ],
-      "admin-contributor-invitations.html"
-    ],
-
-    [
-      "Project Approvals",
-      "Project approval workflow.",
-      [
-        "super_admin",
-        "approval_admin"
-      ],
-      "admin-project-approvals.html"
-    ],
-
-    [
-      "Core Project Lifecycle",
-      "Core treasury, liquidity, staking-term readiness and activation.",
-      [
-        "super_admin",
-        "approval_admin",
-        "finance_admin"
-      ],
-      "admin-core-lifecycle.html"
-    ],
-
-    [
-      "Staking Contract V2",
-      "Review approved Core staking terms and publish them through the secured V2 publication gate.",
-      [
-        "super_admin",
-        "approval_admin",
-        "finance_admin"
-      ],
-      "admin-staking-contract-v2.html"
-    ],
-
-    [
-      "Contributor Project Approvals",
-      "Review Contributor-owned Internal Projects submitted to Mainnet governance.",
-      [
-        "super_admin",
-        "approval_admin"
-      ],
-      "admin-contributor-projects.html"
-    ],
-
-    [
-      "Contributor Funding Assessment",
-      "Review itemized Contributor Internal funding plans, approve validated capital requirements, and route them to the server-controlled liquidity assessment.",
-      [
-        "super_admin",
-        "approval_admin",
-        "finance_admin",
-        "internal_admin"
-      ],
-      "admin-internal-funding-assessment.html"
-    ],
-
-    [
-      "Contributor Internal Lifecycle",
-      "Internal Project treasury, contract readiness and activation.",
-      [
-        "super_admin",
-        "approval_admin",
-        "finance_admin"
-      ],
-      "admin-internal-lifecycle.html"
-    ],
-
-    [
-      "Finance",
-      "Administrative finance oversight.",
-      [
-        "super_admin",
-        "finance_admin"
-      ],
-      "admin-module.html?module=finance"
-    ],
-
-    [
-      "Internal Projects",
-      "Internal project scope administration.",
-      [
-        "super_admin",
-        "internal_admin"
-      ],
-      "admin-module.html?module=internal"
-    ],
-
-    [
-  "External Projects",
-  "External project scope administration.",
-  [
-    "super_admin",
-    "external_admin"
-  ],
-  "admin-external-projects.html"
-]
+    ["Security & Access","Administrator roles and security controls.",["super_admin"],"admin-security.html"],
+    ["Core Team","Invite and manage the seven official ALBUKHR Core Team members.",["super_admin"],"admin-core-team.html"],
+    ["Project Registry","Core project registry administration.",["super_admin","registry_admin","core_admin"],"admin-project-registry.html"],
+    ["Contributor Invitations","Create and securely issue Mainnet Contributor onboarding invitations.",["super_admin"],"admin-contributor-invitations.html"],
+    ["Project Approvals","Project approval workflow.",["super_admin","approval_admin"],"admin-project-approvals.html"],
+    ["Core Project Lifecycle","Core treasury, liquidity, staking-term readiness and activation.",["super_admin","approval_admin","finance_admin"],"admin-core-lifecycle.html"],
+    ["Staking Contract V2","Review approved Core staking terms and publish them through the secured V2 publication gate.",["super_admin","approval_admin","finance_admin"],"admin-staking-contract-v2.html"],
+    ["Contributor Project Approvals","Review Contributor-owned Internal Projects submitted to Mainnet governance.",["super_admin","approval_admin"],"admin-contributor-projects.html"],
+    ["Contributor Funding Assessment","Review itemized Contributor Internal funding plans, approve validated capital requirements, and route them to the server-controlled liquidity assessment.",["super_admin","approval_admin","finance_admin","internal_admin"],"admin-internal-funding-assessment.html"],
+    ["Contributor Internal Lifecycle","Internal Project treasury, contract readiness and activation.",["super_admin","approval_admin","finance_admin"],"admin-internal-lifecycle.html"],
+    ["Finance","Administrative finance oversight.",["super_admin","finance_admin"],"admin-module.html?module=finance"],
+    ["Internal Projects","Internal project scope administration.",["super_admin","internal_admin"],"admin-module.html?module=internal"],
+    ["External Projects","External project scope administration.",["super_admin","external_admin"],"admin-external-projects.html"],
+    ["Pi dApp Service Queue","Review dApp service requests, inspect quote/payment/audit history, update request status, and issue PI quotes. Pi payments remain separately disabled until approved.",["super_admin","external_admin"],"admin-dapp-service-queue-v2.html"]
   ];
 
-  $("modules").innerHTML=
-    defs.map(x=>{
-      const ok=
-        x[2].some(
-          r=>roles.includes(r)
-        );
-
-      return (
-        '<a class="module '+
-        (ok?"":"off")+
-        '" href="'+
-        x[3]+
-        '">'+
-        "<h3>"+
-        x[0]+
-        "</h3>"+
-        "<p>"+
-        x[1]+
-        "</p>"+
-        "<small>"+
-        (ok
-          ?"AUTHORIZED"
-          :"ROLE REQUIRED")+
-        "</small>"+
-        "</a>"
-      );
-    }).join("");
+  $("modules").innerHTML=defs.map(x=>{
+    const ok=x[2].some(r=>roles.includes(r));
+    return '<a class="module '+(ok?"":"off")+'" href="'+x[3]+'"><h3>'+x[0]+"</h3><p>"+x[1]+"</p><small>"+(ok?"AUTHORIZED":"ROLE REQUIRED")+"</small></a>";
+  }).join("");
 }
 
 async function init(){
   try{
-    if(
-      !A()||
-      !window.AlbukhrEnvironment?.isMainnet()
-    ){
-      throw new Error(
-        "Admin Control Center is unavailable."
-      );
+    if(!A()||!window.AlbukhrEnvironment?.isMainnet()){
+      throw new Error("Admin Control Center is unavailable.");
     }
 
     await A().init();
-
-    const a=await A().requireAdmin({
-      redirect:false,
-      preserveSessionOnContextError:true
-    });
-
-    if(!a){
-      location.replace("admin-login.html");
-      return;
-    }
+    const a=await A().requireAdmin({redirect:false,preserveSessionOnContextError:true});
+    if(!a){location.replace("admin-login.html");return;}
 
     const m=await A().ensureMfa();
-
-    if(a.mfa_required&&!m.verified){
-      location.replace("admin-mfa.html");
-      return;
-    }
+    if(a.mfa_required&&!m.verified){location.replace("admin-mfa.html");return;}
 
     render(a,m);
-
-    status(
-      "Admin authorization verified."
-    );
-
+    status("Admin authorization verified.");
   }catch(e){
-    console.error(
-      "[ALBUKHR ADMIN DASHBOARD]",
-      e
-    );
+    console.error("[ALBUKHR ADMIN DASHBOARD]",e);
+    const msg=String(e?.message||e||"");
 
-    const msg=
-      String(
-        e?.message||
-        e||
-        ""
-      );
-
-    if(
-      /mfa|aal2|factor|authenticator/i.test(msg)
-    ){
-      status(
-        "Admin session requires security verification.",
-        true
-      );
-
-      setTimeout(
-        ()=>location.replace("admin-mfa.html"),
-        500
-      );
-
+    if(/mfa|aal2|factor|authenticator/i.test(msg)){
+      status("Admin session requires security verification.",true);
+      setTimeout(()=>location.replace("admin-mfa.html"),500);
       return;
     }
 
-    status(
-      "Admin authorization could not be verified. Retrying secure session...",
-      true
-    );
-
+    status("Admin authorization could not be verified. Retrying secure session...",true);
     try{
-      await new Promise(
-        resolve=>setTimeout(resolve,350)
-      );
+      await new Promise(resolve=>setTimeout(resolve,350));
+      const refreshedSession=await A()?.refreshSession();
+      if(!refreshedSession?.user)throw new Error("Authenticated session could not be refreshed.");
 
-      const refreshedSession=
-        await A()?.refreshSession();
+      const a=await A()?.requireAdmin({redirect:false,preserveSessionOnContextError:true});
+      if(!a||a.is_admin!==true||a.status!=="active")throw new Error("Active admin authorization was not returned.");
 
-      if(!refreshedSession?.user){
-        throw new Error(
-          "Authenticated session could not be refreshed."
-        );
-      }
-
-      const a=
-        await A()?.requireAdmin({
-          redirect:false,
-          preserveSessionOnContextError:true
-        });
-
-      if(
-        !a||
-        a.is_admin!==true||
-        a.status!=="active"
-      ){
-        throw new Error(
-          "Active admin authorization was not returned."
-        );
-      }
-
-      const m=
-        await A().ensureMfa();
-
-      if(
-        a.mfa_required&&
-        !m.verified
-      ){
-        location.replace(
-          "admin-mfa.html"
-        );
-
-        return;
-      }
+      const m=await A().ensureMfa();
+      if(a.mfa_required&&!m.verified){location.replace("admin-mfa.html");return;}
 
       render(a,m);
-
-      status(
-        "Admin authorization verified."
-      );
-
+      status("Admin authorization verified.");
     }catch(retryError){
-      console.error(
-        "[ALBUKHR ADMIN DASHBOARD RETRY]",
-        retryError
-      );
-
-      const retryMessage=
-        String(
-          retryError?.message||
-          retryError||
-          ""
-        );
-
-      if(
-        /mfa|aal2|factor|authenticator/i.test(
-          retryMessage
-        )
-      ){
-        status(
-          "Admin session requires security verification.",
-          true
-        );
-
-        setTimeout(
-          ()=>location.replace("admin-mfa.html"),
-          500
-        );
-
+      console.error("[ALBUKHR ADMIN DASHBOARD RETRY]",retryError);
+      const retryMessage=String(retryError?.message||retryError||"");
+      if(/mfa|aal2|factor|authenticator/i.test(retryMessage)){
+        status("Admin session requires security verification.",true);
+        setTimeout(()=>location.replace("admin-mfa.html"),500);
         return;
       }
-
-      status(
-        "Admin authorization failed. Returning to secure login.",
-        true
-      );
-
-      setTimeout(
-        ()=>location.replace("admin-login.html"),
-        900
-      );
+      status("Admin authorization failed. Returning to secure login.",true);
+      setTimeout(()=>location.replace("admin-login.html"),900);
     }
   }
 }
 
-$("logoutButton")?.addEventListener(
-  "click",
-  async()=>{
-    try{
-      await A()?.signOut();
-    }finally{
-      location.replace(
-        "admin-login.html"
-      );
-    }
-  }
-);
+$("logoutButton")?.addEventListener("click",async()=>{
+  try{await A()?.signOut();}
+  finally{location.replace("admin-login.html");}
+});
 
 init();
-
 })(window,document);
