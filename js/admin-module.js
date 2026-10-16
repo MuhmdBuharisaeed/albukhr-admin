@@ -240,12 +240,12 @@
       '<section class="fin-metrics">' +
       metric('Mainnet projects', s.mainnet_projects || 0) + metric('Active projects', s.active_projects || 0) +
       metric('Approved projects', s.approved_projects || 0) + metric('Active test authorizations', s.active_test_authorizations || 0) +
-      metric('Core investment payments', s.core_investment_payment_count || 0, money(s.core_investment_gross_pi || 0, 'π') + ' recorded gross') +
-      metric('Internal investment payments', s.internal_investment_payment_count || 0, money(s.internal_investment_gross_pi || 0, 'π') + ' recorded gross') +
-      metric('Core liquidity payments', s.core_liquidity_payment_count || 0, money(s.core_liquidity_gross_pi || 0, 'π') + ' recorded gross') +
-      metric('Internal liquidity payments', s.internal_liquidity_payment_count || 0, money(s.internal_liquidity_gross_pi || 0, 'π') + ' recorded gross') +
+      metric('Verified Core investments', s.core_investment_payment_count || 0, money(s.core_investment_gross_pi || 0, 'π') + ' completed + verified') +
+      metric('Verified Internal investments', s.internal_investment_payment_count || 0, money(s.internal_investment_gross_pi || 0, 'π') + ' completed + verified') +
+      metric('Verified Core liquidity', s.core_liquidity_payment_count || 0, money(s.core_liquidity_gross_pi || 0, 'π') + ' completed + verified') +
+      metric('Verified Internal liquidity', s.internal_liquidity_payment_count || 0, money(s.internal_liquidity_gross_pi || 0, 'π') + ' completed + verified') +
       metric('Active stakes', s.active_stakes || 0) + metric('Open withdrawals', s.unresolved_withdrawal_requests || 0) +
-      metric('Recorded fees', money(s.recorded_transaction_fees_pi || 0, 'π')) +
+      metric('Settled fees', money(s.settled_transaction_fees_pi || 0, 'π')) +
       '</section>' +
       '<section class="fin-section"><h3>Mainnet Project Readiness & Test Authorization</h3><p class="fin-muted">Only APPROVED Core or Contributor Internal projects can receive a verification-only test authorization. External projects retain their dedicated activation governance. No project status is changed by this workspace.</p>' +
       '<div class="fin-projects">' + (projectHtml || '<div class="fin-muted">No Mainnet projects were returned.</div>') + '</div></section>' +
@@ -297,7 +297,7 @@
         p_reason: String(reason).trim(),
         p_duration_minutes: 15
       });
-      if (!result || result.success !== true || result.network !== 'mainnet' || result.mode !== 'verification_only' || result.project_status !== 'approved' || result.payment_approval_enabled !== false || result.payment_completion_enabled !== false || result.settlement_enabled !== false) {
+      if (!result || result.success !== true || result.authorized !== true || result.network !== 'mainnet' || result.mode !== 'verification_only' || result.project_status !== 'approved' || result.payment_approval_enabled !== false || result.payment_completion_enabled !== false || result.settlement_enabled !== false) {
         throw new Error("Server did not confirm a verification-only authorization for an APPROVED project.");
       }
       financePreflightResult = null;
@@ -345,7 +345,7 @@
         p_authorization_id: authorizationId,
         p_reason: String(reason).trim()
       });
-      if (!result || result.success !== true || result.project_status_mutated !== false) {
+      if (!result || result.success !== true || result.network !== 'mainnet' || result.project_status_mutated !== false) {
         throw new Error("Server did not confirm that the test authorization closed without changing project status.");
       }
       financePreflightResult = null;
@@ -412,7 +412,7 @@
         return;
       }
       if (key === "finance") {
-        $("workspaceTitle").textContent = "Financial Oversight & Verification-only U2A Tests";
+        $("workspaceTitle").textContent = "Financial Oversight & Readiness Preflight";
         await loadFinance();
         status("Finance Oversight workspace loaded from Mainnet. No payment operations were executed.");
         return;
