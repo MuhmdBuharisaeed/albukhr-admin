@@ -1,0 +1,69 @@
+ALBUKHR INVESTMENT LIMITED
+RAHOTON BINCIKEN FINANCE ADMIN DA PROJECT READINESS
+Mainnet | 16 Oktoba 2026 | Hausa
+Nau’in rahoto: Read-only technical audit da readiness assessment. Wannan rahoto ba izinin aiwatar da Mainnet changes ba ne.
+Muhimmin taƙaitaccen hukunci
+Finance Admin ya buɗe bayan gano mismatch na case a Environment Core global.
+RAHEEM PHARMACY (RAHEEM-25) yana Mainnet, Core Slot 1, status APPROVED.
+Blockers: babu Mainnet Core treasury row; Liquidity readiness ba ta tabbata ba; term versions guda uku suna APPROVED, ba PUBLISHED ba.
+Ba a yi Pi transaction, payment approval/completion, stake, settlement ko project status change ba.
+Authorization na mintuna 15 ya ƙare; sabon gwaji yana buƙatar sabon authorization.
+1. Takaitaccen Bayani
+An binciki matsalar Finance Admin ta ALBUKHR da readiness na RAHEEM PHARMACY. An gano mismatch na case a JavaScript: environment-core.js yana samar da window.ALBukhrEnvironment, amma admin-module.js yana dubawa ta w.AlbukhrEnvironment. JavaScript yana bambanta manya da ƙananan haruffa, don haka rashin daidaiton ya iya haifar da “ALBUKHR Environment Core is unavailable.”
+Hotunan da aka aiko daga baya sun nuna Finance Admin ya buɗe, “Server-authoritative access granted”, admin Active da AAL2 verified. Preflight ya wuce Mainnet, Approved status da Core Slot, amma ya kasa Treasury, Liquidity da Published Terms.
+Binciken Mainnet database ya tabbatar babu row na RAHEEM-25 a public.project_treasury. An samu term versions guda uku, amma duk term_status=approved maimakon published. Waɗannan su ne tushen blockers uku.
+2. Iyakokin Bincike da Tsaro
+An karanta source code da definitions na Finance RPCs, sannan aka yi SELECT queries kan project, treasury, term versions, preflight audit event da authorization. Mainnet Supabase ref: ribpntyqdleytsyktdfb. Testnet bai shiga binciken ba.
+Binciken schema/records ya kasance read-only. Sai dai danna Authorize verification-only test ya kira RPC mai ƙirƙirar finance_test_authorizations record, sannan preflight RPC ya rubuta sakamakon cikin albukhr_security.admin_audit_log. Waɗannan control/audit records ne, ba financial settlement ba.
+Ba a yi Pi payment, payment approval/completion, stake, settlement ko canjin project status ba. Ba a canza GitHub, Render environment ko deployment a matsayin wani ɓangare na wannan rahoto ba.
+3. Environment Core: Dalili da Gyara
+Global ɗin Environment Core shi ne window.ALBukhrEnvironment; admin-module.js ya duba w.AlbukhrEnvironment. Wannan case mismatch ne. Gyara: daidaita check zuwa w.ALBukhrEnvironment, ba tare da canza Supabase config, network isolation ko auth flow ba.
+Hoton dashboard ya tabbatar Finance Admin ya buɗe a wannan gwajin, amma ba ya tabbatar da cikakken regression test na duk modules/browsers. A tabbatar da exact production file, JavaScript syntax, duk occurrences na global ɗin, sannan a gwada Finance da Core Approvals. Ba a yi deployment a matsayin wani ɓangare na wannan rahoto ba.
+4. Bayanan RAHEEM PHARMACY
+Project: RAHEEM PHARMACY; code: RAHEEM-25; ID: 25af782e-d91b-467a-9219-3dd45294aaff; network: mainnet; type: core; Core Slot: 1; status: approved.
+Authorization ID: 0378747b-8839-4f64-a1ea-24254c78dcd7. Created: 2026-10-16 14:22:14 UTC. Expiry: 2026-10-16 14:37:14 UTC. Binciken ƙarshe ya nuna currently_active=false. Authorization ya ƙare; sabon gwaji yana buƙatar sabon authorization.
+5. Sakamakon Preflight
+PASS — mainnet_network: project yana Mainnet.
+PASS — approved_project_test_mode: project ya kasance APPROVED; ba a ɗaga shi zuwa ACTIVE ba.
+PASS — core_slot: slot 1 yana cikin kewayon 1–7.
+BLOCKED — treasury_ready: babu Mainnet Core treasury record da ya dace.
+BLOCKED — liquidity_ready: ba a samu row da zai tabbatar verified_liquidity >= required_liquidity ba.
+BLOCKED — published_terms_ready: babu term version da yake published kuma effective yanzu.
+Preflight: readiness_passed=false; production_payment_eligible=false; payment_approval_called=false; payment_completion_called=false; settlement_written=false; project_status_mutated=false.
+6. Treasury: Sharadi da Abin da Aka Gani
+Core Treasury readiness na buƙatar row a public.project_treasury mai project_id/network=mainnet da suka dace; status active ko locked; treasury_wallet ba fanko ba; required_liquidity > 0.
+Babu row a public.project_treasury da ya haɗu da RAHEEM-25 a Mainnet. Don haka record ɗin treasury kansa bai bayyana ba a wannan table.
+Abin yi: binciki treasury setup workflow, RPC/admin page, foreign-key/project/network matching da audit trail. Kada a ƙirƙiri record ko saka wallet bisa zato; tabbatar da wallet da required liquidity daga tushe na hukuma kafin kowane write.
+7. Liquidity: Sharadi da Abin da Aka Gani
+Core Liquidity readiness na buƙatar treasury row a Mainnet mai status active/locked da verified_liquidity >= required_liquidity.
+Saboda babu treasury row, preflight ba zai tabbatar da liquidity readiness ba. Wannan ba ya tabbatar da akwai ko babu Pi a wani wallet na waje; yana nuna database ba ta da record ɗin da ake buƙata don tabbatar da sharadin.
+Abin yi: bayan gano treasury workflow, tabbatar da required_liquidity da verified_liquidity daga ingantattun records da governance ya amince da su. Kada a sa adadi kawai domin check ya wuce.
+8. Published Investment Terms
+An samu term version guda uku: 53a828d9-6988-4cb8-afbb-a19133877097; f8221874-fdad-4f25-8d78-39bbad95ecac; c9f950aa-e30a-41d4-8c3d-dc7125da3646. Dukansu term_status=approved, effective_from=2026-09-13 17:29:17 UTC, effective_until=NULL.
+Preflight yana buƙatar term_status=published, project_id/project_code/network su dace, effective_from <= now(), kuma effective_until NULL ko a nan gaba. Saboda records ɗin approved ne, ba wanda ya cika sharadin.
+Abin yi: binciki term-version publishing workflow/RPC, approvals da audit trail. Tabbatar da version, terms, duration/rates/conditions da effective dates. Kada a yi UPDATE kai tsaye ba tare da bin publishing workflow da governance ba.
+9. Abin da Bai Kamata a Yi ba
+Kada a kunna DAPP_SERVICE_PI_PAYMENTS_ENABLED ko wani live Pi-payment toggle. Kada a yi payment approval/completion, ƙirƙirar stake/settlement, ko canza project daga APPROVED zuwa ACTIVE domin kawai a cire blockers.
+Kada a ƙirƙiri treasury wallet, liquidity amount, published terms ko ownership data na bogi. Kada a yi SQL write, GitHub change ko deployment sai an tabbatar da workflow, an shirya patch/migration, an yi review kuma an sami izini bayyananne.
+Database preflight ba ya gwada Pi authentication/token, real PaymentDTO ko blockchain transaction. Verification-only authorization ba ainihin U2A payment test ba ne.
+10. Tsarin Aiki da Aka Ba da Shawara
+Mataki 1 — Read-only trace na Core treasury workflow: gano tables/RPCs/admin pages na treasury; duba dalilin rashin row a project_treasury.
+Mataki 2 — Read-only trace na term publishing: gano RPC/page da ya kamata ya ɗauki term version daga approved zuwa published; duba audit trail da validations.
+Mataki 3 — Rubuta remediation plan: fayyace records da ake buƙata, approvals, preconditions, yiwuwar UI/SQL changes da rollback plan. Kada a yi write a wannan matakin.
+Mataki 4 — Review kafin canji: tabbatar da network-awareness, RLS/RBAC, AAL2, audit logging da compatibility da workflows da suke aiki.
+Mataki 5 — Bayan izini: aiwatar da gyare-gyaren da aka amince da su kawai; babu Mainnet writes kafin izini bayyananne.
+Mataki 6 — Sake preflight da sabon authorization na mintuna 15. Tabbatar Treasury, Liquidity da Published Terms sun wuce. Wannan kaɗai bai ba da izinin live payment ba.
+Mataki 7 — Binciken U2A daban: Pi auth, PaymentDTO validation, txid verification da settlement idempotency. Kada a yi live transaction ba tare da cikakken izini ba.
+11. Abubuwan da Aka Tabbatar da Waɗanda Ba a Tabbatar ba
+An tabbatar: Environment Core case mismatch a source; Finance Admin ya buɗe a hoton; RAHEEM-25 Mainnet Core Slot 1 APPROVED; babu treasury row; terms guda uku approved ba published ba; preflight blockers uku; authorization ya ƙare; preflight bai canza status ba ko yin settlement/payment ba.
+Ba a tabbatar ba: dalilin da ya sa treasury row bai wanzu ba; ko treasury/liquidity records suna wani workflow/table daban; wane mataki na term publishing bai kammala ba; ko akwai liquidity a waje da records ɗin da aka bincika; ko duk Admin modules sun wuce regression testing; ko live production file ɗin da aka bayar a chat shi ne exact deployed artifact.
+12. Kammalawa
+Matsalar Environment Core ta shafi sunan global da case mismatch. Bayan dashboard ya buɗe, preflight ya gano blockers uku: babu Mainnet Core treasury record, liquidity readiness ba ta tabbata ba, kuma babu currently published investment term.
+Mataki mafi aminci shi ne a bi treasury setup da term publishing workflows ta read-only audit, sannan a shirya remediation plan. Har sai an kammala wannan da sauran payment-specific checks, RAHEEM PHARMACY ya kasance APPROVED, ba ACTIVE ba, kuma live Pi payments su kasance a kashe.
+Appendix A — Muhimman IDs
+Mainnet Supabase project ref: ribpntyqdleytsyktdfb
+Project ID: 25af782e-d91b-467a-9219-3dd45294aaff
+Project code: RAHEEM-25
+Finance authorization ID: 0378747b-8839-4f64-a1ea-24254c78dcd7
+Preflight audit event: 2026-10-16 14:24:29 UTC
+Ƙa’idar aiki: Wannan rahoto ba ya ba da izinin SQL writes, GitHub changes, Render deployment, canjin project status, ko kunna Pi payments.
