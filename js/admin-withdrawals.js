@@ -86,7 +86,16 @@ async function markPaid(id,txid,note){
 }
 async function init(){
  try{
-  if(!w.AlbukhrEnvironment?.isKnown?.()||!w.AlbukhrEnvironment.isMainnet())throw Error("ALBUKHR Admin is Mainnet only.");
+  const env = w.ALBukhrEnvironment;
+if (
+  !env ||
+  typeof env.isKnown !== "function" ||
+  typeof env.isMainnet !== "function" ||
+  !env.isKnown() ||
+  !env.isMainnet()
+) {
+  throw Error("ALBUKHR Admin is Mainnet only.");
+}
   await A().init();const admin=await A().requireAdmin({redirect:false});if(!admin){location.replace("admin-login.html");return}
   const m=await A().ensureMfa();$("mfaStatus").textContent=m.verified?"AAL2 VERIFIED":"NOT VERIFIED";
   const roles=admin.roles||[];const ok=roles.includes("super_admin")||roles.includes("finance_admin")||roles.includes("approval_admin");
