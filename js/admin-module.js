@@ -289,10 +289,16 @@
       .fin-result-row{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #e3eee8;font-size:11px}
       .fin-result-row:last-child{border-bottom:0}
       .fin-status{font-size:11px;color:#60776d;margin-bottom:10px}
+      .fin-withdrawal-link{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid #cfe3d7;border-radius:12px;padding:12px;background:#f8fcf9}
+      .fin-withdrawal-link p{margin:5px 0 0}
+      .fin-withdrawal-link a{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:9px;background:#087a3e;color:#fff;padding:10px 13px;font-size:12px;font-weight:850;white-space:nowrap}
+      .fin-withdrawal-link a:focus-visible{outline:3px solid #9ccbb1;outline-offset:2px}
       @media(max-width:520px){
         .fin-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
         .fin-section{padding:10px}
         .fin-metric strong{font-size:16px}
+        .fin-withdrawal-link{align-items:stretch}
+        .fin-withdrawal-link a{width:100%}
       }
     `;
 
@@ -486,6 +492,14 @@
         money(s.settled_transaction_fees_pi || 0, "π")
       ) +
       "</section>" +
+
+      /* Navigation only: actual withdrawal access is checked again by its own page. */
+      '<section class="fin-section" aria-labelledby="withdrawalOpsHeading">' +
+      '<h3 id="withdrawalOpsHeading">Withdrawal Operations</h3>' +
+      '<div class="fin-withdrawal-link"><div><strong>Withdrawal Review & Reconciliation</strong>' +
+      '<p class="fin-muted">Review requests, inspect A2U reconciliation holds, and use the existing guarded manual-payment workflow. Opening the page does not send Pi.</p></div>' +
+      '<a href="admin-withdrawals.html" aria-label="Open the secured Withdrawal Review page">Open Withdrawal Review</a></div>' +
+      '</section>' +
 
       '<section class="fin-section"><h3>Mainnet Project Readiness & Test Authorization</h3>' +
       '<p class="fin-muted">Only APPROVED Core or Contributor Internal projects ' +
