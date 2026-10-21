@@ -1,182 +1,27 @@
-(function () {
-  "use strict";
-  const META = document.querySelector('meta[name="albukhr-admin-session-api-base"]');
-  const $ = (id) => document.getElementById(id);
-  let apiBase = null;
-  let currentFactorId = null;
-
-  function setStatus(message, error) {
-    const el = $("status");
-    el.textContent = String(message || "");
-    el.className = "status" + (error ? " error" : "");
-  }
-
-  function resolveApiBase() {
-    const value = String(META?.content || "").trim();
-    if (!value) return null;
-    try {
-      const url = new URL(value);
-      if (url.protocol !== "https:" || url.username || url.password ||
-          !url.hostname.toLowerCase().endsWith(".albukhr.com") ||
-          url.hostname.toLowerCase() === "albukhr.com" ||
-          (url.pathname !== "/" && url.pathname !== "") || url.search || url.hash) return null;
-      return url.origin;
-    } catch (_) { return null; }
-  }
-
-  async function request(path, method, payload) {
-    if (!apiBase) throw new Error("Set the staging API custom domain in this page's meta tag before testing.");
-    const headers = { "Accept": "application/json" };
-    const options = { method: method || "GET", headers, credentials: "include", cache: "no-store", redirect: "error" };
-    if (payload !== undefined) {
-      headers["Content-Type"] = "application/json";
-      options.body = JSON.stringify(payload);
-    }
-    const response = await fetch(apiBase + "/api/admin/session" + path, options);
-    const data = await response.json().catch(() => null);
-    if (!response.ok || !data || data.success !== true) {
-      throw new Error(data?.error || "Staging Admin Session request failed (" + response.status + ").");
-    }
-    if (String(data.network || "").toLowerCase() !== "mainnet") throw new Error("Wrong network returned by the API.");
-    return data;
-  }
-
-  function renderContext(data) {
-    const context = data.context || {};
-    if (context.requires_mfa || data.requires_mfa) {
-      $("context").textContent = "Authenticated Mainnet admin session. MFA/AAL2 is required before roles and scopes are returned.";
-      return;
-    }
-    $("context").textContent = JSON.stringify(context, null, 2);
-  }
-
-  function clearFactors() {
-    $("factors").replaceChildren();
-    $("enrollPanel").classList.add("hidden");
-    $("verifyPanel").classList.add("hidden");
-    $("qr").removeAttribute("src");
-    $("secret").textContent = "";
-    $("totpCode").value = "";
-    currentFactorId = null;
-  }
-
-  async function loadFactors() {
-    const result = await request("/mfa/factors", "GET");
-    const host = $("factors");
-    host.replaceChildren();
-    for (const factor of result.factors || []) {
-      const card = document.createElement("div");
-      card.className = "factor";
-      const title = document.createElement("strong");
-      title.textContent = factor.friendly_name || "Authenticator";
-      const details = document.createElement("small");
-      details.textContent = factor.factor_type + " • " + factor.status;
-      card.append(title, details);
-      if (factor.status === "verified") {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "secondary";
-        button.textContent = "Challenge this authenticator";
-        button.addEventListener("click", async () => {
-          try {
-            await request("/mfa/challenge", "POST", { factor_id: factor.id });
-            currentFactorId = factor.id;
-            $("verifyPanel").classList.remove("hidden");
-            $("totpCode").focus();
-            setStatus("Challenge created. Enter the current authenticator code within 120 seconds.");
-          } catch (error) { setStatus(error.message, true); }
-        });
-        card.append(button);
-      }
-      host.append(card);
-    }
-    if (!(result.factors || []).length) host.textContent = "No authenticator factors are registered for this account.";
-    if (result.requires_mfa) setStatus("An existing verified factor must be challenged; do not enroll a replacement from this flow.");
-    return result;
-  }
-
-  $("loginForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const button = $("loginButton");
-    button.disabled = true;
-    try {
-      const result = await request("/login", "POST", { email: $("email").value, password: $("password").value });
-      $("password").value = "";
-      renderContext(result);
-      setStatus(result.requires_mfa ? "Credentials verified. Complete MFA before accessing roles." : "Staging session verified.");
-    } catch (error) { $("password").value = ""; setStatus(error.message, true); }
-    finally { button.disabled = false; }
-  });
-
-  $("checkButton").addEventListener("click", async () => {
-    try { const result = await request("/context", "GET"); renderContext(result); setStatus("Session context checked."); }
-    catch (error) { $("context").textContent = "No verified session."; setStatus(error.message, true); }
-  });
-
-  $("refreshButton").addEventListener("click", async () => {
-    try { const result = await request("/refresh", "POST", {}); renderContext(result); setStatus("Session refresh succeeded."); }
-    catch (error) { setStatus(error.message, true); }
-  });
-
-  $("loadFactorsButton").addEventListener("click", async () => {
-    try { clearFactors(); await loadFactors(); }
-    catch (error) { setStatus(error.message, true); }
-  });
-
-  $("enrollButton").addEventListener("click", async () => {
-    try {
-      clearFactors();
-      const result = await request("/mfa/enroll", "POST", {});
-      currentFactorId = result.factor?.id || null;
-      if (!currentFactorId) throw new Error("The server did not return an enrollment factor.");
-      const qr = String(result.factor.qr_code || "");
-      if (qr.startsWith("data:image/")) $("qr").src = qr;
-      else if (qr.startsWith("<svg") || qr.includes("<svg")) $("qr").src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(qr);
-      const secret = String(result.factor.secret || "");
-      $("secret").textContent = secret ? "Manual setup key: " + secret : "No manual setup key was returned.";
-      $("enrollPanel").classList.remove("hidden");
-      $("challengeEnrollmentButton").classList.remove("hidden");
-      $("verifyPanel").classList.add("hidden");
-      setStatus("Enrollment started. Scan the QR code first. Then create a short-lived enrollment challenge.");
-    } catch (error) { setStatus(error.message, true); }
-  });
-
-  $("challengeEnrollmentButton").addEventListener("click", async () => {
-    try {
-      if (!currentFactorId) throw new Error("Start enrollment first.");
-      await request("/mfa/challenge", "POST", { factor_id: currentFactorId, purpose: "enroll" });
-      $("verifyPanel").classList.remove("hidden");
-      $("totpCode").focus();
-      setStatus("Enrollment challenge created. Enter the current 6-digit code within 120 seconds.");
-    } catch (error) { setStatus(error.message, true); }
-  });
-
-  $("verifyButton").addEventListener("click", async () => {
-    try {
-      if (!currentFactorId) throw new Error("Choose or enroll a factor first.");
-      const result = await request("/mfa/verify", "POST", { factor_id: currentFactorId, code: $("totpCode").value });
-      $("totpCode").value = "";
-      renderContext(result);
-      await loadFactors().catch(() => null);
-      setStatus(result.requires_mfa ? "MFA is not yet sufficient for admin access." : "MFA verification complete; server context now reports the updated assurance.");
-    } catch (error) { $("totpCode").value = ""; setStatus(error.message, true); }
-  });
-
-  $("logoutButton").addEventListener("click", async () => {
-    try {
-      await request("/logout", "POST", {});
-      clearFactors();
-      $("context").textContent = "Signed out.";
-      setStatus("The server signed out the current local session and cleared its HttpOnly cookies.");
-    } catch (error) { setStatus(error.message, true); }
-  });
-
-  apiBase = resolveApiBase();
-  $("configStatus").textContent = apiBase
-    ? "Staging API base configured: " + apiBase + ". All requests use credentials: include and cache: no-store."
-    : "DISABLED: API base meta tag is empty or invalid. Set it to a reviewed HTTPS custom API domain under albukhr.com on a staging copy only.";
-  if (!apiBase) {
-    for (const button of document.querySelectorAll("button, input")) button.disabled = true;
-    $("configStatus").classList.add("error");
-  }
-})();
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="albukhr-admin-session-api-base" content="">
+<title>ALBUKHR Admin Session Lab — STAGING ONLY</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#16231a;background:#f4f7f5}*{box-sizing:border-box}body{margin:0}.top{background:#087a3e;color:white;padding:18px max(18px,calc((100vw - 850px)/2))}.top strong{font-size:13px;letter-spacing:.12em}.top h1{margin:12px 0 5px;font-size:25px}.top p{margin:0;opacity:.9}.wrap{max-width:850px;margin:22px auto;padding:0 16px 35px}.warning{border:1px solid #c9871a;background:#fff8e8;border-radius:12px;padding:13px 15px;margin-bottom:15px}.panel{background:white;border:1px solid #dce5df;border-radius:12px;padding:18px;margin:14px 0}.panel h2{margin:0 0 12px;font-size:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}label{display:block;font-size:13px;font-weight:700;margin:9px 0}input{width:100%;padding:11px;border:1px solid #b8c8be;border-radius:8px;margin-top:5px;font:inherit}button{border:0;border-radius:8px;background:#087a3e;color:white;font-weight:700;padding:11px 14px;margin:8px 6px 0 0;cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}.secondary{background:#e9f1ec;color:#17462b}.danger{background:#8b2525}.status{white-space:pre-wrap;padding:11px;border-radius:8px;background:#eff5f0;margin:12px 0}.status.error{background:#fff0ef;color:#8b2525}.hidden{display:none!important}.factor{border:1px solid #dce5df;border-radius:8px;padding:12px;margin:8px 0}.factor small{display:block;color:#526259}.qr{display:block;max-width:220px;width:100%;height:auto;margin:12px auto}.secret{overflow-wrap:anywhere}.meta{font-size:12px;color:#526259}.roles{overflow-wrap:anywhere}footer{font-size:12px;color:#526259;text-align:center;padding:12px}
+</style>
+</head>
+<body>
+<header class="top"><strong>ALBUKHR • MAINNET ADMIN SECURITY</strong><h1>Admin Session Lab</h1><p>Isolated staging test. This page is not linked from the live Admin dashboard.</p></header>
+<main class="wrap">
+<div class="warning"><b>STAGING ONLY — DO NOT USE WITH LIVE ADMIN CREDENTIALS UNTIL CONFIGURATION IS REVIEWED.</b><br>This page has no LocalStorage/sessionStorage code. It expects HttpOnly cookies from a trusted HTTPS custom API domain. The API host must be under <code>albukhr.com</code>; <code>albukhr-api.onrender.com</code> is intentionally rejected for this cookie design.</div>
+<div id="configStatus" class="status" role="status">Checking staging API configuration…</div>
+<section class="panel" id="loginPanel"><h2>1. Sign in</h2><form id="loginForm"><div class="grid"><label>Email<input id="email" type="email" autocomplete="username" maxlength="254" required></label><label>Password<input id="password" type="password" autocomplete="current-password" minlength="12" maxlength="1024" required></label></div><button id="loginButton" type="submit">Sign in to staging</button></form></section>
+<section class="panel"><h2>2. Session and security context</h2><button id="checkButton" type="button" class="secondary">Check current session</button><button id="refreshButton" type="button" class="secondary">Refresh session</button><div id="context" class="status">No session checked yet.</div></section>
+<section class="panel"><h2>3. Multi-factor authentication</h2><p class="meta">MFA factors and setup secrets are requested only after a verified staging session. Never share a QR code or manual secret.</p><button id="loadFactorsButton" type="button" class="secondary">Load my factors</button><button id="enrollButton" type="button">Start new authenticator enrollment</button><div id="enrollPanel" class="hidden"><h3>Authenticator setup</h3><img id="qr" class="qr" alt="Staging authenticator QR code"><p id="secret" class="secret"></p><p class="meta">Use a staging-only authenticator account. The secret is kept in page memory and is cleared on reload.</p><button id="challengeEnrollmentButton" type="button" class="secondary">I scanned it — start enrollment challenge</button></div><div id="factors"></div><div id="verifyPanel" class="hidden"><label>Current 6-digit code<input id="totpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}"></label><button id="verifyButton" type="button">Verify authenticator</button></div></section>
+<section class="panel"><h2>4. Sign out</h2><p>Calls the server to revoke the current local session and clear HttpOnly cookies.</p><button id="logoutButton" type="button" class="danger">Sign out of this session</button></section>
+<div id="status" class="status" role="status" aria-live="polite">Waiting for staging configuration.</div>
+<footer>STAGING ARTIFACT • Mainnet data is read only through the existing security-context RPC. No role grants or financial operations are exposed by this page.</footer>
+</main>
+<script src="./admin-session-lab.js" defer></script>
+</body>
+</html>
