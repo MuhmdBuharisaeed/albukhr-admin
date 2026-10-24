@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087a3e"><meta name="robots" content="noindex,nofollow">
+<title>ALBUKHR — Contributor Applications</title>
+<link rel="stylesheet" href="css/admin-module.css">
+<link rel="stylesheet" href="css/admin-contributor-applications.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/core/environment-core.js" defer></script>
+<script src="js/core/supabase-core.js" defer></script>
+<script src="js/core/supabase-admin-auth.js" defer></script>
+<script src="js/admin-contributor-applications.js" defer></script>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="admin-dashboard.html"><img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR"><span><b>ALBUKHR</b><small>ADMINISTRATION</small></span></a><div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div></header>
+<main class="applications-main">
+<nav class="back"><a href="admin-dashboard.html">← Admin Control Center</a> <span> / Contributor Applications</span></nav>
+<section class="page-heading"><div><small>CONTRIBUTOR PROGRAM ADMINISTRATION</small><h1>Contributor Applications</h1><p>Review Form One submissions, record a decision and issue an application-bound onboarding invitation where approved.</p></div><strong id="securityState">Verifying security…</strong></section>
+<div id="pageStatus" class="status" role="status" aria-live="polite"></div>
+<section class="application-summary"><article><span>Authorization</span><b id="authorization">CHECKING</b></article><article><span>Total applications</span><b id="totalCount">0</b></article><article><span>Awaiting review</span><b id="pendingCount">0</b></article><article><span>Security</span><b id="securityLevel">CHECKING</b></article></section>
+<section id="deniedPanel" class="application-panel hidden"><h2>Access denied</h2><p>This workspace requires an active Mainnet Super Admin session with AAL2 verification.</p></section>
+<section id="queuePanel" class="application-panel hidden"><div class="panel-heading"><div><h2>Application queue</h2><p>Application email addresses are applicant-supplied and are not verified by Pi sign-in.</p></div><button id="refreshButton" type="button">Refresh queue</button></div><div id="emptyState" class="empty-state hidden">No Contributor applications have been submitted.</div><div id="applicationRecords" class="application-records"></div></section>
+<section id="invitationPanel" class="application-panel invitation-panel hidden"><div class="panel-heading"><div><h2>One-time invitation link</h2><p>The raw token is shown once. Copy it before leaving this page; it is tied to the approved applicant’s verified Pi UID.</p></div><button id="clearInvitationButton" type="button">Clear from screen</button></div><label>Application-bound link<textarea id="invitationLink" rows="3" readonly spellcheck="false"></textarea></label><div class="invitation-actions"><button id="copyInvitationButton" type="button">Copy invitation link</button><span id="invitationExpiry"></span></div><p class="manual-delivery-warning"><strong>Manual delivery:</strong> Automatic email delivery is not configured by this patch. Verify the communication channel before sending the link. It will not work for a different Pi identity.</p></section>
+<section class="admin-security-note"><b>Security boundary</b><span>Database functions independently enforce Mainnet, active Super Admin, AAL2 and one-time token rules. Client-side UI does not grant authority. Do not record application data or raw tokens in screenshots, chat messages or public issues.</span></section>
+</main>
+</body></html>
