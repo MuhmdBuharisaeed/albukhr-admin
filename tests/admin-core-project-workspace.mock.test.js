@@ -1,214 +1,367 @@
--- ALBUKHR Mainnet: scoped, read-only Core Project Workspace RPC.
--- Super Admin: all seven Mainnet Core Projects.
--- Core Admin: exactly one valid active Mainnet assignment.
--- No treasury/payment/staking/audit writes are performed.
+"use strict";
 
-CREATE OR REPLACE FUNCTION albukhr_security.get_core_project_workspace()
-RETURNS jsonb
-LANGUAGE plpgsql
-STABLE
-SECURITY DEFINER
-SET search_path TO ''
-AS $function$
-DECLARE
-    v_user_id uuid := auth.uid();
-    v_is_super_admin boolean := false;
-    v_is_core_admin boolean := false;
-    v_binding_count integer := 0;
-    v_core_project_id uuid;
-    v_projects jsonb := '[]'::jsonb;
-BEGIN
-    IF v_user_id IS NULL THEN
-        RETURN pg_catalog.jsonb_build_object(
-            'authorized', false, 'network', 'mainnet',
-            'projects', '[]'::jsonb, 'message', 'Authenticated session required.'
-        );
-    END IF;
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
 
-    IF COALESCE(auth.jwt() ->> 'aal', '') <> 'aal2' THEN
-        RETURN pg_catalog.jsonb_build_object(
-            'authorized', false, 'network', 'mainnet',
-            'projects', '[]'::jsonb, 'message', 'AAL2 MFA assurance is required.'
-        );
-    END IF;
+const WORKSPACE_SOURCE = fs.readFileSync(
+  path.join(__dirname, "../js/admin-core-project-workspace.js"),
+  "utf8"
+);
 
-    IF NOT EXISTS (
-        SELECT 1 FROM albukhr_security.admin_users au
-        WHERE au.user_id = v_user_id AND au.status::text = 'active'
-    ) THEN
-        RETURN pg_catalog.jsonb_build_object(
-            'authorized', false, 'network', 'mainnet',
-            'projects', '[]'::jsonb,
-            'message', 'Active ALBUKHR administrator authorization is required.'
-        );
-    END IF;
+class MockElement {
+  constructor(id) {
+    this.id = id;
+    this.textContent = "";
+    this.value = "";
+    this.disabled = false;
+    this.children = [];
+    this.listeners = Object.create(null);
+    this._classes = new Set();
+    this.classList = {
+      add: (...names) => names.forEach((name) => this._classes.add(name)),
+      remove: (...names) => names.forEach((name) => this._classes.delete(name)),
+      contains: (name) => this._classes.has(name),
+      toggle: (name, force) => {
+        const shouldAdd = force === undefined ? !this._classes.has(name) : Boolean(force);
+        if (shouldAdd) this._classes.add(name);
+        else this._classes.delete(name);
+        return shouldAdd;
+      }
+    };
+  }
 
-    SELECT EXISTS (
-        SELECT 1 FROM albukhr_security.admin_role_assignments ara
-        WHERE ara.user_id = v_user_id AND ara.active = true
-          AND ara.revoked_at IS NULL AND ara.role::text = 'super_admin'
-    ) INTO v_is_super_admin;
+  addEventListener(type, callback) {
+    this.listeners[type] = callback;
+  }
 
-    SELECT EXISTS (
-        SELECT 1 FROM albukhr_security.admin_role_assignments ara
-        WHERE ara.user_id = v_user_id AND ara.active = true
-          AND ara.revoked_at IS NULL AND ara.role::text = 'core_admin'
-    ) INTO v_is_core_admin;
+  querySelector(selector) {
+    if (selector === "h2" || selector === "p") {
+      if (!this.descendants) this.descendants = Object.create(null);
+      if (!this.descendants[selector]) this.descendants[selector] = new MockElement(`${this.id}-${selector}`);
+      return this.descendants[selector];
+    }
+    return null;
+  }
 
-    IF NOT v_is_super_admin AND NOT v_is_core_admin THEN
-        RETURN pg_catalog.jsonb_build_object(
-            'authorized', false, 'network', 'mainnet',
-            'projects', '[]'::jsonb,
-            'message', 'Only an active Core Admin or Super Admin can access this workspace.'
-        );
-    END IF;
+  replaceChildren(...children) {
+    this.children = [...children];
+  }
 
-    IF NOT v_is_super_admin THEN
-        SELECT pg_catalog.count(*) INTO v_binding_count
-        FROM albukhr_security.core_admin_bindings b
-        JOIN public.projects p ON p.id = b.core_project_id AND p.core_slot = b.core_slot
-        WHERE b.user_id = v_user_id AND b.active = true AND b.revoked_at IS NULL
-          AND pg_catalog.lower(pg_catalog.btrim(p.network)) = 'mainnet'
-          AND pg_catalog.lower(pg_catalog.btrim(p.project_type)) = 'core'
-          AND p.core_slot BETWEEN 1 AND 7;
+  appendChild(child) {
+    this.children.push(child);
+    return child;
+  }
+}
 
-        IF v_binding_count <> 1 THEN
-            RETURN pg_catalog.jsonb_build_object(
-                'authorized', false, 'network', 'mainnet',
-                'projects', '[]'::jsonb,
-                'message', 'A Core Admin must have exactly one valid active Mainnet Core Project assignment.'
-            );
-        END IF;
+function makeProject(slot, overrides = {}) {
+  return {
+    id: `project-${slot}`,
+    project_id: `project-${slot}`,
+    project_code: `CORE-${slot}`,
+    name: `Core Project ${slot}`,
+    network: "mainnet",
+    project_type: "core",
+    core_slot: slot,
+    status: "active",
+    treasury: { id: null, status: "not_configured", verified_liquidity: null },
+    staking: { total_term_count: 0 },
+    ...overrides
+  };
+}
 
-        SELECT b.core_project_id INTO v_core_project_id
-        FROM albukhr_security.core_admin_bindings b
-        JOIN public.projects p ON p.id = b.core_project_id AND p.core_slot = b.core_slot
-        WHERE b.user_id = v_user_id AND b.active = true AND b.revoked_at IS NULL
-          AND pg_catalog.lower(pg_catalog.btrim(p.network)) = 'mainnet'
-          AND pg_catalog.lower(pg_catalog.btrim(p.project_type)) = 'core'
-          AND p.core_slot BETWEEN 1 AND 7
-        LIMIT 1;
-    END IF;
+function makePayload(role, projects) {
+  return {
+    authorized: true,
+    network: "mainnet",
+    scope: role === "super_admin" ? "all_core_projects" : "assigned_core_project",
+    projects,
+    message: "Workspace loaded"
+  };
+}
 
-    SELECT COALESCE(
-        pg_catalog.jsonb_agg(
-            pg_catalog.jsonb_build_object(
-                'id', p.id,
-                'project_id', p.id,
-                'project_code', p.project_code,
-                'slug', p.slug,
-                'name', p.name,
-                'description', p.description,
-                'project_type', p.project_type,
-                'status', p.status,
-                'core_slot', p.core_slot,
-                'network', p.network,
-                'logo_url', p.logo_url,
-                'created_at', p.created_at,
-                'updated_at', p.updated_at,
-                'treasury', pg_catalog.jsonb_build_object(
-                    'id', t.id,
-                    'status', COALESCE(t.status, 'not_configured'),
-                    'treasury_wallet', t.treasury_wallet,
-                    'required_liquidity', t.required_liquidity,
-                    'verified_liquidity', t.verified_liquidity,
-                    'liquidity_remaining',
-                        CASE WHEN t.id IS NULL THEN NULL
-                        ELSE GREATEST(
-                            COALESCE(t.required_liquidity, 0) - COALESCE(t.verified_liquidity, 0),
-                            0
-                        ) END,
-                    'liquidity_coverage_percent',
-                        CASE
-                        WHEN t.id IS NULL OR COALESCE(t.required_liquidity, 0) <= 0 THEN NULL
-                        ELSE pg_catalog.round(
-                            (COALESCE(t.verified_liquidity, 0) / t.required_liquidity) * 100,
-                            2
-                        ) END
-                ),
-                'staking', pg_catalog.jsonb_build_object(
-                    'approved_term_count', COALESCE(st.approved_term_count, 0),
-                    'published_term_count', COALESCE(st.published_term_count, 0),
-                    'total_term_count', COALESCE(st.total_term_count, 0),
-                    'active_stake_count', COALESCE(sk.active_stake_count, 0),
-                    'total_stake_count', COALESCE(sk.total_stake_count, 0),
-                    'active_staked_pi', COALESCE(sk.active_staked_pi, 0),
-                    'published_terms', COALESCE(st.published_terms, '[]'::jsonb)
-                )
-            )
-            ORDER BY p.core_slot, p.name
-        ),
-        '[]'::jsonb
-    )
-    INTO v_projects
-    FROM public.projects p
-    LEFT JOIN LATERAL (
-        SELECT pt.id, pt.status, pt.treasury_wallet, pt.required_liquidity, pt.verified_liquidity
-        FROM public.project_treasury pt
-        WHERE pt.project_id = p.id AND pt.network = 'mainnet'
-        ORDER BY pt.updated_at DESC NULLS LAST, pt.created_at DESC NULLS LAST
-        LIMIT 1
-    ) t ON true
-    LEFT JOIN LATERAL (
-        SELECT
-            pg_catalog.count(*) FILTER (WHERE tv.term_status = 'approved') AS approved_term_count,
-            pg_catalog.count(*) FILTER (
-                WHERE tv.term_status = 'published'
-                  AND tv.effective_from <= pg_catalog.now()
-                  AND (tv.effective_until IS NULL OR tv.effective_until > pg_catalog.now())
-            ) AS published_term_count,
-            pg_catalog.count(*) AS total_term_count,
-            COALESCE(
-                pg_catalog.jsonb_agg(
-                    pg_catalog.jsonb_build_object(
-                        'id', tv.id, 'term_key', tv.term_key,
-                        'version_number', tv.version_number,
-                        'duration_days', tv.duration_days,
-                        'min_stake', tv.min_stake, 'max_stake', tv.max_stake,
-                        'reward_model', tv.reward_model, 'reward_rate', tv.reward_rate,
-                        'term_status', tv.term_status,
-                        'effective_from', tv.effective_from, 'effective_until', tv.effective_until
-                    )
-                    ORDER BY tv.duration_days, tv.version_number
-                ) FILTER (
-                    WHERE tv.term_status = 'published'
-                      AND tv.effective_from <= pg_catalog.now()
-                      AND (tv.effective_until IS NULL OR tv.effective_until > pg_catalog.now())
-                ),
-                '[]'::jsonb
-            ) AS published_terms
-        FROM public.project_staking_term_versions tv
-        WHERE tv.project_id = p.id AND tv.network = 'mainnet'
-    ) st ON true
-    LEFT JOIN LATERAL (
-        SELECT
-            pg_catalog.count(*) FILTER (WHERE s.status = 'active') AS active_stake_count,
-            pg_catalog.count(*) AS total_stake_count,
-            COALESCE(pg_catalog.sum(s.amount) FILTER (WHERE s.status = 'active'), 0) AS active_staked_pi
-        FROM public.stakes s
-        WHERE s.project_id = p.id AND s.network = 'mainnet'
-    ) sk ON true
-    WHERE pg_catalog.lower(pg_catalog.btrim(p.network)) = 'mainnet'
-      AND pg_catalog.lower(pg_catalog.btrim(p.project_type)) = 'core'
-      AND p.core_slot BETWEEN 1 AND 7
-      AND (v_is_super_admin OR p.id = v_core_project_id);
+function createHarness(options = {}) {
+  const ids = [
+    "pageStatus", "deniedPanel", "workspacePanel", "roleValue", "scopeValue",
+    "securityState", "mfaValue", "projectPickerWrap", "projectPicker",
+    "projectName", "projectMeta", "projectStatus", "coreSlot",
+    "verifiedLiquidity", "treasuryStatus", "overviewState", "treasuryState",
+    "stakingState", "updatesState", "withdrawalsState", "auditState",
+    "refreshButton", "logoutButton"
+  ];
+  const elements = Object.fromEntries(ids.map((id) => [id, new MockElement(id)]));
+  elements.workspacePanel.classList.add("hidden");
+  elements.deniedPanel.classList.add("hidden");
+  elements.projectPickerWrap.classList.add("hidden");
 
-    RETURN pg_catalog.jsonb_build_object(
-        'authorized', true,
-        'network', 'mainnet',
-        'scope', CASE WHEN v_is_super_admin THEN 'all_core_projects' ELSE 'assigned_core_project' END,
-        'projects', COALESCE(v_projects, '[]'::jsonb),
-        'message', CASE
-            WHEN v_is_super_admin THEN 'Mainnet Core Project workspace loaded successfully.'
-            ELSE 'Assigned Mainnet Core Project workspace loaded successfully.'
-        END
-    );
-END;
-$function$;
+  const rpcCalls = [];
+  const navigation = [];
+  const authCalls = [];
+  const unexpectedDatabaseMethods = [];
+  let rpcIndex = 0;
+  const rpcResponses = options.rpcResponses || [
+    { data: makePayload(options.role || "core_admin", [makeProject(options.slot || 1)]), error: null }
+  ];
 
-REVOKE ALL ON FUNCTION albukhr_security.get_core_project_workspace() FROM PUBLIC;
-REVOKE ALL ON FUNCTION albukhr_security.get_core_project_workspace() FROM anon;
-GRANT EXECUTE ON FUNCTION albukhr_security.get_core_project_workspace() TO authenticated;
+  const client = {
+    schema(schemaName) {
+      assert.equal(schemaName, "albukhr_security");
+      return {
+        async rpc(functionName) {
+          rpcCalls.push(functionName);
+          const response = rpcResponses[Math.min(rpcIndex, rpcResponses.length - 1)];
+          rpcIndex += 1;
+          if (typeof response === "function") return response();
+          return response;
+        }
+      };
+    },
+    auth: {
+      mfa: {
+        async getAuthenticatorAssuranceLevel() {
+          authCalls.push("getAuthenticatorAssuranceLevel");
+          return {
+            data: { currentLevel: options.assuranceLevel || "aal2" },
+            error: null
+          };
+        }
+      }
+    }
+  };
 
-COMMENT ON FUNCTION albukhr_security.get_core_project_workspace()
-IS 'AAL2-protected Mainnet Core Project workspace. Super Admin receives the seven valid Core Projects; Core Admin receives exactly one valid active assigned Core Project. Read-only.';
+  // Any unexpected persistence method fails loudly instead of silently simulating a write.
+  ["from", "insert", "update", "upsert", "delete", "rpcWrite"].forEach((method) => {
+    client[method] = (...args) => {
+      unexpectedDatabaseMethods.push({ method, args });
+      throw new Error(`Unexpected database method: ${method}`);
+    };
+  });
+
+  const role = options.role || "core_admin";
+  const adminContext = options.adminContext === null ? null : {
+    is_admin: options.isAdmin !== false,
+    status: options.adminStatus || "active",
+    roles: options.roles || [role],
+    mfa_required: false
+  };
+  const adminAuth = {
+    async init() { authCalls.push("init"); },
+    async requireAdmin() {
+      authCalls.push("requireAdmin");
+      return adminContext;
+    },
+    async ensureMfa() {
+      authCalls.push("ensureMfa");
+      return { verified: true };
+    },
+    async signOut() { authCalls.push("signOut"); }
+  };
+
+  const document = {
+    readyState: "complete",
+    getElementById(id) { return elements[id] || null; },
+    createElement(tag) { return new MockElement(tag); },
+    addEventListener() {}
+  };
+  const window = {
+    ALBukhrEnvironment: options.environment === false ? null : {
+      isKnown: () => options.knownEnvironment !== false,
+      isMainnet: () => options.mainnet !== false
+    },
+    ALBUKHR_SUPABASE: { client },
+    AlbukhrSupabaseAdminAuth: adminAuth,
+    location: { replace(url) { navigation.push(url); } }
+  };
+  const sandbox = {
+    window,
+    document,
+    console: { error() {}, warn() {}, log() {} }
+  };
+
+  vm.runInNewContext(WORKSPACE_SOURCE, sandbox, {
+    filename: "js/admin-core-project-workspace.js",
+    timeout: 1000
+  });
+
+  return {
+    elements,
+    rpcCalls,
+    navigation,
+    authCalls,
+    unexpectedDatabaseMethods,
+    async settle() {
+      // Let the initialization/load promise chain finish without exposing internals.
+      for (let i = 0; i < 8; i += 1) await new Promise((resolve) => setImmediate(resolve));
+    }
+  };
+}
+
+test("Core Admin receives and renders exactly one assigned Mainnet Core Project", async () => {
+  const h = createHarness({ role: "core_admin", slot: 4 });
+  await h.settle();
+
+  assert.deepEqual(h.rpcCalls, ["get_core_project_workspace"]);
+  assert.equal(h.elements.projectName.textContent, "Core Project 4");
+  assert.equal(h.elements.coreSlot.textContent, "4");
+  assert.equal(h.elements.scopeValue.textContent, "ASSIGNED PROJECT ONLY");
+  assert.equal(h.elements.workspacePanel.classList.contains("hidden"), false);
+  assert.equal(h.elements.projectPickerWrap.classList.contains("hidden"), true);
+  assert.deepEqual(h.unexpectedDatabaseMethods, []);
+});
+
+test("Super Admin receives all seven Mainnet Core Projects and a project picker", async () => {
+  const projects = Array.from({ length: 7 }, (_, index) => makeProject(index + 1));
+  const h = createHarness({
+    role: "super_admin",
+    rpcResponses: [{ data: makePayload("super_admin", projects), error: null }]
+  });
+  await h.settle();
+
+  assert.deepEqual(h.rpcCalls, ["get_core_project_workspace"]);
+  assert.equal(h.elements.scopeValue.textContent, "ALL 7 CORE PROJECTS");
+  assert.equal(h.elements.projectPickerWrap.classList.contains("hidden"), false);
+  assert.equal(h.elements.projectPicker.children.length, 7);
+  assert.equal(h.elements.projectName.textContent, "Core Project 1");
+});
+
+test("a non-Mainnet environment is denied before any Supabase request", async () => {
+  const h = createHarness({ mainnet: false });
+  await h.settle();
+
+  assert.deepEqual(h.rpcCalls, []);
+  assert.equal(h.elements.workspacePanel.classList.contains("hidden"), true);
+  assert.equal(h.elements.deniedPanel.classList.contains("hidden"), false);
+  assert.match(h.elements.pageStatus.textContent, /Mainnet/i);
+});
+
+test("an unknown environment is denied before any Supabase request", async () => {
+  const h = createHarness({ knownEnvironment: false });
+  await h.settle();
+
+  assert.deepEqual(h.rpcCalls, []);
+  assert.equal(h.elements.workspacePanel.classList.contains("hidden"), true);
+  assert.equal(h.elements.deniedPanel.classList.contains("hidden"), false);
+});
+
+test("a missing admin session redirects to the Admin login page", async () => {
+  const h = createHarness({ adminContext: null });
+  await h.settle();
+
+  assert.deepEqual(h.navigation, ["admin-login.html"]);
+  assert.deepEqual(h.rpcCalls, []);
+});
+
+test("an inactive admin account is denied before the workspace RPC", async () => {
+  const h = createHarness({ adminStatus: "suspended" });
+  await h.settle();
+
+  assert.deepEqual(h.rpcCalls, []);
+  assert.equal(h.elements.workspacePanel.classList.contains("hidden"), true);
+  assert.equal(h.elements.deniedPanel.classList.contains("hidden"), false);
+});
+
+test("AAL1 assurance redirects to MFA and does not call the workspace RPC", async () => {
+  const h = createHarness({ assuranceLevel: "aal1" });
+  await h.settle();
+
+  assert.deepEqual(h.navigation, ["admin-mfa.html"]);
+  assert.deepEqual(h.rpcCalls, []);
+});
+
+test("an administrator without Core Admin or Super Admin role is denied", async () => {
+  const h = createHarness({ roles: ["finance_admin"] });
+  await h.settle();
+
+  assert.deepEqual(h.rpcCalls, []);
+  assert.equal(h.elements.workspacePanel.classList.contains("hidden"), true);
+  assert.equal(h.elements.deniedPanel.classList.contains("hidden"), false);
+});
+
+test("a Core Admin response containing more than one project is rejected", async () => {
+  const h = createHarness({
+    role: "core_admin",
+    rpcResponses: [{ data: makePayload("core_admin", [makeProject(1), makeProject(2)]), error: null }]
+  });
+  await h.settle();
+
+  assert.deepEqual(h.rpcCalls, ["get_core_project_workspace"]);
+  assert.equal(h.elements.workspacePanel.classList.contains("hidden"), true);
+  assert.equal(h.elements.deniedPanel.classList.contains("hidden"), false);
+  assert.match(h.elements.pageStatus.textContent, /exactly one/i);
+});
+
+test("a Super Admin response with fewer than seven projects is rejected", async () => {
+  const h = createHarness({
+    role: "super_admin",
+    rpcResponses: [{ data: makePayload("super_admin", [makeProject(1)]), error: null }]
+  });
+  await h.settle();
+
+  assert.equal(h.elements.workspacePanel.classList.contains("hidden"), true);
+  assert.equal(h.elements.deniedPanel.classList.contains("hidden"), false);
+  assert.match(h.elements.pageStatus.textContent, /seven-project/i);
+});
+
+test("a project returned from Testnet or with a non-Core type is rejected", async (t) => {
+  for (const invalidProject of [
+    makeProject(1, { network: "testnet" }),
+    makeProject(1, { project_type: "external" }),
+    makeProject(8, { core_slot: 8 })
+  ]) {
+    await t.test(JSON.stringify({ network: invalidProject.network, type: invalidProject.project_type, slot: invalidProject.core_slot }), async () => {
+      const h = createHarness({
+        rpcResponses: [{ data: makePayload("core_admin", [invalidProject]), error: null }]
+      });
+      await h.settle();
+      assert.equal(h.elements.workspacePanel.classList.contains("hidden"), true);
+      assert.equal(h.elements.deniedPanel.classList.contains("hidden"), false);
+    });
+  }
+});
+
+test("an RPC authorization denial does not reveal workspace data", async () => {
+  const h = createHarness({
+    rpcResponses: [{
+      data: { authorized: false, network: "mainnet", projects: [], message: "AAL2 required" },
+      error: null
+    }]
+  });
+  await h.settle();
+
+  assert.equal(h.elements.workspacePanel.classList.contains("hidden"), true);
+  assert.equal(h.elements.deniedPanel.classList.contains("hidden"), false);
+  assert.equal(h.elements.roleValue.textContent, "DENIED");
+  assert.equal(h.elements.scopeValue.textContent, "NONE");
+});
+
+test("a failed refresh hides previously rendered project data", async () => {
+  const h = createHarness({
+    rpcResponses: [
+      { data: makePayload("core_admin", [makeProject(3)]), error: null },
+      { data: null, error: new Error("simulated refresh failure") }
+    ]
+  });
+  await h.settle();
+
+  assert.equal(h.elements.workspacePanel.classList.contains("hidden"), false);
+  assert.equal(typeof h.elements.refreshButton.listeners.click, "function");
+  await h.elements.refreshButton.listeners.click();
+  await h.settle();
+
+  assert.equal(h.elements.workspacePanel.classList.contains("hidden"), true);
+  assert.equal(h.elements.deniedPanel.classList.contains("hidden"), false);
+  assert.match(h.elements.pageStatus.textContent, /simulated refresh failure/i);
+  assert.deepEqual(h.rpcCalls, ["get_core_project_workspace", "get_core_project_workspace"]);
+});
+
+test("workspace page performs no direct database or financial writes", async () => {
+  const h = createHarness();
+  await h.settle();
+
+  assert.deepEqual(h.rpcCalls, ["get_core_project_workspace"]);
+  assert.deepEqual(h.unexpectedDatabaseMethods, []);
+  assert.doesNotMatch(WORKSPACE_SOURCE, /\.(?:insert|update|upsert|delete)\s*\(/i);
+  assert.doesNotMatch(WORKSPACE_SOURCE, /\b(?:createPayment|sendPayment|withdrawFunds|transferFunds)\s*\(/i);
+});
