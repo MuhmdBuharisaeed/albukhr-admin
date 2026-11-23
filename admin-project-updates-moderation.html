@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#087a3e">
+  <meta name="robots" content="noindex,nofollow">
+  <title>ALBUKHR — Project Updates Moderation</title>
+  <link rel="stylesheet" href="css/admin-project-updates-moderation.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="js/core/environment-core.js" defer></script>
+  <script src="js/core/supabase-core.js" defer></script>
+  <script src="js/core/supabase-admin-auth.js" defer></script>
+  <script src="js/admin-project-updates-moderation.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="admin-dashboard.html"><span class="brand-mark">A</span><span><b>ALBUKHR</b><small>ADMINISTRATION</small></span></a>
+    <div class="top-actions"><span class="network-pill">MAINNET</span><button id="logoutButton" class="quiet-button" type="button">Sign out</button></div>
+  </header>
+
+  <main class="page-shell">
+    <nav class="back-link"><a href="admin-core-project-workspace.html">← Core Project Workspace</a></nav>
+    <section class="hero">
+      <div><span class="eyebrow">TRUST & CONTENT GOVERNANCE</span><h1>Project Updates Moderation</h1><p>Review submitted reports and record accountable moderation decisions for published Mainnet project updates.</p></div>
+      <span id="securityBadge" class="security-badge">VERIFYING SUPER ADMIN</span>
+    </section>
+
+    <div id="pageStatus" class="status-bar" role="status" aria-live="polite">Verifying Mainnet Super Admin authorization…</div>
+
+    <section id="deniedPanel" class="denied-panel" hidden>
+      <h2>Access denied</h2>
+      <p>This workspace is restricted to an active ALBUKHR Mainnet Super Admin with a server-verified AAL2 session. Your account session will not be changed by this page.</p>
+    </section>
+
+    <section id="moderationWorkspace" hidden>
+      <div class="governance-note"><strong>Moderation standard</strong><span>Negative or critical opinions are not grounds for removal by themselves. Assess the selected report against its stated reason and details. Every decision requires a reason and is recorded through the trusted moderation service.</span></div>
+
+      <div class="workspace-toolbar">
+        <div class="tabs" role="tablist" aria-label="Report status">
+          <button class="tab active" type="button" data-status="open" role="tab" aria-selected="true">Open reports</button>
+          <button class="tab" type="button" data-status="reviewing" role="tab" aria-selected="false">Under review</button>
+        </div>
+        <button id="refreshReportsButton" class="secondary-button" type="button">Refresh queue</button>
+      </div>
+
+      <div class="moderation-layout">
+        <aside class="panel queue-panel" aria-label="Moderation report queue">
+          <div class="panel-heading"><div><h2>Report queue</h2><p id="queueCount">Loading reports…</p></div></div>
+          <div id="queueStatus" class="queue-status" role="status" aria-live="polite">Loading report queue…</div>
+          <div id="reportQueue" class="report-queue"></div>
+        </aside>
+
+        <section class="panel review-panel" aria-label="Selected report review">
+          <div id="reviewEmpty" class="review-empty"><div class="empty-icon">✓</div><h2>Select a report</h2><p>Choose an item from the queue to inspect the report and its published update.</p></div>
+
+          <div id="reviewContent" hidden>
+            <div class="review-heading"><div><span class="eyebrow">REPORT REVIEW</span><h2 id="reviewTitle">Reported update</h2></div><span id="reviewStatus" class="status-pill">OPEN</span></div>
+            <div class="report-facts">
+              <div><span>Project</span><strong id="reviewProject">—</strong></div>
+              <div><span>Report reason</span><strong id="reviewReason">—</strong></div>
+              <div><span>Reported at</span><strong id="reviewDate">—</strong></div>
+              <div><span>Report ID</span><code id="reviewReportId">—</code></div>
+            </div>
+            <section class="report-details-block"><h3>Report details</h3><p id="reviewDetails">No additional details supplied.</p></section>
+
+            <section id="updateContext" class="update-context">
+              <h3>Published update context</h3>
+              <div id="updateContextBody" class="context-body">Loading the published update…</div>
+            </section>
+
+            <section id="commentsContext" class="comments-context" hidden>
+              <h3>Visible comments on this update</h3>
+              <div id="commentsList" class="comments-list"></div>
+            </section>
+
+            <form id="decisionForm" class="decision-form" novalidate>
+              <label for="decisionReason">Decision reason <span>Required · max 2,000 characters</span></label>
+              <textarea id="decisionReason" maxlength="2000" rows="4" required placeholder="Record the evidence considered and why this decision is appropriate."></textarea>
+              <div class="decision-actions">
+                <button class="decision-button reviewing" type="submit" name="decision" value="reviewing">Mark under review</button>
+                <button class="decision-button resolve" type="submit" name="decision" value="resolved">Resolve report</button>
+                <button class="decision-button dismiss" type="submit" name="decision" value="dismissed">Dismiss report</button>
+              </div>
+              <p id="decisionHint" class="decision-hint" role="status" aria-live="polite">Select a decision after reviewing the report.</p>
+            </form>
+          </div>
+        </section>
+      </div>
+
+      <p class="security-footnote">Mainnet only · Admin Auth + AAL2 · Super Admin role verified in Supabase trusted functions · All decisions use the ALBUKHR API gateway · No direct browser database writes</p>
+    </section>
+  </main>
+</body>
+</html>
