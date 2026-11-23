@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#087a3e">
+  <meta name="robots" content="noindex,nofollow">
+  <title>ALBUKHR — Project Updates Publisher</title>
+  <link rel="stylesheet" href="css/admin-project-updates.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="js/core/environment-core.js" defer></script>
+  <script src="js/core/supabase-core.js" defer></script>
+  <script src="js/core/supabase-admin-auth.js" defer></script>
+  <script src="js/admin-project-updates.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="admin-dashboard.html"><span class="brand-mark">A</span><span><b>ALBUKHR</b><small>ADMINISTRATION</small></span></a>
+    <div class="top-actions"><span class="network-pill">MAINNET</span><button id="logoutButton" class="quiet-button" type="button">Sign out</button></div>
+  </header>
+
+  <main class="page-shell">
+    <nav class="back-link"><a href="admin-core-project-workspace.html">← Core Project Workspace</a></nav>
+    <section class="hero">
+      <div><span class="eyebrow">PROJECT COMMUNICATIONS</span><h1>Project Updates</h1><p>Publish project progress and milestones through the trusted Mainnet gateway.</p></div>
+      <span id="securityBadge" class="security-badge">VERIFYING ADMIN SESSION</span>
+    </section>
+
+    <div id="pageStatus" class="status-bar" role="status" aria-live="polite">Checking Mainnet Admin authorization…</div>
+
+    <section id="workspace" class="workspace" hidden>
+      <div class="panel project-panel">
+        <div class="panel-heading"><div><h2>Authorized publisher projects</h2><p>Only projects returned by the server-side publisher grant check are shown.</p></div><button id="refreshProjectsButton" class="secondary-button" type="button">Refresh projects</button></div>
+        <label class="field-label" for="projectSelect">Select project</label>
+        <select id="projectSelect" class="control" disabled><option value="">Loading authorized projects…</option></select>
+        <div id="projectMeta" class="project-meta">Publisher scope will appear here after verification.</div>
+      </div>
+
+      <div class="composer-layout">
+        <section class="panel composer-panel">
+          <div class="panel-heading"><div><h2>Publish an update</h2><p>Each update requires one still image. Video uploads are not supported.</p></div><span class="required-pill">IMAGE REQUIRED</span></div>
+          <form id="publishForm" novalidate>
+            <div class="field-grid">
+              <label class="field"><span class="field-label">Update type</span><select id="updateKind" class="control" required><option value="progress">Progress update</option><option value="milestone">Milestone achieved</option></select></label>
+              <label class="field"><span class="field-label">Title <span id="titleCount" class="counter">0 / 160</span></span><input id="updateTitle" class="control" type="text" maxlength="160" required placeholder="A clear, factual update title"></label>
+            </div>
+            <label class="field"><span class="field-label">Update details <span id="bodyCount" class="counter">0 / 10,000</span></span><textarea id="updateBody" class="control textarea" maxlength="10000" rows="7" required placeholder="Describe the progress, work completed, current status, or milestone. Avoid presenting unverified claims as independently verified facts."></textarea></label>
+            <div class="field">
+              <span class="field-label">Evidence image</span>
+              <label class="upload-box" for="updateImage"><span class="upload-icon">＋</span><strong>Choose one image</strong><span>JPEG, PNG or WEBP · Maximum 10 MiB</span><input id="updateImage" type="file" accept="image/jpeg,image/png,image/webp" required></label>
+              <div id="imagePreviewWrap" class="image-preview-wrap" hidden><img id="imagePreview" alt="Selected update image preview"><div><strong id="imageName"></strong><span id="imageInfo"></span><button id="removeImageButton" class="text-button" type="button">Remove image</button></div></div>
+            </div>
+            <div class="source-note"><b>Content source</b><span>Updates are labelled <code>project_provided</code>. Publication does not mean ALBUKHR has independently verified the claims or evidence.</span></div>
+            <div class="form-actions"><span id="publishHint" class="form-hint">Choose an authorized project and complete all fields.</span><button id="publishButton" class="primary-button" type="submit" disabled>Publish update</button></div>
+          </form>
+        </section>
+
+        <aside class="panel rules-panel">
+          <h2>Publishing rules</h2>
+          <ul><li>Only an active project with a valid publisher grant can publish.</li><li>Suspended, rejected or archived projects cannot publish new updates.</li><li>Previous published updates remain visible under the lifecycle rules.</li><li>Good-faith criticism is not removed simply because it is negative.</li><li>One still image is required for each update; no video is accepted.</li></ul>
+        </aside>
+      </div>
+
+      <section class="timeline-section">
+        <div class="panel-heading timeline-heading"><div><h2>Published update timeline</h2><p>Public Mainnet updates for the selected project.</p></div><button id="refreshFeedButton" class="secondary-button" type="button">Refresh timeline</button></div>
+        <div id="feedStatus" class="feed-status">Select a project to load its published updates.</div>
+        <div id="feedList" class="feed-list"></div>
+        <button id="loadMoreButton" class="secondary-button load-more" type="button" hidden>Load older updates</button>
+      </section>
+    </section>
+
+    <section id="emptyPanel" class="empty-panel" hidden><h2>No publisher projects are assigned</h2><p>Your authenticated Admin account has no active Project Updates publisher grant. Ask a Super Admin to review the publisher grant for the required project. The page will not infer access from browser roles.</p></section>
+  </main>
+</body>
+</html>
