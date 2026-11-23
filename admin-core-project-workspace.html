@@ -1,28 +1,181 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#087a3e"><meta name="robots" content="noindex,nofollow">
-<title>ALBUKHR — Core Project Workspace</title>
-<link rel="stylesheet" href="css/admin-core-project-workspace.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script><script src="js/core/environment-core.js" defer></script><script src="js/core/supabase-core.js" defer></script><script src="js/core/supabase-admin-auth.js" defer></script><script src="js/admin-core-project-workspace.js" defer></script><script src="js/admin-project-updates-link.js" defer></script>
-</head><body>
-<header class="topbar"><a class="brand" href="admin-dashboard.html"><img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR"><span><b>ALBUKHR</b><small>ADMINISTRATION</small></span></a><div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div></header>
-<main><nav class="back"><a href="admin-dashboard.html">← Admin Control Center</a></nav>
-<section class="hero"><div><small>CORE PROJECT OPERATIONS</small><h1>Core Project Workspace</h1><p>A controlled workspace for the seven official ALBUKHR Core Projects.</p></div><strong id="securityState">Verifying security...</strong></section>
-<div id="pageStatus" class="status" aria-live="polite">Checking authorization…</div>
-<section class="summary"><article><span>Workspace role</span><b id="roleValue">CHECKING</b></article><article><span>Project scope</span><b id="scopeValue">CHECKING</b></article><article><span>Security level</span><b id="mfaValue">CHECKING</b></article></section>
-<section id="deniedPanel" class="panel hidden"><h2>Access denied</h2><p>This workspace is available only to an active Mainnet Core Admin assigned to a Core Project, or an authorized Super Admin.</p></section>
-<section id="workspacePanel" class="panel hidden"><div class="workspace-head"><div><h2 id="projectName">Core Project</h2><p id="projectMeta">Loading server-authorized project scope…</p></div><label id="projectPickerWrap" class="picker hidden">Select Core Project<select id="projectPicker" aria-label="Select Core Project"></select></label></div>
-<div class="stats"><article><span>Project status</span><b id="projectStatus">—</b></article><article><span>Core slot</span><b id="coreSlot">—</b></article><article><span>Verified liquidity</span><b id="verifiedLiquidity">—</b></article><article><span>Treasury status</span><b id="treasuryStatus">—</b></article></div>
-<div class="section-title"><div><h2>Project management</h2><p>Workspace permissions are enforced by the Mainnet security layer.</p></div><button id="refreshButton" type="button">Refresh</button></div>
-<div class="feature-grid">
-<article class="feature"><div class="feature-icon">◈</div><h3>Project Overview</h3><p>Project identity, approval status, lifecycle and activation readiness.</p><span id="overviewState" class="state">WAITING FOR DATA</span></article>
-<article class="feature"><div class="feature-icon">▤</div><h3>Treasury & Liquidity</h3><p>Verified liquidity, treasury balance and transaction history. No direct browser-side financial writes.</p><span id="treasuryState" class="state">WAITING FOR DATA</span></article>
-<article class="feature"><div class="feature-icon">◇</div><h3>Staking & Rewards</h3><p>Published staking terms, active stakes, reward activity and reserve coverage.</p><span id="stakingState" class="state">WAITING FOR DATA</span></article>
-<article class="feature"><div class="feature-icon">▧</div><h3>Project Updates</h3><p>Publish progress updates and milestones, attach one image, and review the public project timeline.</p><span id="updatesState" class="state locked">CONNECTING PUBLISHER GATEWAY</span><a id="openProjectUpdatesLink" href="admin-project-updates.html" style="display:inline-flex;align-items:center;justify-content:center;margin-top:12px;padding:9px 12px;border:1px solid #d7e8df;border-radius:10px;color:#087a3e;background:#fff;text-decoration:none;font-weight:800;font-size:12px">Open Project Updates</a></article>
-<article class="feature"><div class="feature-icon">⚖</div><h3>Project Updates Moderation</h3><p>Review reported updates, inspect published context, and record Super Admin moderation decisions.</p><span class="state">SUPER ADMIN ONLY</span><a href="admin-project-updates-moderation.html" style="display:inline-flex;align-items:center;justify-content:center;margin-top:12px;padding:9px 12px;border:1px solid #d7e8df;border-radius:10px;color:#087a3e;background:#fff;text-decoration:none;font-weight:800;font-size:12px">Open Moderation Queue</a></article>
-<article class="feature"><div class="feature-icon">⇄</div><h3>Treasury Withdrawal Requests</h3><p>Core Admin request → Finance initial review → Super Admin final decision.</p><span id="withdrawalsState" class="state locked">WORKFLOW NOT ENABLED</span></article>
-<article class="feature"><div class="feature-icon">⌁</div><h3>Governance & Audit Trail</h3><p>Authorized project actions and administrative decisions.</p><span id="auditState" class="state">WAITING FOR DATA</span></article>
-</div>
-<div class="notice"><b>Financial safety</b><span>Core Admins cannot move Treasury funds or approve withdrawals. Finance Admin performs initial review; only Super Admin can make the final approval decision. No payout is enabled from this workspace.</span></div>
-<div class="notice muted"><b>Feature availability</b><span>Project Updates uses its own trusted Mainnet API and publisher grants. Treasury Withdrawal Requests remain unavailable until their dedicated secure backend workflow is installed and verified. This page will not simulate submissions or write financial records directly.</span></div>
-</section></main></body></html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#087a3e">
+  <meta name="robots" content="noindex,nofollow">
+  <title>ALBUKHR — Core Project Workspace</title>
+  <link rel="stylesheet" href="css/admin-core-project-workspace.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="js/core/environment-core.js" defer></script>
+  <script src="js/core/supabase-core.js" defer></script>
+  <script src="js/core/supabase-admin-auth.js" defer></script>
+  <script src="js/admin-core-project-workspace.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="admin-dashboard.html">
+      <img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR">
+      <span><b>ALBUKHR</b><small>ADMINISTRATION</small></span>
+    </a>
+    <div class="actions">
+      <span>MAINNET</span>
+      <button id="logoutButton" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <nav class="back"><a href="admin-dashboard.html">← Admin Control Center</a></nav>
+
+    <section class="hero">
+      <div>
+        <small>CORE PROJECT OPERATIONS</small>
+        <h1>Core Project Workspace</h1>
+        <p>A controlled workspace for the seven official ALBUKHR Core Projects.</p>
+      </div>
+      <strong id="securityState">Verifying security...</strong>
+    </section>
+
+    <div id="pageStatus" class="status" role="status" aria-live="polite">Checking authorization…</div>
+
+    <section class="summary" aria-label="Workspace authorization summary">
+      <article><span>Workspace role</span><b id="roleValue">CHECKING</b></article>
+      <article><span>Project scope</span><b id="scopeValue">CHECKING</b></article>
+      <article><span>Security level</span><b id="mfaValue">CHECKING</b></article>
+    </section>
+
+    <section id="deniedPanel" class="panel hidden" aria-live="polite">
+      <h2>Access denied</h2>
+      <p>This workspace is available only to an active Mainnet Core Admin assigned to a Core Project, or an authorized Super Admin.</p>
+    </section>
+
+    <section id="workspacePanel" class="panel hidden">
+      <div class="workspace-head">
+        <div>
+          <h2 id="projectName">Core Project</h2>
+          <p id="projectMeta">Loading server-authorized project scope…</p>
+        </div>
+        <label id="projectPickerWrap" class="picker hidden">
+          Select Core Project
+          <select id="projectPicker" aria-label="Select Core Project"></select>
+        </label>
+      </div>
+
+      <div class="stats">
+        <article><span>Project status</span><b id="projectStatus">—</b></article>
+        <article><span>Core slot</span><b id="coreSlot">—</b></article>
+        <article><span>Verified liquidity</span><b id="verifiedLiquidity">—</b></article>
+        <article><span>Treasury status</span><b id="treasuryStatus">—</b></article>
+      </div>
+
+      <div class="section-title">
+        <div>
+          <h2>Project management</h2>
+          <p>Workspace permissions are enforced by the Mainnet security layer.</p>
+        </div>
+        <button id="refreshButton" type="button">Refresh</button>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature">
+          <div class="feature-icon">◈</div>
+          <h3>Project Overview</h3>
+          <p>Project identity, approval status, lifecycle and activation readiness.</p>
+          <span id="overviewState" class="state">WAITING FOR DATA</span>
+        </article>
+
+        <article class="feature">
+          <div class="feature-icon">▤</div>
+          <h3>Treasury &amp; Liquidity</h3>
+          <p>Verified liquidity, treasury configuration and transaction readiness. Financial writes remain on trusted server workflows.</p>
+          <span id="treasuryState" class="state">WAITING FOR DATA</span>
+        </article>
+
+        <article class="feature">
+          <div class="feature-icon">◇</div>
+          <h3>Staking &amp; Rewards</h3>
+          <p>Published staking terms, active stakes and current staking readiness data.</p>
+          <span id="stakingState" class="state">WAITING FOR DATA</span>
+        </article>
+
+        <article class="feature">
+          <div class="feature-icon">▧</div>
+          <h3>Project Updates</h3>
+          <p>Publish progress updates and milestones, attach evidence, and review this project's public timeline.</p>
+          <span id="updatesState" class="state locked">CHECKING PUBLISHER PERMISSION</span>
+          <a id="openProjectUpdatesLink" class="feature-link hidden" href="admin-project-updates.html">Open Project Updates</a>
+          <p id="updatesHint" class="feature-hint" aria-live="polite">Publisher access has not yet been checked.</p>
+        </article>
+
+        <article class="feature">
+          <div class="feature-icon">⚖</div>
+          <h3>Project Updates Moderation</h3>
+          <p>Review reported updates and record moderation decisions. This function is restricted to Super Admin.</p>
+          <span class="state locked">SUPER ADMIN ONLY</span>
+          <a id="openModerationLink" class="feature-link hidden" href="admin-project-updates-moderation.html">Open Moderation Queue</a>
+        </article>
+
+        <article class="feature">
+          <div class="feature-icon">⇄</div>
+          <h3>Core Treasury Withdrawals</h3>
+          <p>A dedicated project-treasury request, liquidity reservation, approval and payout workflow has not yet been implemented.</p>
+          <span id="withdrawalsState" class="state locked">NOT IMPLEMENTED</span>
+          <p class="feature-hint">This is separate from investor staking reward/capital withdrawals. No project-treasury withdrawal or payout submission is enabled here.</p>
+        </article>
+
+        <article class="feature">
+          <div class="feature-icon">⌁</div>
+          <h3>Governance &amp; Audit Trail</h3>
+          <p>Read-only history of authorized project actions and administrative decisions.</p>
+          <span id="auditState" class="state locked">CHECKING AUDIT ACCESS</span>
+        </article>
+      </div>
+
+      <section class="audit-panel" aria-labelledby="auditHeading">
+        <div class="audit-heading">
+          <div>
+            <h2 id="auditHeading">Project Governance &amp; Audit History</h2>
+            <p>Latest recorded Mainnet actions for the selected Core Project. This is a read-only view.</p>
+          </div>
+          <span id="auditCount" class="audit-count">—</span>
+        </div>
+        <div id="auditTrailStatus" class="audit-status" role="status" aria-live="polite">Loading authorized project history…</div>
+        <div id="auditTrailList" class="audit-list" aria-live="polite"></div>
+      </section>
+
+      <section class="shortcuts-panel" aria-labelledby="shortcutsHeading">
+        <div class="audit-heading">
+          <div>
+            <h2 id="shortcutsHeading">Core Administration Shortcuts</h2>
+            <p>Open the existing secured modules. Access remains controlled by each module's own server-side role checks.</p>
+          </div>
+        </div>
+        <div class="shortcut-grid">
+          <a class="shortcut-link hidden" data-required-roles="super_admin,registry_admin,core_admin" href="admin-project-registry.html">
+            <b>Project Registry</b><span>Core project registry and scope administration</span>
+          </a>
+          <a class="shortcut-link hidden" data-required-roles="super_admin" href="admin-core-team.html">
+            <b>Core Team</b><span>Official Core Team invitations and membership</span>
+          </a>
+          <a class="shortcut-link hidden" data-required-roles="super_admin,approval_admin,finance_admin" href="admin-core-lifecycle.html">
+            <b>Core Lifecycle</b><span>Treasury readiness and Core Project activation</span>
+          </a>
+          <a class="shortcut-link hidden" data-required-roles="super_admin,approval_admin,finance_admin" href="admin-staking-contract-v2.html">
+            <b>Staking Contract V2</b><span>Review and publish approved Core staking terms</span>
+          </a>
+        </div>
+      </section>
+
+      <div class="notice">
+        <b>Financial safety</b>
+        <span>Core Admins cannot move Treasury funds or approve withdrawals. Finance Admin performs initial review; only Super Admin can make the final approval decision. No payout is enabled from this workspace.</span>
+      </div>
+      <div class="notice muted">
+        <b>Feature availability</b>
+        <span>Project Updates readiness is confirmed against the authenticated Admin's active Mainnet publisher grants. Core Treasury Withdrawals remain unavailable because a dedicated owner/project treasury withdrawal contract is not present. The existing investor reward/capital withdrawal workflow is a separate feature and is not reused here. This page does not simulate submissions or write financial records directly.</span>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
