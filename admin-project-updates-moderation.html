@@ -8,12 +8,14 @@
   <title>ALBUKHR — Project Updates Moderation</title>
   <link rel="stylesheet" href="css/admin-project-updates-moderation.css">
   <link rel="stylesheet" href="css/admin-project-updates-moderation-actions.css">
+  <link rel="stylesheet" href="css/admin-project-updates-moderation-history.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="js/core/environment-core.js" defer></script>
   <script src="js/core/supabase-core.js" defer></script>
   <script src="js/core/supabase-admin-auth.js" defer></script>
   <script src="js/admin-project-updates-moderation.js" defer></script>
   <script src="js/admin-project-updates-moderation-actions.js" defer></script>
+  <script src="js/admin-project-updates-moderation-history.js" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -89,6 +91,31 @@
           </div>
         </section>
       </div>
+
+      <section class="panel moderation-history-panel" id="moderationHistoryPanel" aria-labelledby="moderationHistoryTitle">
+        <div class="history-heading">
+          <div>
+            <span class="eyebrow">ACCOUNTABILITY RECORDS</span>
+            <h2 id="moderationHistoryTitle">Moderation History</h2>
+            <p>Read-only record of report decisions, update actions, and comment actions.</p>
+          </div>
+          <button id="refreshModerationHistoryButton" class="secondary-button" type="button">Load history</button>
+        </div>
+
+        <div class="history-toolbar">
+          <label for="moderationHistoryScope">History filter</label>
+          <select id="moderationHistoryScope" class="history-scope">
+            <option value="all">All moderation events</option>
+            <option value="reports">Report decisions</option>
+            <option value="updates">Project update actions</option>
+            <option value="comments">Comment actions</option>
+          </select>
+        </div>
+
+        <div id="moderationHistoryStatus" class="history-status" role="status" aria-live="polite">Load history to review recorded Mainnet moderation events.</div>
+        <div id="moderationHistoryList" class="moderation-history-list"></div>
+        <button id="loadMoreModerationHistoryButton" class="secondary-button history-more" type="button" hidden>Load older history</button>
+      </section>
 
       <p class="security-footnote">Mainnet only · Admin Auth + AAL2 · Super Admin role verified in Supabase trusted functions · All decisions use the ALBUKHR API gateway · No direct browser database writes</p>
     </section>
