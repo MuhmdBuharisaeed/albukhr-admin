@@ -1,0 +1,146 @@
+/* ALBUKHR Project Updates Moderation — Stage 6F content-action controls */
+.content-moderation-panel {
+  margin: 14px 0 4px;
+  padding: 14px;
+  border: 1px solid #dce9e2;
+  border-radius: 13px;
+  background: #f8fcf9;
+}
+
+.content-moderation-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.content-moderation-heading strong {
+  color: #073b28;
+  font-size: 13px;
+}
+
+.content-moderation-state {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #eaf5ee;
+  color: #087a3e;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .45px;
+}
+
+.content-moderation-explainer,
+.content-moderation-note {
+  margin: 8px 0 11px;
+  color: #61776d;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.content-moderation-label,
+.comment-moderation-label {
+  display: block;
+  margin: 8px 0 6px;
+  color: #365a48;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.content-moderation-reason {
+  display: block;
+  width: 100%;
+  min-height: 66px;
+  padding: 10px 11px;
+  resize: vertical;
+  border: 1px solid #cfded5;
+  border-radius: 10px;
+  background: #fff;
+  color: #073b28;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.content-moderation-reason:focus {
+  outline: 2px solid rgba(8,122,62,.15);
+  border-color: #087a3e;
+}
+
+.content-moderation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.content-action-button {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid #d4e3da;
+  border-radius: 9px;
+  background: #fff;
+  color: #087a3e;
+  font-size: 10px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.content-action-button.secondary:hover,
+.content-action-button.restore:hover {
+  background: #edf7f1;
+}
+
+.content-action-button.danger {
+  border-color: #ecd1ce;
+  color: #a52821;
+}
+
+.content-action-button.danger:hover {
+  background: #fff5f4;
+}
+
+.content-action-button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.content-moderation-status {
+  margin: 9px 0 0;
+  color: #61776d;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.content-moderation-status.error {
+  color: #a52821;
+}
+
+.content-moderation-status.success {
+  color: #087a3e;
+}
+
+.content-moderation-status.warning {
+  color: #946100;
+}
+
+.comment-moderation-actions {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px dashed #dce9e2;
+}
+
+.comment-moderation-label {
+  margin-top: 0;
+}
+
+.comment-moderation-actions .content-moderation-actions {
+  margin-top: 5px;
+}
+
+.comment-moderation-result {
+  margin: 7px 0 0;
+  color: #087a3e;
+  font-size: 10px;
+  font-weight: 750;
+}
