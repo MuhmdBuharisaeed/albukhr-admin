@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087a3e">
+<meta name="robots" content="noindex,nofollow">
+<title>ALBUKHR — Accept Admin Invitation</title>
+<link rel="stylesheet" href="css/admin-invitation-accept.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/core/environment-core.js" defer></script>
+<script src="js/core/supabase-core.js" defer></script>
+<script src="js/core/invitation-auth.js" defer></script>
+<script src="js/admin-invitation-accept.js" defer></script>
+</head>
+<body>
+<main class="shell">
+  <section class="card">
+    <header class="brand"><div class="brand-mark">A</div><div><b>ALBUKHR</b><small>ADMIN INVITATION SECURITY</small></div></header>
+    <section id="loadingState" class="state"><div class="spinner" aria-hidden="true"></div><h1>Verifying invitation</h1><p>Checking the one-time Mainnet Admin invitation.</p></section>
+    <section id="invalidState" class="state hidden"><div class="state-icon error-icon">!</div><h1>Invitation unavailable</h1><p id="invalidMessage">This invitation is invalid or unavailable.</p></section>
+    <section id="validState" class="hidden">
+      <div class="state-icon success-icon">✓</div>
+      <p class="eyebrow">INVITATION TOKEN VERIFIED</p>
+      <h1>Complete Admin appointment</h1>
+      <p id="inviteMessage" class="intro">Sign in using the exact email address that received this invitation.</p>
+      <div class="details"><div><span>Admin role</span><b id="roleName">—</b></div><div><span>Expires</span><b id="expiresAt">—</b></div></div>
+      <section id="authPanel" class="subpanel">
+        <h2>Authenticate the invited account</h2>
+        <p>Use the invited email address. The database checks the confirmed email against the private invitation record.</p>
+        <form id="authForm" novalidate>
+          <label for="candidateEmail">Email address<input id="candidateEmail" type="email" maxlength="320" autocomplete="email" required></label>
+          <label for="candidatePassword">Password<input id="candidatePassword" type="password" minlength="12" autocomplete="current-password" required></label>
+          <div class="button-row"><button id="signInButton" class="primary" type="submit">Sign in</button><button id="signUpButton" class="secondary" type="button">Create account</button></div>
+        </form>
+        <p class="fine-print">New accounts must confirm their email before an Admin invitation can be accepted. Passwords must be at least 12 characters.</p>
+      </section>
+      <section id="signedInPanel" class="subpanel hidden">
+        <h2>Authenticated account</h2>
+        <p id="signedInEmail" class="signed-email">—</p>
+        <p id="emailCheckMessage">Checking the confirmed invitation email...</p>
+        <button id="switchAccountButton" class="secondary" type="button">Use a different account</button>
+      </section>
+      <section id="mfaPanel" class="subpanel hidden">
+        <h2>Secure the account with MFA</h2>
+        <p>Admin privileges require a current Supabase AAL2 session. Enrol or verify an authenticator before accepting.</p>
+        <div id="enrolInstructions" class="hidden">
+          <p>Scan this QR code with an authenticator app, or enter the secret manually.</p>
+          <img id="totpQr" class="qr" alt="Authenticator enrolment QR code">
+          <label>Authenticator secret<input id="totpSecret" type="text" readonly autocomplete="off"></label>
+        </div>
+        <label for="mfaCode">Six-digit authenticator code<input id="mfaCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000"></label>
+        <button id="verifyMfaButton" class="primary" type="button">Verify MFA and continue</button>
+      </section>
+      <section id="acceptPanel" class="subpanel hidden">
+        <h2>Ready to accept</h2>
+        <p>Your verified email matches the invitation and the current session has AAL2 assurance. Acceptance will create the ordinary Admin role assignment atomically.</p>
+        <button id="acceptButton" class="primary" type="button">Accept Admin appointment</button>
+      </section>
+      <div id="pageStatus" class="status" role="status" aria-live="polite"></div>
+    </section>
+    <footer>ALBUKHR Mainnet • Secure Admin Appointment</footer>
+  </section>
+</main>
+</body>
+</html>
