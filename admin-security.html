@@ -11,7 +11,7 @@
 <script src="js/core/environment-core.js" defer></script>
 <script src="js/core/supabase-core.js" defer></script>
 <script src="js/core/supabase-admin-auth.js" defer></script>
-<script src="js/admin-security.js?v=20261127-wp3b3" defer></script>
+<script src="js/admin-security.js?v=20261128-single-super-admin-v1" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -71,14 +71,14 @@
 
   <section class="workspace financial-workspace" id="financialControlWorkspace" hidden>
     <div class="workspace-heading">
-      <div><small>MAINNET • AAL2 • SUPER ADMIN</small><h2>Financial Control Roles</h2><p>Request or review Finance/Treasury, Risk/Compliance, Governance and Custody Signer assignments. Every change requires a different active AAL2 Super Admin to approve or reject it.</p></div>
+      <div><small>MAINNET • AAL2 • SUPER ADMIN</small><h2>Financial Control Roles</h2><p>Grant or revoke Finance/Treasury, Risk/Compliance, Governance and Custody Signer assignments. The Mainnet RPC selects single- or dual-Super-Admin authorization from the live active Super Admin count.</p></div>
       <button id="financialRefreshButton" type="button" class="secondary">Refresh</button>
     </div>
-    <div class="governance-warning"><b>Independent approval required • current onboarding blocker</b><span>Read-only Mainnet verification on 27 November 2026 found 1 active Super Admin and 7 active Core Admins. A requester cannot approve or reject their own request, and the target Admin is also barred. Until a second eligible Super Admin is safely appointed, any new role-change request will remain pending. Do not treat this workspace as a Super Admin appointment tool.</span></div>
+    <div class="governance-warning"><b id="authorizationModeTitle">Governance authorization mode</b><span id="authorizationModeText">Loading current Mainnet Super Admin count and authorization mode...</span></div>
     <div id="financialControlStatus" class="inline-status" aria-live="polite"></div>
 
     <section class="subsection">
-      <div class="subsection-heading"><div><h3>Request a role change</h3><p>Choose an active Core Team Admin returned by the existing AAL2-protected Admin directory RPC. This form does not create an Admin account or elevate a user.</p></div></div>
+      <div class="subsection-heading"><div><h3>Request a role change</h3><p>Choose an active Admin returned by the existing AAL2-protected Admin directory. The target cannot be the acting Super Admin and must have mandatory MFA enabled.</p></div></div>
       <form id="roleRequestForm" novalidate>
         <div class="form-grid">
           <label>Request type<select id="requestType" required><option value="grant">Grant a financial-control role</option><option value="revoke">Request revocation of an active role</option></select></label>
@@ -94,7 +94,7 @@
     </section>
 
     <section class="subsection">
-      <div class="subsection-heading"><div><h3>Pending second approvals</h3><p>Requests remain pending until another eligible Super Admin approves or rejects them.</p></div><span id="pendingCount" class="count-pill">0</span></div>
+      <div class="subsection-heading"><div><h3>Pending independent approvals</h3><p>Only requests created while multiple active Super Admins exist are held for a distinct second AAL2 Super Admin.</p></div><span id="pendingCount" class="count-pill">0</span></div>
       <div id="pendingRequests" class="record-list"><p class="empty-state">Loading pending requests...</p></div>
     </section>
 
@@ -107,7 +107,7 @@
       <div class="subsection-heading"><div><h3>Recent governance events</h3><p>Append-only request, approval and rejection audit events.</p></div><span id="eventCount" class="count-pill">0</span></div>
       <div id="recentEvents" class="record-list"><p class="empty-state">Loading audit events...</p></div>
     </section>
-    <p class="muted workspace-footnote">Financial-control roles are separate from the legacy <code>admin_role</code> enum. This workspace never changes legacy Admin roles, creates Super Admin accounts, or bypasses the database's dual-approval checks.</p>
+    <p class="muted workspace-footnote">Financial-control roles remain separate from legacy Admin roles. With exactly one active Mainnet Super Admin, a role change is approved and recorded by that Super Admin in one atomic RPC transaction. If multiple active Super Admins exist, distinct second approval remains mandatory. The workspace never creates a Super Admin or writes directly to security tables.</p>
   </section>
 </main>
 </body>
