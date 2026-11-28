@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>ALBUKHR External Terms &amp; Disclosure Governance</title>
+<link rel="stylesheet" href="css/admin-external-terms-disclosure.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/core/environment-core.js" defer></script>
+<script src="js/core/supabase-core.js" defer></script>
+<script src="js/core/supabase-admin-auth.js" defer></script>
+<script src="js/admin-external-terms-disclosure.js?v=20261128-1" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="admin-dashboard.html">
+    <img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR">
+    <span><b>ALBUKHR</b><small>ADMINISTRATION</small></span>
+  </a>
+  <div class="top-actions">
+    <span class="network-pill">MAINNET ONLY</span>
+    <span id="securityState" class="security-pill">VERIFYING SECURITY</span>
+    <button id="logoutButton" class="button secondary" type="button">Sign out</button>
+  </div>
+</header>
+<main>
+  <a class="back" href="admin-external-projects.html">← External Project Applications</a>
+  <section class="hero">
+    <div>
+      <p class="eyebrow">EXTERNAL PROJECTS · GOVERNANCE</p>
+      <h1>Terms &amp; Disclosure Workbench</h1>
+      <p class="intro">Prepare, review and publish versioned External Project Terms and investor Disclosure. All writes are performed by Mainnet trusted RPCs and require AAL2.</p>
+    </div>
+    <div class="hero-actions">
+      <a class="button secondary" href="admin-external-sop.html">External SOP</a>
+      <button id="refreshButton" class="button primary" type="button">Refresh</button>
+    </div>
+  </section>
+
+  <div id="pageStatus" class="status" role="status" aria-live="polite">Checking Mainnet administrator authorization…</div>
+
+  <section class="selection-card">
+    <div class="selection-copy">
+      <h2>External application</h2>
+      <p>Choose an application to inspect its latest Terms, Disclosure, funding and custody readiness.</p>
+    </div>
+    <div class="selection-controls">
+      <label for="statusFilter">Queue status</label>
+      <select id="statusFilter">
+        <option value="">All applications</option>
+        <option value="approved">Approved</option>
+        <option value="converted">Converted</option>
+        <option value="under_review">Under review</option>
+        <option value="draft">Draft</option>
+      </select>
+      <label for="applicationSelect">Application</label>
+      <select id="applicationSelect" disabled>
+        <option value="">Loading applications…</option>
+      </select>
+    </div>
+  </section>
+
+  <section id="workspace" class="workspace" hidden>
+    <div class="summary-grid">
+      <article class="summary-card">
+        <span>Application</span>
+        <strong id="applicationName">—</strong>
+        <small id="applicationCode">—</small>
+      </article>
+      <article class="summary-card">
+        <span>Application state</span>
+        <strong id="applicationStatus">—</strong>
+        <small id="networkValue">MAINNET</small>
+      </article>
+      <article class="summary-card">
+        <span>Approved funding</span>
+        <strong id="fundingStatus">—</strong>
+        <small id="fundingAmount">—</small>
+      </article>
+      <article class="summary-card">
+        <span>External custody profile</span>
+        <strong id="custodyStatus">—</strong>
+        <small id="custodyModel">—</small>
+      </article>
+    </div>
+
+    <section class="governance-card">
+      <header class="section-head">
+        <div>
+          <p class="eyebrow">01 · VERSIONED INVESTMENT CONTRACT</p>
+          <h2>External Project Terms</h2>
+          <p>Draft → Under Review → Approved → Published. Published and superseded versions are immutable.</p>
+        </div>
+        <div class="head-actions">
+          <span id="termsStatus" class="state-pill">NOT STARTED</span>
+          <button id="startTermsButton" class="button secondary" type="button">Start Terms Version</button>
+        </div>
+      </header>
+      <div class="info-note">Publishing Terms requires a converted Mainnet External project, current approved funding, verified Due Diligence and Risk, and a READY custody profile. Publication supersedes the previous Terms and invalidates any previously published Disclosure.</div>
+      <div class="form-grid">
+        <label>Investment model<input id="investmentModel" type="text" maxlength="100" autocomplete="off"></label>
+        <label>Asset code<input id="assetCode" type="text" maxlength="20" autocomplete="off"></label>
+        <label>Target capital requirement<input id="targetCapital" type="number" min="0.0000001" step="any"></label>
+        <label>Minimum investment<input id="minimumInvestment" type="number" min="0.0000001" step="any"></label>
+        <label>Maximum investment<input id="maximumInvestment" type="number" min="0.0000001" step="any"></label>
+        <label>Term duration (days)<input id="termDurationDays" type="number" min="1" step="1"></label>
+        <label>Funding window start<input id="fundingWindowStart" type="datetime-local"></label>
+        <label>Funding window end<input id="fundingWindowEnd" type="datetime-local"></label>
+      </div>
+      <div class="json-grid">
+        <label>Return model (JSON)<textarea id="returnModel" rows="5" spellcheck="false">{}</textarea></label>
+        <label>Principal policy (JSON)<textarea id="principalPolicy" rows="5" spellcheck="false">{}</textarea></label>
+        <label>Exit policy (JSON)<textarea id="exitPolicy" rows="5" spellcheck="false">{}</textarea></label>
+        <label>Fee policy (JSON)<textarea id="feePolicy" rows="5" spellcheck="false">{}</textarea></label>
+        <label>Distribution policy (JSON)<textarea id="distributionPolicy" rows="5" spellcheck="false">{}</textarea></label>
+        <label>Default policy (JSON)<textarea id="defaultPolicy" rows="5" spellcheck="false">{}</textarea></label>
+        <label>Conditions (JSON)<textarea id="conditions" rows="5" spellcheck="false">{}</textarea></label>
+        <label>Custody reference (JSON)<textarea id="custodyReference" rows="5" spellcheck="false">{}</textarea></label>
+        <label>Disclosure reference (JSON)<textarea id="disclosureReference" rows="5" spellcheck="false">{}</textarea></label>
+        <label>Consent reference (JSON)<textarea id="consentReference" rows="5" spellcheck="false">{}</textarea></label>
+      </div>
+      <label class="full-field">Internal Terms notes (not investor-facing)<textarea id="termsNotes" rows="3"></textarea></label>
+      <div class="review-row">
+        <label class="reason-field">Review reason / revision instructions<input id="termsReviewReason" type="text" maxlength="1000" placeholder="Required for revision or rejection"></label>
+        <div class="action-row">
+          <button id="saveTermsButton" class="button secondary" type="button">Save Draft</button>
+          <button id="submitTermsButton" class="button primary" type="button">Submit for Review</button>
+          <button id="approveTermsButton" class="button primary" type="button">Approve</button>
+          <button id="revisionTermsButton" class="button warning" type="button">Request Revision</button>
+          <button id="rejectTermsButton" class="button danger" type="button">Reject</button>
+          <button id="publishTermsButton" class="button publish" type="button">Publish Terms</button>
+        </div>
+      </div>
+      <p id="termsDigest" class="digest-line">Terms SHA-256: not published</p>
+    </section>
+
+    <section class="governance-card">
+      <header class="section-head">
+        <div>
+          <p class="eyebrow">02 · INVESTOR-FACING DISCLOSURE</p>
+          <h2>External Project Disclosure</h2>
+          <p>Draft → Under Review → Approved → Published. The Disclosure is pinned to the exact published Terms and upstream source versions.</p>
+        </div>
+        <div class="head-actions">
+          <span id="disclosureStatus" class="state-pill">NOT STARTED</span>
+          <button id="startDisclosureButton" class="button secondary" type="button">Start Disclosure Version</button>
+        </div>
+      </header>
+      <div class="info-note">The Disclosure cannot be submitted or published unless all 16 required investor disclosure sections are complete and the source version references remain current. Do not use placeholder text or unsupported claims.</div>
+      <div class="form-grid">
+        <label>Disclosure title<input id="disclosureTitle" type="text" maxlength="200"></label>
+        <label>Disclosure date<input id="disclosureDate" type="date"></label>
+      </div>
+      <label class="full-field">Investor summary<textarea id="disclosureSummary" rows="4" maxlength="10000"></textarea></label>
+      <label class="full-field">Disclosure content — JSON object<textarea id="disclosureContent" rows="20" spellcheck="false" placeholder="Provide the complete investor-facing disclosure JSON. All 16 required section keys must contain substantive information."></textarea></label>
+      <details class="metadata-details">
+        <summary>Disclosure metadata (optional JSON)</summary>
+        <textarea id="disclosureMetadata" rows="5" spellcheck="false">{}</textarea>
+      </details>
+      <div class="required-sections">
+        <h3>Required disclosure sections</h3>
+        <p>These exact keys are enforced by the Mainnet submission RPC.</p>
+        <ul id="requiredSectionsList"></ul>
+      </div>
+      <div class="review-row">
+        <label class="reason-field">Review reason / revision instructions<input id="disclosureReviewReason" type="text" maxlength="1000" placeholder="Required for revision or rejection"></label>
+        <div class="action-row">
+          <button id="saveDisclosureButton" class="button secondary" type="button">Save Draft</button>
+          <button id="submitDisclosureButton" class="button primary" type="button">Submit for Review</button>
+          <button id="approveDisclosureButton" class="button primary" type="button">Approve</button>
+          <button id="revisionDisclosureButton" class="button warning" type="button">Request Revision</button>
+          <button id="rejectDisclosureButton" class="button danger" type="button">Reject</button>
+          <button id="publishDisclosureButton" class="button publish" type="button">Publish Disclosure</button>
+        </div>
+      </div>
+      <p id="disclosureDigest" class="digest-line">Disclosure SHA-256: not published</p>
+    </section>
+  </section>
+
+  <section id="emptyWorkspace" class="empty-state">
+    <strong>Select an External Project application</strong>
+    <p>Only global Super Admin and Approval Admin accounts can administer Terms and Disclosure publication.</p>
+  </section>
+</main>
+</body>
+</html>
