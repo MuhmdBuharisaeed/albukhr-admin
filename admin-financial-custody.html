@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087a3e">
+<meta name="robots" content="noindex,nofollow">
+<title>ALBUKHR — Global Financial Custody</title>
+<link rel="stylesheet" href="css/admin-module.css">
+<link rel="stylesheet" href="css/admin-financial-custody.css?v=20261128-e435">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="js/core/environment-core.js" defer></script>
+<script src="js/core/supabase-core.js" defer></script>
+<script src="js/core/supabase-admin-auth.js" defer></script>
+<script src="js/admin-financial-custody.js?v=20261128-e435" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="admin-dashboard.html">
+    <img src="images/file_00000000064c7246ae2d8ac819ddf9fc.png" alt="ALBUKHR">
+    <span><b>ALBUKHR</b><small>ADMINISTRATION</small></span>
+  </a>
+  <div class="actions"><span>MAINNET</span><button id="logoutButton" type="button">Sign out</button></div>
+</header>
+<main>
+  <nav class="back"><a href="admin-dashboard.html">← Admin Control Center</a></nav>
+  <section class="hero">
+    <div><small>MAINNET • GLOBAL FINANCIAL GOVERNANCE</small><h1>Global Custody Workspace</h1><p>Project-scoped custody account registration, evidence, balance snapshots, independent review, Governance verification and External custody linking. This workspace records custody evidence only; it does not move PI.</p></div>
+    <strong id="securityState">VERIFYING</strong>
+  </section>
+  <div id="pageStatus" class="status" role="status" aria-live="polite">Verifying Mainnet Admin session and AAL2...</div>
+
+  <section class="panel directory-panel">
+    <div class="panel-heading"><div><h2>Mainnet Project</h2><p>Only approved or active Mainnet projects covered by your Super Admin or financial-control authority are listed.</p></div><button id="refreshButton" class="secondary" type="button">Refresh</button></div>
+    <label for="projectSelect">Select project</label>
+    <select id="projectSelect" disabled><option value="">Loading authorized Mainnet projects...</option></select>
+  </section>
+
+  <section id="workspace" hidden>
+    <section class="summary-grid">
+      <article class="summary-card"><span>Project</span><b id="projectName">—</b><small id="projectCode">—</small></article>
+      <article class="summary-card"><span>Project type / status</span><b id="projectType">—</b><small id="projectStatus">—</small></article>
+      <article class="summary-card"><span>Global Custody accounts</span><b id="accountCount">0</b><small>Latest PI account versions</small></article>
+      <article class="summary-card"><span>Authorization</span><b id="authorizationMode">—</b><small id="roleCount">No financial roles</small></article>
+    </section>
+
+    <section id="readOnlyNotice" class="notice warning" hidden>
+      <b>Read-only Super Admin oversight</b>
+      <span>This account can inspect the selected Mainnet project's custody records, but it has no Finance &amp; Treasury, Risk &amp; Compliance or Governance operational role for this project. Assign those roles through Security &amp; Access. Do not use Super Admin status as a substitute for financial-role separation.</span>
+      <a href="admin-security.html">Open Security &amp; Financial Control Roles</a>
+    </section>
+
+    <section class="role-strip panel">
+      <div><h2>Project-scoped financial roles</h2><p>These role grants are separate from ordinary Admin roles and are checked by Mainnet RPCs on every operation.</p></div>
+      <div id="roleBadges" class="role-badges"></div>
+    </section>
+
+    <section class="panel" id="accountRegistrationPanel" hidden>
+      <div class="panel-heading"><div><h2>Register a custody account</h2><p>Finance &amp; Treasury only. Registration creates an immutable account record; it does not create a wallet or transfer funds.</p></div><span class="tag">FINANCE &amp; TREASURY</span></div>
+      <form id="accountForm" class="form-grid" novalidate>
+        <label>Fund class<select name="fund_class" required>
+          <option value="principal">Principal</option><option value="reward_reserve">Reward Reserve</option><option value="withdrawal_liquidity_reserve">Withdrawal Liquidity Reserve</option><option value="operating">Operating</option><option value="escrow">Escrow</option><option value="general_treasury">General Treasury</option><option value="payout_clearing">Payout Clearing</option>
+        </select></label>
+        <label>Account type<select name="account_type" required>
+          <option value="project_wallet">Project Wallet</option><option value="custodial_wallet">Custodial Wallet</option><option value="escrow_account">Escrow Account</option><option value="third_party_account">Third-party Account</option><option value="clearing_account">Clearing Account</option>
+        </select></label>
+        <label>Custody model<select name="custody_model" required>
+          <option value="self_custody">Self-custody</option><option value="multisignature">Multisignature</option><option value="third_party_custodian">Third-party Custodian</option><option value="escrow">Escrow</option><option value="controlled_release">Controlled Release</option>
+        </select></label>
+        <label>Custody provider<input name="custody_provider" minlength="2" maxlength="200" required placeholder="Provider / institution / control arrangement"></label>
+        <label>Account reference<input name="account_reference" minlength="2" maxlength="300" required placeholder="Stable internal reference for this account"></label>
+        <label>Public account address (optional)<input name="public_account_address" minlength="8" maxlength="300" placeholder="Public address only; never enter a secret key"></label>
+        <label>Legal account holder (optional)<input name="legal_account_holder" minlength="2" maxlength="300" placeholder="Registered account holder"></label>
+        <label>Supersedes existing account<select name="supersedes_account_id" id="supersedesAccount"><option value="">New account version / no predecessor</option></select></label>
+        <label class="span-all">Reason<textarea name="reason" minlength="10" maxlength="2000" required rows="3" placeholder="Explain why this account is being registered or versioned (10–2,000 characters)."></textarea></label>
+        <div class="form-actions span-all"><button class="primary" type="submit">Register account</button></div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><div><h2>Custody account register</h2><p>Displays only the latest version for each project / fund class / account reference. Historical records remain immutable in the ledger.</p></div><span id="verifiedCount" class="tag">0 verified</span></div>
+      <div id="accounts" class="account-list"><div class="empty">No custody accounts are registered for this project.</div></div>
+    </section>
+
+    <section id="externalCustodyPanel" class="panel" hidden>
+      <div class="panel-heading"><div><h2>External Project custody linking</h2><p>Links an already verified Global Custody account to the converted External custody profile. Linking never creates or changes a custody account.</p></div><span class="tag">PROJECT-BOUND</span></div>
+      <div id="externalProfileSummary" class="external-profile-summary"></div>
+      <form id="externalLinkForm" class="form-grid" novalidate>
+        <label>Custody purpose<select name="purpose_code" id="externalPurpose" required>
+          <option value="principal_custody">Principal custody</option><option value="project_operating">Project operating</option><option value="investor_escrow">Investor escrow</option><option value="reward_reserve">Reward reserve</option><option value="withdrawal_liquidity_reserve">Withdrawal liquidity reserve</option><option value="general_treasury">General treasury</option><option value="payout_clearing">Payout clearing</option>
+        </select></label>
+        <label>Verified PI custody account<select name="account_id" id="externalAccountSelect" required><option value="">Select an eligible verified account</option></select></label>
+        <label class="checkbox-label"><input type="checkbox" name="is_required" checked> Required for External custody readiness</label>
+        <label class="span-all">Reason<textarea name="reason" minlength="3" maxlength="2000" rows="2" required placeholder="Why is this exact verified custody account linked to this External purpose?"></textarea></label>
+        <div class="form-actions span-all"><button class="primary" type="submit">Link verified account</button></div>
+      </form>
+      <div class="section-divider"><h3>Existing account links</h3><div id="externalLinks" class="record-list"><div class="empty">No custody account links yet.</div></div></div>
+      <div id="externalReadiness" class="readiness-block"></div>
+    </section>
+
+    <section class="panel audit-panel">
+      <div class="panel-heading"><div><h2>Recent custody audit events</h2><p>Append-only account, evidence, snapshot and review events for this project.</p></div><span class="tag">READ-ONLY</span></div>
+      <div id="reviewEvents" class="record-list"><div class="empty">No custody events have been recorded.</div></div>
+    </section>
+  </section>
+  <footer class="boundary-note">ALBUKHR Mainnet • PI asset only • Trusted Supabase RPC boundary • No direct table access • No A2U, payout, withdrawal, payment or wallet movement is performed by this page.</footer>
+</main>
+</body>
+</html>
