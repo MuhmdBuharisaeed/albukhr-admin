@@ -99,7 +99,7 @@ const state={admin:null,applicationId:null,workspace:null};
 function setStatus(m,error=false){const e=$("pageStatus");e.textContent=m||"";e.classList.toggle("error",!!error)}
 function client(){const core=window.ALBUKHR_SUPABASE;if(!core||!core.client)throw new Error("ALBUKHR Supabase Core is unavailable.");return core.client}
 async function rpc(name,params={}){const {data,error}=await client().schema("albukhr_security").rpc(name,params);if(error)throw error;return data}
-function esc(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#039;")}
+function esc(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
 function fmtDate(v){if(!v)return "—";const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleString()}
 function norm(v){return String(v||"pending").trim().toLowerCase()}
 function pill(v){const s=norm(v);if(["ready","assessed","verified","completed"].includes(s))return "pill ready";if(["blocked","failed","critical","rejected"].includes(s))return "pill danger";if(["pending","in_progress","mitigation_required","escalated","partially_verified"].includes(s))return "pill warn";return "pill"}
@@ -118,7 +118,27 @@ $("backToQueue").addEventListener("click",()=>{history.replaceState(null,"","adm
 $("completeButton").addEventListener("click",()=>completeRisk().catch(e=>setStatus(e.message,true)));
 $("logoutButton").addEventListener("click",async()=>{await window.AlbukhrSupabaseAdminAuth.signOut();location.href="admin-login.html"});
 }
-async function init(){try{if(!window.ALBukhrEnvironment?.isMainnet?.())throw new Error("External Risk Assessment is available only on ALBUKHR MAINNET.");const auth=window.AlbukhrSupabaseAdminAuth;if(!auth)throw new Error("ALBUKHR Admin Auth Core is unavailable.");const admin=await auth.requireAdmin({redirect:true});if(!admin)return;if(!admin.roles.includes("super_admin")&&!admin.roles.includes("external_admin")){throw new Error("External administration role required.")}state.admin=admin;$("securityState").textContent="AAL2 VERIFIED";bind();const id=readId();if(id)await loadWorkspace(id);else await loadQueue()}catch(e){console.error("[ALBUKHR EXTERNAL RISK]",e);$("securityState").textContent="ACCESS ERROR";setStatus(e.message||"Unable to load External Risk Assessment.",true)}}
+async function init(){
+  try{
+    if(!window.ALBukhrEnvironment?.isMainnet?.())throw new Error("External Risk Assessment is available only on ALBUKHR MAINNET.");
+    const auth=window.AlbukhrSupabaseAdminAuth;
+    if(!auth)throw new Error("ALBUKHR Admin Auth Core is unavailable.");
+    const admin=await auth.requireAdmin({redirect:false,preserveSessionOnContextError:true});
+    if(!admin){location.replace("admin-login.html");return;}
+    const roles=Array.isArray(admin.roles)?admin.roles:[];
+    if(!roles.includes("super_admin")&&!roles.includes("approval_admin"))throw new Error("External Risk Assessment requires global Super Admin or Approval Admin authority.");
+    const mfa=await auth.ensureMfa();
+    if(admin.mfa_required&&(!mfa||!mfa.verified)){location.replace("admin-mfa.html");return;}
+    const {data:assurance,error:assuranceError}=await client().auth.mfa.getAuthenticatorAssuranceLevel();
+    if(assuranceError)throw assuranceError;
+    if(assurance?.currentLevel!=="aal2"){location.replace("admin-mfa.html");return;}
+    state.admin=admin;
+    $("securityState").textContent="AAL2 VERIFIED · GLOBAL REVIEWER";
+    bind();
+    const id=readId();
+    if(id)await loadWorkspace(id);else await loadQueue();
+  }catch(e){console.error("[ALBUKHR EXTERNAL RISK]",e);$("securityState").textContent="ACCESS ERROR";setStatus(e.message||"Unable to load External Risk Assessment.",true)}
+}
 document.readyState==="loading"?document.addEventListener("DOMContentLoaded",init,{once:true}):init();
 })();
 </script>
