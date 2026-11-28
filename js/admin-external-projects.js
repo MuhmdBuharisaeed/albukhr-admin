@@ -415,15 +415,9 @@ function setup(){
 }
 
 /*
- * External Projects intentionally uses the same Admin security
- * boundary as the working Admin Control Center.
- *
- * IMPORTANT:
- * - This page does NOT perform a second client-side environment gate.
- * - MAINNET validation remains inside the shared Admin Supabase Core
- *   and Admin Auth layers, and again inside the protected RPCs.
- * - This wait only prevents a race between deferred script loading
- *   and page initialization; it does not grant authorization.
+ * External Projects intentionally uses the shared ALBUKHR Admin security
+ * boundary and the same global reviewer authority enforced by the database.
+ * This page performs no project-scoped role elevation.
  */
 async function waitForSecurityDependencies(timeoutMs=5000){
   const started=Date.now();
@@ -464,20 +458,15 @@ async function init(){
       preserveSessionOnContextError:true
     });
 
-        if(!admin){
+    if(!admin){
       location.replace("admin-login.html");
       return;
     }
 
-    // External Projects access is limited to authorized roles.
     const roles=Array.isArray(admin.roles)?admin.roles:[];
-
-    if(
-      !roles.includes("super_admin") &&
-      !roles.includes("external_admin")
-    ){
+    if(!roles.includes("super_admin")&&!roles.includes("approval_admin")){
       status(
-        "External Projects access is restricted to authorized administrators.",
+        "External application review requires global Super Admin or Approval Admin authority.",
         true
       );
       location.replace("admin-dashboard.html");
@@ -485,27 +474,26 @@ async function init(){
     }
 
     const mfa=await A().ensureMfa();
-
-    if(admin.mfa_required&&!mfa.verified){
+    if(admin.mfa_required&&(!mfa||!mfa.verified)){
       location.replace("admin-mfa.html");
       return;
     }
 
-        $("securityState").textContent =
-      mfa.verified ? "AAL2 verified" : "Security verified";
-
-    const sopLink=$("externalSopLink");
-    if(sopLink){
-      sopLink.hidden=false;
+    const {data:assurance,error:assuranceError}=await C().auth.mfa.getAuthenticatorAssuranceLevel();
+    if(assuranceError)throw assuranceError;
+    if(assurance?.currentLevel!=="aal2"){
+      location.replace("admin-mfa.html");
+      return;
     }
 
-    status("Administrator security verification completed.");
+    $("securityState").textContent="AAL2 verified · Global reviewer";
 
+    const sopLink=$("externalSopLink");
+    if(sopLink)sopLink.hidden=false;
 
-
+    status("Global reviewer authorization and AAL2 verification completed.");
     setup();
     await loadQueue();
-
   }catch(e){
     console.error(
       "[ALBUKHR ADMIN EXTERNAL PROJECTS]",
@@ -513,12 +501,9 @@ async function init(){
     );
 
     $("securityState").textContent="Security check failed";
-
     const message=String(e?.message||e||"");
-
     status(
-      message||
-      "External Project administrator authorization failed.",
+      message||"External Project administrator authorization failed.",
       true
     );
   }
